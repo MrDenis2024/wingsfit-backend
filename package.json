@@ -4,7 +4,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.ts",
-    "seed": "ts-node fixtures.ts"
+    "seed": "ts-node fixtures.ts",
+    "format:check": "npx prettier . --check",
+    "format": "npx prettier . --write",
+    "typecheck": "npx tsc --noemit"
   },
   "keywords": [],
   "author": "",
