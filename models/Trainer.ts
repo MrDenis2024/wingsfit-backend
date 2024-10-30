@@ -1,4 +1,5 @@
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
+import User from './User';
 
 const Schema = mongoose.Schema;
 
@@ -7,6 +8,13 @@ const TrainerSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
+        validate: {
+            validator: async (value: Types.ObjectId) => {
+                const user = await User.findById(value);
+                return Boolean(user);
+            },
+            message: 'Пользователь не найден!',
+        }
     },
     firstName: {
         type: String,
@@ -25,6 +33,7 @@ const TrainerSchema = new Schema({
     },
     rating:{
         type: Number,
+        default: 0,
     },
     avatar:{
         type: String,
