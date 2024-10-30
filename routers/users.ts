@@ -50,7 +50,8 @@ usersRouter.post("/google", async (req, res, next) => {
           user,
           firstName: "someName",
           lastName: "someName",
-          subscribes: ['dadwa', 'dadawd']
+          subscribes: ['dadwa', 'dadawd'],
+          timeZone: "+7GTM",
         });
 
         client.populate("user", "_id token");

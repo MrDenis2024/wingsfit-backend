@@ -45,6 +45,10 @@ const ClientSchema = new Schema<ClientTypes>({
   subscribes: {
     type: [Schema.Types.ObjectId],
   },
+  timeZone: {
+    type: String,
+    required: true,
+  },
   avatar: String,
 });
 

@@ -9,4 +9,5 @@ export interface ClientTypes {
   age: number;
   subscribes: Types.ObjectId[];
   avatar: string;
+  timeZone: string;
 }
