@@ -2,7 +2,8 @@ import express from "express";
 import config from "../config";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/User";
-import Trainer from '../models/Trainer';
+import Trainer from "../models/Trainer";
+import Client from "../models/Client";
 
 const usersRouter = express.Router();
 const googleClient = new OAuth2Client(config.google.clientId);
@@ -31,24 +32,36 @@ usersRouter.post("/google", async (req, res, next) => {
         googleId: id,
         role: role,
       });
-
-      user.getToken();
-      await user.save();
-
       if (role === "trainer") {
         const trainer = await Trainer.create({
           user,
-          firstName: 'someName',
-          lastName: 'someName',
-          courseTypes: ['sambo' , 'yoga' , 'dance'],
-          timeZone: '+6GTM',
+          firstName: "someName",
+          lastName: "someName",
+          courseTypes: ["sambo", "yoga", "dance"],
+          timeZone: "+6GTM",
         });
 
-        trainer.populate('user', '_id token')
+        trainer.populate("user", "_id token");
 
-        return res.status(200).send(trainer)
+        return res.status(200).send(trainer);
+      }
+      if (role === "client") {
+        const client = await Client.create({
+          user,
+          firstName: "someName",
+          lastName: "someName",
+          subscribes: ['dadwa', 'dadawd'],
+          timeZone: "+7GTM",
+        });
+
+        client.populate("user", "_id token");
+
+        return res.status(200).send(client);
       }
     }
+
+    user.getToken();
+    await user.save();
 
     return res.send({ message: `${user.role} created`, token: user.token });
   } catch (error) {
