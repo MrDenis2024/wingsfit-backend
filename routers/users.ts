@@ -3,6 +3,7 @@ import config from "../config";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/User";
 import Trainer from "../models/Trainer";
+import Client from "../models/Client";
 
 const usersRouter = express.Router();
 const googleClient = new OAuth2Client(config.google.clientId);
@@ -43,6 +44,18 @@ usersRouter.post("/google", async (req, res, next) => {
         trainer.populate("user", "_id token");
 
         return res.status(200).send(trainer);
+      }
+      if (role === "client") {
+        const client = await Client.create({
+          user,
+          firstName: "someName",
+          lastName: "someName",
+          subscribes: ['dadwa', 'dadawd']
+        });
+
+        client.populate("user", "_id token");
+
+        return res.status(200).send(client);
       }
     }
 
