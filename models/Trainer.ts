@@ -1,9 +1,10 @@
 import mongoose, { Types } from 'mongoose';
 import User from './User';
+import { TrainerTypes } from '../types/trainerTypes';
 
 const Schema = mongoose.Schema;
 
-const TrainerSchema = new Schema({
+const TrainerSchema = new Schema<TrainerTypes>({
     user:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -29,7 +30,7 @@ const TrainerSchema = new Schema({
         type: String,
         required: true,
     },
-    courseType:{
+    courseTypes:{
         type: [String],
     },
     rating:{
