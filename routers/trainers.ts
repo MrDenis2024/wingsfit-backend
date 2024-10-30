@@ -2,20 +2,20 @@ import express from 'express';
 import Trainer from '../models/Trainer';
 import auth, { RequestWithUser } from '../middleware/auth';
 
-const trainerRouter = express.Router();
+const trainersRouter = express.Router();
 
-trainerRouter.get('/', async (req, res) => {
+trainersRouter.get('/', async (req, res) => {
     const allTrainers = await Trainer.find().populate('user' , 'displayName');
     return res.status(200).json(allTrainers);
 })
 
-trainerRouter.get('/:id', async (req, res) => {
+trainersRouter.get('/:id', async (req, res) => {
     const id = req.params.id;
     const allTrainers = await Trainer.findById(id).populate('user' , 'displayName');
     return res.status(200).json(allTrainers);
 })
 
-trainerRouter.put('/:id', auth , async (req: RequestWithUser, res) => {
+trainersRouter.put('/:id', auth , async (req: RequestWithUser, res) => {
     try{
         const trainerId = req.params.id;
         const user = req.user;
@@ -38,4 +38,4 @@ trainerRouter.put('/:id', auth , async (req: RequestWithUser, res) => {
     }
 })
 
-export default trainerRouter;
+export default trainersRouter;
