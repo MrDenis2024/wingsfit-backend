@@ -11,9 +11,9 @@ const TrainerSchema = new Schema({
         validate: {
             validator: async (value: Types.ObjectId) => {
                 const user = await User.findById(value);
-                return Boolean(user);
+                return Boolean(user && user.role === "trainer");
             },
-            message: 'Пользователь не найден!',
+            message: "There can only be one role",
         }
     },
     firstName: {
