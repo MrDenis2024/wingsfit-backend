@@ -2,7 +2,6 @@ import express from "express";
 import config from "../config";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/User";
-import Client from "../models/Client";
 
 const usersRouter = express.Router();
 const googleClient = new OAuth2Client(config.google.clientId);
@@ -31,23 +30,26 @@ usersRouter.post("/google", async (req, res, next) => {
         googleId: id,
         role: role,
       });
+    }
 
-      if (role === "client") {
-        const trainer = await Client.create({
+      user.getToken();
+      await user.save();
+
+      if (role === "trainer") {
+        const trainer = await Trainer.create({
           user,
-          firstName: "someName",
-          lastName: "someName",
-          subscribes: ["dwdawdwa", "dawdawdawd"],
+          firstName: 'someName',
+          lastName: 'someName',
+          courseTypes: ['sambo' , 'yoga' , 'dance'],
+          timeZone: '+6GTM',
         });
 
-        trainer.populate("user", "_id token");
+        trainer.populate('user', '_id token')
 
-        return res.status(200).send(trainer);
+        return res.status(200).send(trainer)
       }
     }
 
-    user.getToken();
-    await user.save();
     return res.send({ message: `${user.role} created`, token: user.token });
   } catch (error) {
     return next(error);
