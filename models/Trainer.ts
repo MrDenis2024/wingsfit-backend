@@ -8,6 +8,7 @@ const TrainerSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
+        unique: true,
         validate: {
             validator: async (value: Types.ObjectId) => {
                 const user = await User.findById(value);
