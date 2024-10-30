@@ -2,6 +2,7 @@ import express from "express";
 import config from "../config";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/User";
+import Client from "../models/Client";
 
 const usersRouter = express.Router();
 const googleClient = new OAuth2Client(config.google.clientId);
@@ -30,6 +31,19 @@ usersRouter.post("/google", async (req, res, next) => {
         googleId: id,
         role: role,
       });
+
+      if (role === "client") {
+        const trainer = await Client.create({
+          user,
+          firstName: "someName",
+          lastName: "someName",
+          subscribes: ["dwdawdwa", "dawdawdawd"],
+        });
+
+        trainer.populate("user", "_id token");
+
+        return res.status(200).send(trainer);
+      }
     }
 
     user.getToken();
