@@ -2,9 +2,53 @@ import express from "express";
 import User from "../models/User";
 import config from "../config";
 import { OAuth2Client } from "google-auth-library";
+import mongoose from "mongoose";
 
 const usersRouter = express.Router();
 const googleClient = new OAuth2Client(config.google.clientId);
+
+usersRouter.post("/", async (req, res, next) => {
+  try {
+    const role = req.query.role as string;
+    if (!role || (role !== "client" && role !== "trainer")) {
+      return res.status(400).send({ error: "Role not found or uncorrected" });
+    }
+    const user = new User({
+      email: req.body.email,
+      password: req.body.password,
+      confirmPassword: req.body.confirmPassword,
+      role: role,
+    });
+    user.getToken();
+    await user.save();
+    return res.status(200).send(user);
+  } catch (error) {
+    if (error instanceof mongoose.Error.ValidationError) {
+      return res.status(400).send(error);
+    }
+    return next(error);
+  }
+});
+usersRouter.post("/sessions", async (req, res, next) => {
+  try {
+    if (!req.body.email || !req.body.password) {
+      return res.status(400).send({ error: "Email and password are required" });
+    }
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(400).send({ error: "User not found!" });
+    }
+    const isMatch = await user.checkPassword(req.body.password);
+    if (!isMatch) {
+      return res.status(400).send({ error: "Password is wrong!" });
+    }
+    user.getToken();
+    await user.save();
+    return res.status(200).send(user);
+  } catch (error) {
+    return next(error);
+  }
+});
 
 usersRouter.post("/google", async (req, res, next) => {
   try {

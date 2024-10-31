@@ -28,12 +28,10 @@ trainersRouter.post(
 
       if (!user) return res.status(401).send({ error: "User not found" });
       if (user.role !== "trainer") {
-        return res
-          .status(400)
-          .send({
-            error:
-              "Bad Request! Trainer create only for users with role trainer!",
-          });
+        return res.status(400).send({
+          error:
+            "Bad Request! Trainer create only for users with role trainer!",
+        });
       }
 
       const trainerMutation = {

@@ -34,12 +34,9 @@ clientsRouter.post(
       if (!user) return res.status(401).send({ error: "User not found" });
 
       if (user.role !== "client") {
-        return res
-          .status(400)
-          .send({
-            error:
-              "Bad Request! Client create only for users with role client!",
-          });
+        return res.status(400).send({
+          error: "Bad Request! Client create only for users with role client!",
+        });
       }
       const clientMutation = {
         user: user._id,
