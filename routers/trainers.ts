@@ -6,7 +6,7 @@ const trainersRouter = express.Router();
 
 trainersRouter.get("/", async (req, res) => {
   const allTrainers = await Trainer.find().populate("user", "displayName");
-  return res.status(200).json(allTrainers);
+  return res.status(200).send(allTrainers);
 });
 
 trainersRouter.get("/:id", async (req, res) => {
@@ -15,7 +15,7 @@ trainersRouter.get("/:id", async (req, res) => {
     "user",
     "displayName",
   );
-  return res.status(200).json(allTrainers);
+  return res.status(200).send(allTrainers);
 });
 
 trainersRouter.put("/:id", auth, async (req: RequestWithUser, res) => {
@@ -27,13 +27,13 @@ trainersRouter.put("/:id", auth, async (req: RequestWithUser, res) => {
 
     const trainer = await Trainer.findById(trainerId);
     if (!trainer) {
-      return res.status(404).json({ message: "Trainer not found" });
+      return res.status(404).send({ error: "Trainer not found" });
     }
 
     if (trainer.user.toString() !== user._id.toString()) {
       return res
         .status(403)
-        .json({ message: "You do not have the rights to change this profile" });
+        .send({ error: "You do not have the rights to change this profile" });
     }
     const updatedTrainer = await Trainer.findByIdAndUpdate(
       trainerId,
@@ -41,9 +41,9 @@ trainersRouter.put("/:id", auth, async (req: RequestWithUser, res) => {
       { new: true },
     );
 
-    res.json(updatedTrainer);
+    res.send(updatedTrainer);
   } catch (e) {
-    res.status(500).json({ message: "Error updating trainer profile", e });
+    res.status(500).send({ error: "Error updating trainer profile", e });
   }
 });
 

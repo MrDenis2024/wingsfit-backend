@@ -31,13 +31,13 @@ clientsRouter.put("/:id", auth, async (req: RequestWithUser, res, next) => {
 
     const client = await Client.findById(clientId);
     if (!client) {
-      return res.status(404).json({ message: "Client not found" });
+      return res.status(404).send({ error: "Client not found" });
     }
 
     if (client.user.toString() !== user._id.toString()) {
       return res
         .status(403)
-        .json({ message: "You do not have the rights to change this profile" });
+        .send({ error: "You do not have the rights to change this profile" });
     }
     const updatedClient = await Client.findByIdAndUpdate(clientId, req.body, {
       new: true,
