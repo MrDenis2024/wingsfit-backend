@@ -1,17 +1,13 @@
 import express from "express";
 import User from "../models/User";
-import Trainer from "../models/Trainer";
-import Client from "../models/Client";
-import { imagesUpload } from "../multer";
 import config from "../config";
-import {OAuth2Client} from "google-auth-library";
+import { OAuth2Client } from "google-auth-library";
 
 const usersRouter = express.Router();
 const googleClient = new OAuth2Client(config.google.clientId);
 
 usersRouter.post(
   "/google",
-  imagesUpload.single("avatar"),
   async (req, res, next) => {
     try {
       const ticket = await googleClient.verifyIdToken({
@@ -25,15 +21,7 @@ usersRouter.post(
       const id = payload.sub;
       const user = await User.findOne({ googleId: id });
       if (user) {
-        if (user.role === "client") {
-          const client = await Client.findOne({ user: user._id });
-          return res.send({ user: user, profile: client });
-        }
-
-        if (user.role === "trainer") {
-          const trainer = await Trainer.findOne({ user: user._id });
-          return res.send({ user: user,profile: trainer });
-        }
+          return res.status(200).send(user);
       }
 
       if (!user) {
@@ -50,32 +38,8 @@ usersRouter.post(
         newUser.getToken();
         await newUser.save();
 
-        if (role === "trainer") {
-          const courseTypes = JSON.parse(req.body.courseTypes) as string[];
-          const trainer = await Trainer.create({
-            user: newUser._id,
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            courseTypes: courseTypes,
-            timeZone: req.body.timeZone,
-            avatar: req.file ? req.file.filename : null,
-          });
-          return res.status(200).send({ user, trainer });
-        }
+        return res.status(200).send(newUser);
 
-        if (role === "client") {
-          const client = await Client.create({
-            user: newUser._id,
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            timeZone: req.body.timeZone,
-            avatar: req.file ? req.file.filename : null,
-            health: req.body.health,
-            gender: req.body.gender,
-            age: parseFloat(req.body.age),
-          });
-          return res.status(200).send({ newUser, client });
-       }
       }
     } catch (error) {
       return next(error);
