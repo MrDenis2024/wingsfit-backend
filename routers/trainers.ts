@@ -27,18 +27,23 @@ trainersRouter.post(
       const user = req.user;
 
       if (!user) return res.status(401).send({ error: "User not found" });
-      if(user.role!=='trainer'){
-          return res.status(400).send({ error: "Bad Request! Trainer create only for users with role trainer!" });
+      if (user.role !== "trainer") {
+        return res
+          .status(400)
+          .send({
+            error:
+              "Bad Request! Trainer create only for users with role trainer!",
+          });
       }
 
-      const trainerMutation={
-          user: user._id,
-          firstName: req.body.firstName,
-          lastName: req.body.lastName,
-          courseTypes: JSON.parse(req.body.courseTypes) as string[],
-          timeZone: req.body.timeZone,
-          avatar: req.file ? req.file.filename : null,
-      }
+      const trainerMutation = {
+        user: user._id,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        courseTypes: JSON.parse(req.body.courseTypes) as string[],
+        timeZone: req.body.timeZone,
+        avatar: req.file ? req.file.filename : null,
+      };
       const trainer = await Trainer.create(trainerMutation);
 
       return res.status(200).send(trainer);

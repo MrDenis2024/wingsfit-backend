@@ -1,7 +1,7 @@
 import express from "express";
 import Client from "../models/Client";
 import auth, { RequestWithUser } from "../middleware/auth";
-import {imagesUpload} from "../multer";
+import { imagesUpload } from "../multer";
 
 const clientsRouter = express.Router();
 
@@ -23,32 +23,42 @@ clientsRouter.get("/:id", async (req, res, next) => {
   }
 });
 
-clientsRouter.post("/", auth,imagesUpload.single('avatar'), async (req: RequestWithUser, res, next) => {
-  try {
-    const user = req.user;
+clientsRouter.post(
+  "/",
+  auth,
+  imagesUpload.single("avatar"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const user = req.user;
 
-    if (!user) return res.status(401).send({ error: "User not found" });
+      if (!user) return res.status(401).send({ error: "User not found" });
 
-    if(user.role!=='client'){
-      return res.status(400).send({ error: "Bad Request! Client create only for users with role client!" });
+      if (user.role !== "client") {
+        return res
+          .status(400)
+          .send({
+            error:
+              "Bad Request! Client create only for users with role client!",
+          });
+      }
+      const clientMutation = {
+        user: user._id,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        timeZone: req.body.timeZone,
+        avatar: req.file ? req.file.filename : null,
+        health: req.body.health,
+        gender: req.body.gender,
+        age: parseFloat(req.body.age),
+      };
+      const client = await Client.create(clientMutation);
+
+      return res.status(200).send(client);
+    } catch (error) {
+      next(error);
     }
-    const clientMutation ={
-      user: user._id,
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      timeZone: req.body.timeZone,
-      avatar: req.file ? req.file.filename : null,
-      health: req.body.health,
-      gender: req.body.gender,
-      age: parseFloat(req.body.age),
-    }
-    const client = await Client.create(clientMutation);
-
-    return res.status(200).send(client);
-  } catch (error) {
-    next(error);
-  }
-});
+  },
+);
 
 clientsRouter.put("/:id", auth, async (req: RequestWithUser, res, next) => {
   try {
