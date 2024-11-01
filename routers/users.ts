@@ -1,12 +1,54 @@
 import express from "express";
+import User from "../models/User";
 import config from "../config";
 import { OAuth2Client } from "google-auth-library";
-import User from "../models/User";
-import Trainer from "../models/Trainer";
-import Client from "../models/Client";
+import mongoose from "mongoose";
 
 const usersRouter = express.Router();
 const googleClient = new OAuth2Client(config.google.clientId);
+
+usersRouter.post("/", async (req, res, next) => {
+  try {
+    const role = req.query.role as string;
+    if (!role || (role !== "client" && role !== "trainer")) {
+      return res.status(400).send({ error: "Role not found or uncorrected" });
+    }
+    const user = new User({
+      email: req.body.email,
+      password: req.body.password,
+      confirmPassword: req.body.confirmPassword,
+      role: role,
+    });
+    user.getToken();
+    await user.save();
+    return res.status(200).send(user);
+  } catch (error) {
+    if (error instanceof mongoose.Error.ValidationError) {
+      return res.status(400).send(error);
+    }
+    return next(error);
+  }
+});
+usersRouter.post("/sessions", async (req, res, next) => {
+  try {
+    if (!req.body.email || !req.body.password) {
+      return res.status(400).send({ error: "Email and password are required" });
+    }
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(400).send({ error: "User not found!" });
+    }
+    const isMatch = await user.checkPassword(req.body.password);
+    if (!isMatch) {
+      return res.status(400).send({ error: "Password is wrong!" });
+    }
+    user.getToken();
+    await user.save();
+    return res.status(200).send(user);
+  } catch (error) {
+    return next(error);
+  }
+});
 
 usersRouter.post("/google", async (req, res, next) => {
   try {
@@ -14,56 +56,34 @@ usersRouter.post("/google", async (req, res, next) => {
       idToken: req.body.credential,
       audience: config.google.clientId,
     });
-
     const payload = ticket.getPayload();
     if (!payload) {
       return res.status(400).send({ error: "Google Login Error!" });
     }
-
+    const email = payload.email;
     const id = payload.sub;
-    let user = await User.findOne({ googleId: id });
+    const user = await User.findOne({ googleId: id });
+    if (user) {
+      return res.status(200).send(user);
+    }
     if (!user) {
       const role = req.query.role as string;
       if (!role || (role !== "client" && role !== "trainer")) {
-        return res.status(401).send({ error: "Role not found or uncorrected" });
+        return res.status(400).send({ error: "Role not found or uncorrected" });
       }
-
-      user = new User({
-        googleId: id,
+      const newPassword = crypto.randomUUID();
+      const newUser = new User({
+        email: email,
+        password: newPassword,
+        confirmPassword: newPassword,
+        googleId: req.body.googleId,
         role: role,
       });
-      if (role === "trainer") {
-        const trainer = await Trainer.create({
-          user,
-          firstName: "someName",
-          lastName: "someName",
-          courseTypes: ["sambo", "yoga", "dance"],
-          timeZone: "+6GTM",
-        });
+      newUser.getToken();
+      await newUser.save();
 
-        trainer.populate("user", "_id token");
-
-        return res.status(200).send(trainer);
-      }
-      if (role === "client") {
-        const client = await Client.create({
-          user,
-          firstName: "someName",
-          lastName: "someName",
-          subscribes: ['dadwa', 'dadawd'],
-          timeZone: "+7GTM",
-        });
-
-        client.populate("user", "_id token");
-
-        return res.status(200).send(client);
-      }
+      return res.status(200).send(newUser);
     }
-
-    user.getToken();
-    await user.save();
-
-    return res.send({ message: `${user.role} created`, token: user.token });
   } catch (error) {
     return next(error);
   }
