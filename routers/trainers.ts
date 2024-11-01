@@ -6,16 +6,13 @@ import { imagesUpload } from "../multer";
 const trainersRouter = express.Router();
 
 trainersRouter.get("/", async (req, res) => {
-  const allTrainers = await Trainer.find().populate("user", "displayName");
+  const allTrainers = await Trainer.find();
   return res.status(200).send(allTrainers);
 });
 
 trainersRouter.get("/:id", async (req, res) => {
   const id = req.params.id;
-  const allTrainers = await Trainer.findById(id).populate(
-    "user",
-    "displayName",
-  );
+  const allTrainers = await Trainer.findById(id);
   return res.status(200).send(allTrainers);
 });
 trainersRouter.post(
