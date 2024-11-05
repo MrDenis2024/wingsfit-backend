@@ -51,6 +51,23 @@ const UserSchema = new Schema<
       required: true,
       enum: ["client", "trainer"],
     },
+    firstName: String,
+    lastName: String,
+    phoneNumber: String,
+    avatar: String,
+    notification: {
+      type: Boolean,
+      default: true,
+    },
+    createdAt: {
+      type: Date,
+    },
+    updatedAt: {
+      type: Date,
+    },
+    lastActivity: {
+      type: Date,
+    },
     token: {
       type: String,
       required: true,

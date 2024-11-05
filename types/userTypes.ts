@@ -7,6 +7,14 @@ export interface UserFields {
   token: string;
   googleId?: string;
   __confirmPassword: string;
+  firstName: string,
+  lastName: string;
+  phoneNumber?: string;
+  avatar: string;
+  notification?: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  lastActivity: Date;
 }
 
 export interface UserVirtuals {

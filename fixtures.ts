@@ -5,92 +5,65 @@ import Trainer from "./models/Trainer";
 import Client from "./models/Client";
 
 const run = async () => {
-  await mongoose.connect(config.database);
-  const db = mongoose.connection;
-  try {
-    await db.dropCollection("trainers");
-    await db.dropCollection("clients");
-    await db.dropCollection("users");
-  } catch (err) {
-    console.log("skipping drop");
-  }
+    await mongoose.connect(config.database);
+    const db = mongoose.connection;
+    try {
+        await db.dropCollection("trainers");
+        await db.dropCollection("clients");
+        await db.dropCollection("users");
+    } catch (err) {
+        console.log("skipping drop");
+    }
 
-  const firstTrainer = new User({
-    email: "trainer@fit.local",
-    password: "test",
-    confirmPassword: "test",
-    role: "trainer",
-  });
-  firstTrainer.getToken();
-  await firstTrainer.save();
-  const secondTrainer = new User({
-    email: "trainer2@fit.local",
-    password: "test",
-    confirmPassword: "test",
-    role: "trainer",
-  });
-  secondTrainer.getToken();
-  await secondTrainer.save();
+    const trainerUser = new User({
+        email: "trainer@fit.local",
+        password: "test",
+        confirmPassword: "test",
+        role: "trainer",
+        firstName: "Vasya",
+        lastName: "Pupkin",
+        phoneNumber: "1234567890",
+        notification: true,
+    });
+    trainerUser.getToken();
+    await trainerUser.save();
 
-  const firstClient = new User({
-    email: "client@fit.local",
-    password: "test",
-    confirmPassword: "test",
-    role: "client",
-  });
-  firstClient.getToken();
-  await firstClient.save();
-  const secondClient = new User({
-    email: "client2@fit.local",
-    password: "test",
-    confirmPassword: "test",
-    role: "client",
-  });
-  secondClient.getToken();
-  await secondClient.save();
+    await Trainer.create({
+        user: trainerUser._id,
+        courseTypes: ["rumba", "tango", "lambada"],
+        timeZone: "UTC+6",
+        specialization: "Dance",
+        experience: "5 years",
+        certificates: "Certified Dance Instructor",
+        description: "Professional dance trainer with a love for rhythm.",
+        availableDays: "Monday, Wednesday, Friday",
+    });
 
-  await Trainer.create(
-    {
-      user: firstTrainer,
-      firstName: "Vasya",
-      lastName: "Pupkin",
-      courseTypes: ["rumba", "tango", "lambada"],
-      timeZone: "UTC +6",
-      avatar: null,
-    },
-    {
-      user: secondTrainer,
-      firstName: "Jane",
-      lastName: "kuskin",
-      courseTypes: ["box", "fitness", "bodybuilding"],
-      timeZone: "UTC +6",
-      avatar: null,
-    },
-  );
-  await Client.create(
-    {
-      user: firstClient,
-      firstName: "jane",
-      lastName: "doe",
-      timeZone: "UTC +6",
-      avatar: null,
-      health: "wrong left leg",
-      gender: "another",
-      age: 27,
-    },
-    {
-      user: secondClient,
-      firstName: "john",
-      lastName: "doe",
-      timeZone: "UTC +7",
-      avatar: null,
-      health: "fat",
-      gender: "male",
-      age: 20,
-    },
-  );
+    const clientUser = new User({
+        email: "client@fit.local",
+        password: "test",
+        confirmPassword: "test",
+        role: "client",
+        firstName: "Jane",
+        lastName: "Doe",
+        phoneNumber: "1122334455",
+        notification: true,
+    });
+    clientUser.getToken();
+    await clientUser.save();
 
-  await db.close();
+    await Client.create({
+        user: clientUser._id,
+        timeZone: "UTC+6",
+        gender: "another",
+        dateOfBirth: new Date("1995-05-15"),
+        subscribes: [],
+        preferredWorkoutType: "yoga",
+        trainingLevel: "beginner",
+        physicalData: "Injury in left leg",
+    });
+
+    await db.close();
 };
 
 run().catch(console.error);

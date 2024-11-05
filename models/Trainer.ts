@@ -18,28 +18,23 @@ const TrainerSchema = new Schema<TrainerTypes>({
       message: "There can only be one role",
     },
   },
-  firstName: {
-    type: String,
-    required: true,
-  },
-  lastName: {
-    type: String,
-    required: true,
-  },
   timeZone: {
     type: String,
     required: true,
   },
   courseTypes: {
     type: [String],
+    required: true,
   },
   rating: {
     type: Number,
     default: 0,
   },
-  avatar: {
-    type: String,
-  },
+  specialization: String,
+  experience: String,
+  certificates: String,
+  description: String,
+  availableDays: String,
 });
 
 const Trainer = mongoose.model("Trainer", TrainerSchema);

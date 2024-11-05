@@ -2,12 +2,11 @@ import { Types } from "mongoose";
 
 export interface ClientTypes {
   user: Types.ObjectId | string;
-  firstName: string;
-  lastName: string;
-  health: string;
   gender: string;
-  age: number;
+  dateOfBirth: Date;
   subscribes: Types.ObjectId[];
-  avatar: string;
   timeZone: string;
+  preferredWorkoutType: string;
+  trainingLevel: string;
+  physicalData: string;
 }
