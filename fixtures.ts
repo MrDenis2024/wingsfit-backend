@@ -15,80 +15,53 @@ const run = async () => {
     console.log("skipping drop");
   }
 
-  const firstTrainer = new User({
+  const trainerUser = new User({
     email: "trainer@fit.local",
     password: "test",
     confirmPassword: "test",
     role: "trainer",
+    firstName: "Vasya",
+    lastName: "Pupkin",
+    phoneNumber: "1234567890",
+    notification: true,
   });
-  firstTrainer.getToken();
-  await firstTrainer.save();
-  const secondTrainer = new User({
-    email: "trainer2@fit.local",
-    password: "test",
-    confirmPassword: "test",
-    role: "trainer",
-  });
-  secondTrainer.getToken();
-  await secondTrainer.save();
+  trainerUser.getToken();
+  await trainerUser.save();
 
-  const firstClient = new User({
+  await Trainer.create({
+    user: trainerUser._id,
+    courseTypes: ["rumba", "tango", "lambada"],
+    timeZone: "UTC+6",
+    specialization: "Dance",
+    experience: "5 years",
+    certificates: "Certified Dance Instructor",
+    description: "Professional dance trainer with a love for rhythm.",
+    availableDays: "Monday, Wednesday, Friday",
+  });
+
+  const clientUser = new User({
     email: "client@fit.local",
     password: "test",
     confirmPassword: "test",
     role: "client",
+    firstName: "Jane",
+    lastName: "Doe",
+    phoneNumber: "1122334455",
+    notification: true,
   });
-  firstClient.getToken();
-  await firstClient.save();
-  const secondClient = new User({
-    email: "client2@fit.local",
-    password: "test",
-    confirmPassword: "test",
-    role: "client",
-  });
-  secondClient.getToken();
-  await secondClient.save();
+  clientUser.getToken();
+  await clientUser.save();
 
-  await Trainer.create(
-    {
-      user: firstTrainer,
-      firstName: "Vasya",
-      lastName: "Pupkin",
-      courseTypes: ["rumba", "tango", "lambada"],
-      timeZone: "UTC +6",
-      avatar: null,
-    },
-    {
-      user: secondTrainer,
-      firstName: "Jane",
-      lastName: "kuskin",
-      courseTypes: ["box", "fitness", "bodybuilding"],
-      timeZone: "UTC +6",
-      avatar: null,
-    },
-  );
-  await Client.create(
-    {
-      user: firstClient,
-      firstName: "jane",
-      lastName: "doe",
-      timeZone: "UTC +6",
-      avatar: null,
-      health: "wrong left leg",
-      gender: "another",
-      age: 27,
-    },
-    {
-      user: secondClient,
-      firstName: "john",
-      lastName: "doe",
-      timeZone: "UTC +7",
-      avatar: null,
-      health: "fat",
-      gender: "male",
-      age: 20,
-    },
-  );
+  await Client.create({
+    user: clientUser._id,
+    timeZone: "UTC+6",
+    gender: "another",
+    dateOfBirth: new Date("1995-05-15"),
+    subscribes: [],
+    preferredWorkoutType: "yoga",
+    trainingLevel: "beginner",
+    physicalData: "Injury in left leg",
+  });
 
   await db.close();
 };

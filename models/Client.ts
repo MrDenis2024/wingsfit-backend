@@ -24,23 +24,13 @@ const ClientSchema = new Schema<ClientTypes>({
       message: "User does not exist!",
     },
   },
-  firstName: {
-    type: String,
-    required: true,
-  },
-  lastName: {
-    type: String,
-    required: true,
-  },
-  health: {
-    type: String,
-  },
   gender: {
     type: String,
     enum: ["female", "male", "another"],
+    required: true,
   },
-  age: {
-    type: Number,
+  dateOfBirth: {
+    type: Date,
   },
   subscribes: {
     type: [Schema.Types.ObjectId],
@@ -49,7 +39,9 @@ const ClientSchema = new Schema<ClientTypes>({
     type: String,
     required: true,
   },
-  avatar: String,
+  preferredWorkoutType: String,
+  trainingLevel: String,
+  physicalData: String,
 });
 
 const Client = mongoose.model("Client", ClientSchema);
