@@ -7,7 +7,7 @@ export interface UserFields {
   token: string;
   googleId?: string;
   __confirmPassword: string;
-  firstName: string,
+  firstName: string;
   lastName: string;
   phoneNumber?: string;
   avatar: string;

@@ -27,7 +27,7 @@ const ClientSchema = new Schema<ClientTypes>({
   gender: {
     type: String,
     enum: ["female", "male", "another"],
-    required: true
+    required: true,
   },
   dateOfBirth: {
     type: Date,
