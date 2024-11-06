@@ -3,6 +3,7 @@ import Trainer from "../models/Trainer";
 import auth, { RequestWithUser } from "../middleware/auth";
 import { imagesUpload } from "../multer";
 import User from "../models/User";
+import mongoose from "mongoose";
 
 const trainersRouter = express.Router();
 
@@ -14,18 +15,30 @@ trainersRouter.get("/", async (_req, res) => {
 trainersRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
   try {
     const user = req.user;
+
     if (!user) return res.status(401).send({ error: "User not found" });
+    if (!mongoose.isValidObjectId(req.params.id))
+      return res.status(400).send({ error: "Invalid client ID" });
 
     const trainer = await Trainer.findOne({
       _id: req.params.id,
       user,
-    }).populate(
-      "user",
-      "email firstName lastName role token phoneNumber avatar createdAt updatedAt lastActivity",
-    );
+    });
 
     if (!trainer) {
       return res.status(400).send({ error: "Trainer not found" });
+    }
+
+    if (user._id.equals(trainer.user)) {
+      await trainer.populate(
+        "user",
+        "email firstName lastName role token phoneNumber notification avatar createdAt updatedAt lastActivity",
+      );
+    } else {
+      await trainer.populate(
+        "user",
+        "email firstName lastName role phoneNumber avatar createdAt updatedAt lastActivity",
+      );
     }
 
     return res.status(200).send(trainer);
@@ -60,13 +73,12 @@ trainersRouter.post(
           .send({ error: "The required fields must be filled in!" });
       }
 
-      const updatedUser = await User.findOneAndUpdate(
+      await User.findOneAndUpdate(
         { _id: user },
         {
           firstName: req.body.firstName,
           lastName: req.body.lastName,
           phoneNumber: req.body.phoneNumber,
-          notification: req.body.notification !== "false",
           avatar: req.file ? req.file.filename : null,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -74,6 +86,12 @@ trainersRouter.post(
         },
         { new: true },
       );
+
+      if (req.body.notification === "true") {
+        await User.findOneAndUpdate({ _id: user }, { notification: true });
+      } else if (req.body.notification === "false") {
+        await User.findOneAndUpdate({ _id: user }, { notification: false });
+      }
 
       const trainerMutation = {
         user,
@@ -87,17 +105,24 @@ trainersRouter.post(
       };
 
       const trainer = await Trainer.create(trainerMutation);
+      await trainer.populate(
+        "user",
+        "_id email firstName lastName role token phoneNumber notification avatar createdAt updatedAt lastActivity",
+      );
 
-      return res.status(200).send({ user: updatedUser, trainer });
+      return res.status(200).send(trainer);
     } catch (error) {
+      if (error instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send(error);
+      }
+
       return next(error);
     }
   },
 );
 
-trainersRouter.put("/:id", auth, async (req: RequestWithUser, res, next) => {
+trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
   try {
-    const trainerId = req.params.id;
     const user = req.user;
 
     if (!user) return res.status(401).send({ error: "User not found" });
@@ -114,7 +139,7 @@ trainersRouter.put("/:id", auth, async (req: RequestWithUser, res, next) => {
     }
 
     const trainer = await Trainer.findOneAndUpdate(
-      { _id: trainerId, user },
+      { user },
       {
         timeZone: req.body.timeZone,
         courseTypes: req.body.courseTypes,
@@ -131,13 +156,12 @@ trainersRouter.put("/:id", auth, async (req: RequestWithUser, res, next) => {
       return res.status(404).send({ error: "Trainer not found" });
     }
 
-    const updatedUser = await User.findOneAndUpdate(
+    await User.findOneAndUpdate(
       { _id: user },
       {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         phoneNumber: req.body.phoneNumber,
-        notification: req.body.notification !== "false",
         avatar: req.file ? req.file.filename : null,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -146,8 +170,23 @@ trainersRouter.put("/:id", auth, async (req: RequestWithUser, res, next) => {
       { new: true },
     );
 
-    return res.status(200).send({ user: updatedUser, trainer });
+    if (req.body.notification === "true") {
+      await User.findOneAndUpdate({ _id: user }, { notification: true });
+    } else if (req.body.notification === "false") {
+      await User.findOneAndUpdate({ _id: user }, { notification: false });
+    }
+
+    await trainer.populate(
+      "user",
+      "_id email firstName lastName role token phoneNumber notification avatar createdAt updatedAt lastActivity",
+    );
+
+    return res.status(200).send(trainer);
   } catch (error) {
+    if (error instanceof mongoose.Error.ValidationError) {
+      return res.status(400).send(error);
+    }
+
     return next(error);
   }
 });

@@ -19,15 +19,29 @@ clientsRouter.get("/", async (_req, res, next) => {
 clientsRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
   try {
     const user = req.user;
-    if (!user) return res.status(401).send({ error: "User not found" });
 
-    const client = await Client.findOne({ _id: req.params.id, user }).populate(
-      "user",
-      "email firstName lastName role token phoneNumber avatar createdAt updatedAt lastActivity",
-    );
+    if (!user) return res.status(401).send({ error: "User not found" });
+    if (!mongoose.isValidObjectId(req.params.id))
+      return res.status(400).send({ error: "Invalid client ID" });
+
+    const client = await Client.findOne({
+      _id: req.params.id,
+    });
 
     if (!client) {
       return res.status(400).send({ error: "Client not found" });
+    }
+
+    if (user._id.equals(client.user)) {
+      await client.populate(
+        "user",
+        "email firstName lastName role phoneNumber notification avatar createdAt updatedAt lastActivity",
+      );
+    } else {
+      await client.populate(
+        "user",
+        "email firstName lastName role phoneNumber avatar createdAt updatedAt lastActivity",
+      );
     }
 
     return res.status(200).send(client);
@@ -63,13 +77,12 @@ clientsRouter.post(
           .send({ error: "The required fields must be filled in!" });
       }
 
-      const updatedUser = await User.findOneAndUpdate(
+      await User.findOneAndUpdate(
         { _id: user },
         {
           firstName: req.body.firstName,
           lastName: req.body.lastName,
           phoneNumber: req.body.phoneNumber,
-          notification: req.body.notification !== "false",
           avatar: req.file ? req.file.filename : null,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -77,6 +90,12 @@ clientsRouter.post(
         },
         { new: true },
       );
+
+      if (req.body.notification === "true") {
+        await User.findOneAndUpdate({ _id: user }, { notification: true });
+      } else if (req.body.notification === "false") {
+        await User.findOneAndUpdate({ _id: user }, { notification: false });
+      }
 
       const clientMutation = {
         user,
@@ -89,30 +108,31 @@ clientsRouter.post(
       };
 
       const client = await Client.create(clientMutation);
+      await client.populate(
+        "user",
+        "_id email firstName lastName role token phoneNumber notification avatar createdAt updatedAt lastActivity",
+      );
 
-      return res.status(200).send({ user: updatedUser, client });
+      return res.status(200).send(client);
     } catch (error) {
       if (error instanceof mongoose.Error.ValidationError) {
         return res.status(400).send(error);
       }
 
-      next(error);
+      return next(error);
     }
   },
 );
 
 clientsRouter.put(
-  "/:id",
+  "/",
   auth,
   imagesUpload.single("avatar"),
   async (req: RequestWithUser, res, next) => {
     try {
-      const clientId = req.params.id;
       const user = req.user;
 
       if (!user) return res.status(401).send({ error: "User not found" });
-      if (!mongoose.isValidObjectId(clientId))
-        return res.status(400).send({ error: "Invalid client ID!" });
 
       if (
         !req.body.firstName ||
@@ -126,10 +146,9 @@ clientsRouter.put(
       }
 
       const client = await Client.findOneAndUpdate(
-        { _id: clientId, user },
+        { user },
         {
           gender: req.body.gender,
-          dateOfBirth: new Date(req.body.dateOfBirth),
           timeZone: req.body.timeZone,
           preferredWorkoutType: req.body.preferredWorkoutType,
           trainingLevel: req.body.trainingLevel,
@@ -142,23 +161,52 @@ clientsRouter.put(
         return res.status(404).send({ error: "Client not found" });
       }
 
-      const updatedUser = await User.findOneAndUpdate(
+      const dateOfBirth = new Date(req.body.dateOfBirth);
+
+      if (dateOfBirth.toDateString() !== "Invalid Date") {
+        const updatedDateOfBirth = await Client.findOneAndUpdate(
+          { user },
+          { dateOfBirth },
+          { new: true },
+        );
+
+        if (updatedDateOfBirth) {
+          client.dateOfBirth = updatedDateOfBirth.dateOfBirth;
+        }
+      }
+
+      await User.findOneAndUpdate(
         { _id: user },
         {
           firstName: req.body.firstName,
           lastName: req.body.lastName,
           phoneNumber: req.body.phoneNumber,
-          notification: req.body.notification !== "false",
           avatar: req.file ? req.file.filename : null,
+          createdAt: new Date(),
           updatedAt: new Date(),
           lastActivity: new Date(),
         },
         { new: true },
       );
 
-      return res.status(200).send({ user: updatedUser, client });
+      if (req.body.notification === "true") {
+        await User.findOneAndUpdate({ _id: user }, { notification: true });
+      } else if (req.body.notification === "false") {
+        await User.findOneAndUpdate({ _id: user }, { notification: false });
+      }
+
+      await client.populate(
+        "user",
+        "_id email firstName lastName role token phoneNumber notification avatar createdAt updatedAt lastActivity",
+      );
+
+      return res.status(200).send(client);
     } catch (error) {
-      next(error);
+      if (error instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send(error);
+      }
+
+      return next(error);
     }
   },
 );
