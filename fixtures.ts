@@ -14,6 +14,7 @@ const run = async () => {
     await db.dropCollection("clients");
     await db.dropCollection("users");
     await db.dropCollection("courses");
+    await db.dropCollection("lessons");
   } catch (err) {
     console.log("skipping drop");
   }
