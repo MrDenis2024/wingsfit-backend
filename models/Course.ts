@@ -1,6 +1,5 @@
 import mongoose, { Types } from "mongoose";
 import User from "./User";
-import { TrainerTypes } from "../types/trainerTypes";
 import { CourseTypes } from "../types/courseTypes";
 
 const Schema = mongoose.Schema;
@@ -24,15 +23,18 @@ const CourseSchema = new Schema<CourseTypes>({
   },
   description: {
     type: String,
-    required: true,
   },
   format: {
     type: String,
-    required: true,
+    default: "group",
     enum: ["single", "group"],
   },
   schedule: {
-    type: [String],
+    type: String,
+    required: true,
+  },
+  scheduleLength: {
+    type: String,
     required: true,
   },
   price: {
@@ -40,7 +42,6 @@ const CourseSchema = new Schema<CourseTypes>({
   },
   image: {
     type: String,
-    required: true,
   },
   maxClients: {
     type: Number,

@@ -5,7 +5,8 @@ export interface CourseTypes {
   title: string;
   description: string;
   format: string;
-  schedule: string[];
+  schedule: string;
+  scheduleLength: String;
   price: number;
   image: string;
   maxClients: number;
