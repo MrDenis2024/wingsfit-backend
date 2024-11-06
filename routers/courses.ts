@@ -13,6 +13,9 @@ coursesRouter.get("/:id", async (req, res, next) => {
   try {
     const id = req.params.id;
     const course = await Course.findById(id);
+    if (!course) {
+      return res.status(404).send({ error: "Course not found" });
+    }
     return res.status(200).send(course);
   } catch (error) {
     return next(error);
@@ -21,7 +24,6 @@ coursesRouter.get("/:id", async (req, res, next) => {
 coursesRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
   try {
     const user = req.user;
-
     if (!user) return res.status(401).send({ error: "User not found" });
     if (user.role !== "trainer") {
       return res.status(400).send({
@@ -40,7 +42,6 @@ coursesRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
       maxClients: req.body.maxClients,
     };
     const newCourse = await Course.create(courseMutation);
-
     return res.status(200).send(newCourse);
   } catch (error) {
     return next(error);
