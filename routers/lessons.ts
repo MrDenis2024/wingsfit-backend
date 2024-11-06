@@ -14,22 +14,20 @@ lessonsRouter.get("/:id", async (req, res, next) => {
     try {
         const id = req.params.id;
 
-        if(id === null){
-            return res.status(404).send({error: 'Id not found'});
-        }
-
         if(!mongoose.isValidObjectId(id)){
-            return res.status(401).send({error: 'Id is required'});
+            return res.status(401).send({error: 'Id wrong'});
         }
 
         const oneLesson = await Lessons.findById(id);
+
+        if(oneLesson === null){
+            return res.status(404).send({error: 'Lesson not found'});
+        }
+
         return res.status(200).send(oneLesson);
     }catch (e) {
         next(e)
     }
-
-
-
 })
 
 lessonsRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
