@@ -99,24 +99,28 @@ usersRouter.post("/google", async (req, res, next) => {
   }
 });
 
-usersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
-  try {
-    const user = req.user;
+usersRouter.patch(
+  "/lastActivity",
+  auth,
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const user = req.user;
 
-    if (!user) {
-      return res.status(401).send({ error: "User not found!" });
+      if (!user) {
+        return res.status(401).send({ error: "User not found!" });
+      }
+
+      user.lastActivity = new Date();
+      await user.save();
+
+      return res
+        .status(200)
+        .send({ message: "Last activity updated successfully!" });
+    } catch (error) {
+      return next(error);
     }
-
-    user.lastActivity = new Date();
-    await user.save();
-
-    return res
-      .status(200)
-      .send({ message: "Last activity updated successfully!" });
-  } catch (error) {
-    return next(error);
-  }
-});
+  },
+);
 
 usersRouter.delete("/sessions", async (req, res, next) => {
   try {

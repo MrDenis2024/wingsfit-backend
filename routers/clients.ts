@@ -12,7 +12,7 @@ clientsRouter.get("/", async (_req, res, next) => {
     const clients = await Client.find();
     return res.send(clients);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -46,7 +46,7 @@ clientsRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
 
     return res.status(200).send(client);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 

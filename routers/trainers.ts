@@ -7,9 +7,13 @@ import mongoose from "mongoose";
 
 const trainersRouter = express.Router();
 
-trainersRouter.get("/", async (_req, res) => {
-  const allTrainers = await Trainer.find();
-  return res.status(200).send(allTrainers);
+trainersRouter.get("/", async (_req, res, next) => {
+  try {
+    const allTrainers = await Trainer.find();
+    return res.status(200).send(allTrainers);
+  } catch (error) {
+    return next(error);
+  }
 });
 
 trainersRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
@@ -42,8 +46,8 @@ trainersRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
     }
 
     return res.status(200).send(trainer);
-  } catch (e) {
-    return next();
+  } catch (error) {
+    return next(error);
   }
 });
 trainersRouter.post(
