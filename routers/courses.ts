@@ -9,10 +9,14 @@ coursesRouter.get("/", async (req, res) => {
   return res.status(200).send(allCourses);
 });
 
-coursesRouter.get("/:id", async (req, res) => {
-  const id = req.params.id;
-  const course = await Course.findById(id);
-  return res.status(200).send(course);
+coursesRouter.get("/:id", async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const course = await Course.findById(id);
+    return res.status(200).send(course);
+  } catch (error) {
+    return next(error);
+  }
 });
 coursesRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
   try {

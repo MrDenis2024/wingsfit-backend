@@ -7,7 +7,6 @@ import clientsRouter from "./routers/clients";
 import trainersRouter from "./routers/trainers";
 import coursesRouter from "./routers/courses";
 
-
 const app = express();
 const port = 8000;
 
