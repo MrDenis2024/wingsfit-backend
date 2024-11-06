@@ -18,7 +18,7 @@ trainersRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
 
     if (!user) return res.status(401).send({ error: "User not found" });
     if (!mongoose.isValidObjectId(req.params.id))
-      return res.status(400).send({ error: "Invalid client ID" });
+      return res.status(400).send({ error: "Invalid trainer ID" });
 
     const trainer = await Trainer.findOne({
       _id: req.params.id,
