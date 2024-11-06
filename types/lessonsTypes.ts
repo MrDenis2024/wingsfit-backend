@@ -6,7 +6,8 @@ export interface LessonsTypes{
     timeZone: string;
     groupLevel: number;
     quantityClients: number;
+    ageLimit: number;
     description: string;
     participants: Types.ObjectId[];
-    presences: Types.ObjectId[];
+    presentUser: Types.ObjectId[];
 }
