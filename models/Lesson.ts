@@ -41,5 +41,5 @@ const LessonSchema = new Schema<LessonsTypes>({
     }
 })
 
-const Lessons = mongoose.model("Lessons", LessonSchema);
-export default Lessons;
+const Lesson = mongoose.model("Lesson", LessonSchema);
+export default Lesson;

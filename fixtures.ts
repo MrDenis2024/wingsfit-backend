@@ -4,7 +4,7 @@ import User from "./models/User";
 import Trainer from "./models/Trainer";
 import Client from "./models/Client";
 import Course from "./models/Course";
-import Lessons from "./models/Lessons";
+import Lesson from "./models/Lesson";
 
 const run = async () => {
   await mongoose.connect(config.database);
@@ -97,7 +97,7 @@ const run = async () => {
     return console.log('Course not found')
   }
 
-  await Lessons.create({
+  await Lesson.create({
     course: course._id,
     title: "Advanced Training",
     quantityClients: 10,
