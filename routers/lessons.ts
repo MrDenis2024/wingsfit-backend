@@ -1,6 +1,7 @@
 import express from "express";
 import Lessons from "../models/Lessons";
 import auth, {RequestWithUser} from "../middleware/auth";
+import mongoose from "mongoose";
 
 const lessonsRouter = express.Router();
 
@@ -9,10 +10,26 @@ lessonsRouter.get("/",async (req, res) => {
     return res.status(200).send(allLessons)
 })
 
-lessonsRouter.get("/:id", async (req, res) => {
-    const id = req.params.id;
-    const oneLesson = await Lessons.findById(id);
-    return res.status(200).send(oneLesson);
+lessonsRouter.get("/:id", async (req, res, next) => {
+    try {
+        const id = req.params.id;
+
+        if(id === null){
+            return res.status(404).send({error: 'Id not found'});
+        }
+
+        if(!mongoose.isValidObjectId(id)){
+            return res.status(401).send({error: 'Id is required'});
+        }
+
+        const oneLesson = await Lessons.findById(id);
+        return res.status(200).send(oneLesson);
+    }catch (e) {
+        next(e)
+    }
+
+
+
 })
 
 lessonsRouter.post("/", auth, async (req: RequestWithUser, res, next) => {

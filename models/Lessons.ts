@@ -33,9 +33,11 @@ const LessonSchema = new Schema<LessonsTypes>({
     },
     participants:{
         type: [mongoose.Schema.Types.ObjectId],
+        ref: "Users",
     },
     presentUser:{
         type: [mongoose.Schema.Types.ObjectId],
+        ref: "Users",
     }
 })
 
