@@ -3,6 +3,8 @@ import config from "./config";
 import User from "./models/User";
 import Trainer from "./models/Trainer";
 import Client from "./models/Client";
+import Course from "./models/Course";
+import Lesson from "./models/Lesson";
 
 const run = async () => {
   await mongoose.connect(config.database);
@@ -11,6 +13,8 @@ const run = async () => {
     await db.dropCollection("trainers");
     await db.dropCollection("clients");
     await db.dropCollection("users");
+    await db.dropCollection("courses");
+    await db.dropCollection("lessons");
   } catch (err) {
     console.log("skipping drop");
   }
@@ -62,6 +66,46 @@ const run = async () => {
     trainingLevel: "beginner",
     physicalData: "Injury in left leg",
   });
+
+  const courses = [
+    {
+      title: "Yoga Basics",
+      description: "An introductory course on yoga.",
+      format: "group",
+      schedule: "Monday, Wednesday, Friday",
+      scheduleLength: "1h",
+      price: 150,
+      maxClients: 10,
+      user: trainerUser._id
+    },
+    {
+      title: "Advanced Pilates",
+      description: "For experienced practitioners.",
+      format: "single",
+      schedule: "Tuesday, Thursday",
+      scheduleLength: "1.5h",
+      price: 200,
+      maxClients: 5,
+      user: trainerUser._id
+    }
+  ];
+  await Course.create(courses);
+
+  const course = await Course.findOne({ title: "Yoga Basics" });
+
+  if(!course){
+    return console.log('Course not found')
+  }
+
+  await Lesson.create({
+    course: course._id,
+    title: "Advanced Training",
+    quantityClients: 10,
+    timeZone: "+4 GTM",
+    groupLevel: 2,
+    ageLimit: 21,
+    description: "A session for advanced practitioners.",
+  })
 
   await db.close();
 };
