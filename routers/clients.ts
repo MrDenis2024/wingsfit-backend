@@ -182,7 +182,6 @@ clientsRouter.put(
           lastName: req.body.lastName,
           phoneNumber: req.body.phoneNumber,
           avatar: req.file ? req.file.filename : null,
-          createdAt: new Date(),
           updatedAt: new Date(),
           lastActivity: new Date(),
         },
