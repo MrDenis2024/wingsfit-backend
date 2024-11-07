@@ -2,18 +2,53 @@ import express from "express";
 import Trainer from "../models/Trainer";
 import auth, { RequestWithUser } from "../middleware/auth";
 import { imagesUpload } from "../multer";
+import User from "../models/User";
+import mongoose from "mongoose";
 
 const trainersRouter = express.Router();
 
-trainersRouter.get("/", async (req, res) => {
-  const allTrainers = await Trainer.find();
-  return res.status(200).send(allTrainers);
+trainersRouter.get("/", async (_req, res, next) => {
+  try {
+    const allTrainers = await Trainer.find();
+    return res.status(200).send(allTrainers);
+  } catch (error) {
+    return next(error);
+  }
 });
 
-trainersRouter.get("/:id", async (req, res) => {
-  const id = req.params.id;
-  const allTrainers = await Trainer.findById(id);
-  return res.status(200).send(allTrainers);
+trainersRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
+  try {
+    const user = req.user;
+
+    if (!user) return res.status(401).send({ error: "User not found" });
+    if (!mongoose.isValidObjectId(req.params.id))
+      return res.status(400).send({ error: "Invalid trainer ID" });
+
+    const trainer = await Trainer.findOne({
+      _id: req.params.id,
+      user,
+    });
+
+    if (!trainer) {
+      return res.status(400).send({ error: "Trainer not found" });
+    }
+
+    if (user._id.equals(trainer.user)) {
+      await trainer.populate(
+        "user",
+        "email firstName lastName role token phoneNumber notification avatar createdAt updatedAt lastActivity",
+      );
+    } else {
+      await trainer.populate(
+        "user",
+        "email firstName lastName role phoneNumber avatar createdAt updatedAt lastActivity",
+      );
+    }
+
+    return res.status(200).send(trainer);
+  } catch (error) {
+    return next(error);
+  }
 });
 trainersRouter.post(
   "/",
@@ -31,48 +66,130 @@ trainersRouter.post(
         });
       }
 
+      if (
+        !req.body.firstName ||
+        !req.body.lastName ||
+        !req.body.timeZone ||
+        !req.body.courseTypes
+      ) {
+        return res
+          .status(400)
+          .send({ error: "The required fields must be filled in!" });
+      }
+
+      await User.findOneAndUpdate(
+        { _id: user },
+        {
+          firstName: req.body.firstName,
+          lastName: req.body.lastName,
+          phoneNumber: req.body.phoneNumber,
+          avatar: req.file ? req.file.filename : null,
+          updatedAt: new Date(),
+          lastActivity: new Date(),
+        },
+        { new: true },
+      );
+
+      if (req.body.notification === "true") {
+        await User.findOneAndUpdate({ _id: user }, { notification: true });
+      } else if (req.body.notification === "false") {
+        await User.findOneAndUpdate({ _id: user }, { notification: false });
+      }
+
       const trainerMutation = {
-        user: user._id,
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        courseTypes: JSON.parse(req.body.courseTypes) as string[],
+        user,
         timeZone: req.body.timeZone,
-        avatar: req.file ? req.file.filename : null,
+        courseTypes: req.body.courseTypes,
+        specialization: req.body.specialization,
+        experience: req.body.experience,
+        certificates: req.body.certificates,
+        description: req.body.description,
+        availableDays: req.body.availableDays,
       };
+
       const trainer = await Trainer.create(trainerMutation);
+      await trainer.populate(
+        "user",
+        "_id email firstName lastName role token phoneNumber notification avatar createdAt updatedAt lastActivity",
+      );
 
       return res.status(200).send(trainer);
     } catch (error) {
+      if (error instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send(error);
+      }
+
       return next(error);
     }
   },
 );
 
-trainersRouter.put("/:id", auth, async (req: RequestWithUser, res, next) => {
+trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
   try {
-    const trainerId = req.params.id;
     const user = req.user;
 
     if (!user) return res.status(401).send({ error: "User not found" });
 
-    const trainer = await Trainer.findById(trainerId);
+    if (
+      !req.body.firstName ||
+      !req.body.lastName ||
+      !req.body.timeZone ||
+      !req.body.courseTypes
+    ) {
+      return res
+        .status(400)
+        .send({ error: "The required fields must be filled in!" });
+    }
+
+    const trainer = await Trainer.findOneAndUpdate(
+      { user },
+      {
+        timeZone: req.body.timeZone,
+        courseTypes: req.body.courseTypes,
+        specialization: req.body.specialization,
+        experience: req.body.experience,
+        certificates: req.body.certificates,
+        description: req.body.description,
+        availableDays: req.body.availableDays,
+      },
+      { new: true },
+    );
+
     if (!trainer) {
       return res.status(404).send({ error: "Trainer not found" });
     }
 
-    if (trainer.user.toString() !== user._id.toString()) {
-      return res
-        .status(403)
-        .send({ error: "You do not have the rights to change this profile" });
-    }
-    const updatedTrainer = await Trainer.findByIdAndUpdate(
-      trainerId,
-      req.body,
+    await User.findOneAndUpdate(
+      { _id: user },
+      {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        phoneNumber: req.body.phoneNumber,
+        avatar: req.file ? req.file.filename : null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastActivity: new Date(),
+      },
       { new: true },
     );
 
-    return res.status(200).send(updatedTrainer);
+    if (req.body.notification === "true") {
+      await User.findOneAndUpdate({ _id: user }, { notification: true });
+    } else if (req.body.notification === "false") {
+      await User.findOneAndUpdate({ _id: user }, { notification: false });
+    }
+
+    await trainer.populate(
+      "user",
+      "_id email firstName lastName role token phoneNumber notification avatar createdAt updatedAt lastActivity",
+    );
+
+    return res.status(200).send(trainer);
   } catch (error) {
+    if (error instanceof mongoose.Error.ValidationError) {
+      return res.status(400).send(error);
+    }
+
     return next(error);
   }
 });

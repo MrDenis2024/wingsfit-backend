@@ -3,9 +3,19 @@ import User from "../models/User";
 import config from "../config";
 import { OAuth2Client } from "google-auth-library";
 import mongoose from "mongoose";
+import auth, { RequestWithUser } from "../middleware/auth";
 
 const usersRouter = express.Router();
 const googleClient = new OAuth2Client(config.google.clientId);
+
+usersRouter.get("/", async (_req, res, next) => {
+  try {
+    const users = await User.find();
+    return res.status(200).send(users);
+  } catch (error) {
+    return next(error);
+  }
+});
 
 usersRouter.post("/", async (req, res, next) => {
   try {
@@ -88,6 +98,30 @@ usersRouter.post("/google", async (req, res, next) => {
     return next(error);
   }
 });
+
+usersRouter.patch(
+  "/lastActivity",
+  auth,
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const user = req.user;
+
+      if (!user) {
+        return res.status(401).send({ error: "User not found!" });
+      }
+
+      user.lastActivity = new Date();
+      await user.save();
+
+      return res
+        .status(200)
+        .send({ message: "Last activity updated successfully!" });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
 usersRouter.delete("/sessions", async (req, res, next) => {
   try {
     const headerValue = req.get("Authorization");

@@ -30,10 +30,10 @@ const UserSchema = new Schema<
       ],
       validate: {
         validator: async function (value: string): Promise<boolean> {
-          if (!(this as HydratedDocument<UserFields>).isModified("username")) {
+          if (!(this as HydratedDocument<UserFields>).isModified("email")) {
             return true;
           }
-          const user = await User.findOne({ username: value });
+          const user = await User.findOne({ email: value });
           return !user;
         },
         message: "This user is already registered!",
