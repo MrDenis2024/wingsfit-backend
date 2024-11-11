@@ -12,6 +12,11 @@ const SALT_WORK_FACTOR = 10;
 
 const Schema = mongoose.Schema;
 
+const TimeZoneSchema = new Schema({
+   value: String,
+   offset: Number,
+});
+
 const UserSchema = new Schema<
   UserFields,
   UserModel,
@@ -22,7 +27,6 @@ const UserSchema = new Schema<
   {
     email: {
       type: String,
-      required: true,
       unique: true,
       match: [
         /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,5})+$/,
@@ -39,6 +43,7 @@ const UserSchema = new Schema<
         message: "This user is already registered!",
       },
     },
+    userName: String,
     password: {
       type: String,
       required: true,
@@ -49,11 +54,17 @@ const UserSchema = new Schema<
     role: {
       type: String,
       required: true,
-      enum: ["client", "trainer"],
+      enum: ["client", "trainer", "admin", "superAdmin"],
     },
     firstName: String,
     lastName: String,
     phoneNumber: String,
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+    },
+    timeZone: TimeZoneSchema,
+    dateOfBirth: Date,
     avatar: String,
     notification: {
       type: Boolean,
