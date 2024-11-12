@@ -5,6 +5,7 @@ import Trainer from "./models/Trainer";
 import Client from "./models/Client";
 import Course from "./models/Course";
 import Lesson from "./models/Lesson";
+import LessonType from "./models/LessonType";
 
 const run = async () => {
   await mongoose.connect(config.database);
@@ -15,6 +16,7 @@ const run = async () => {
     await db.dropCollection("users");
     await db.dropCollection("courses");
     await db.dropCollection("lessons");
+    await db.dropCollection("lessontypes");
   } catch (err) {
     console.log("skipping drop");
   }
@@ -24,6 +26,12 @@ const run = async () => {
     password: "test",
     confirmPassword: "test",
     role: "trainer",
+    timeZone: {
+      value: "asd",
+      offset: "+6",
+    },
+    gender: "male",
+    dateOfBirth: new Date("1990-11-15"),
     firstName: "Vasya",
     lastName: "Pupkin",
     phoneNumber: "1234567890",
@@ -35,7 +43,6 @@ const run = async () => {
   await Trainer.create({
     user: trainerUser._id,
     courseTypes: ["rumba", "tango", "lambada"],
-    timeZone: "UTC+6",
     specialization: "Dance",
     experience: "5 years",
     certificates: "Certified Dance Instructor",
@@ -48,6 +55,12 @@ const run = async () => {
     password: "test",
     confirmPassword: "test",
     role: "client",
+    gender: "other",
+    timeZone: {
+      value: "asd",
+      offset: "+6",
+    },
+    dateOfBirth: new Date("1995-05-15"),
     firstName: "Jane",
     lastName: "Doe",
     phoneNumber: "1122334455",
@@ -58,9 +71,6 @@ const run = async () => {
 
   await Client.create({
     user: clientUser._id,
-    timeZone: "UTC+6",
-    gender: "another",
-    dateOfBirth: new Date("1995-05-15"),
     subscribes: [],
     preferredWorkoutType: "yoga",
     trainingLevel: "beginner",
@@ -106,7 +116,16 @@ const run = async () => {
     ageLimit: 21,
     description: "A session for advanced practitioners.",
   });
-
+  await LessonType.create({
+    name: "Yoga",
+    description: "An introductory course on yoga.",
+    isPublished: false,
+  }, {
+    name: "Fitness",
+    description: "An introductory course on fitness.",
+    isPublished: false,
+  });
+  
   await db.close();
 };
 

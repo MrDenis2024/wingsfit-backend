@@ -24,20 +24,8 @@ const ClientSchema = new Schema<ClientTypes>({
       message: "User does not exist!",
     },
   },
-  gender: {
-    type: String,
-    enum: ["female", "male", "another"],
-    required: true,
-  },
-  dateOfBirth: {
-    type: Date,
-  },
   subscribes: {
     type: [Schema.Types.ObjectId],
-  },
-  timeZone: {
-    type: String,
-    required: true,
   },
   preferredWorkoutType: String,
   trainingLevel: String,

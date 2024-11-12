@@ -35,12 +35,12 @@ clientsRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
     if (user._id.equals(client.user)) {
       await client.populate(
         "user",
-        "email firstName lastName role phoneNumber notification avatar createdAt updatedAt lastActivity",
+        "email firstName lastName role phoneNumber gender timeZone dateOfBirth notification avatar createdAt updatedAt lastActivity",
       );
     } else {
       await client.populate(
         "user",
-        "email firstName lastName role phoneNumber avatar createdAt updatedAt lastActivity",
+        "email firstName lastName role phoneNumber gender timeZone dateOfBirth avatar createdAt updatedAt lastActivity",
       );
     }
 
@@ -83,12 +83,17 @@ clientsRouter.post(
           firstName: req.body.firstName,
           lastName: req.body.lastName,
           phoneNumber: req.body.phoneNumber,
+          gender: req.body.gender,
+          timeZone: req.body.timeZone,
+          dateOfBirth: req.body.dateOfBirth
+            ? new Date(req.body.dateOfBirth)
+            : null,
           avatar: req.file ? req.file.filename : null,
           createdAt: new Date(),
           updatedAt: new Date(),
           lastActivity: new Date(),
         },
-        { new: true },
+        { new: true, runValidators: true },
       );
 
       if (req.body.notification === "true") {
@@ -99,10 +104,7 @@ clientsRouter.post(
 
       const clientMutation = {
         user,
-        timeZone: req.body.timeZone,
         physicalData: req.body.physicalData,
-        gender: req.body.gender,
-        dateOfBirth: new Date(req.body.dateOfBirth),
         preferredWorkoutType: req.body.preferredWorkoutType,
         trainingLevel: req.body.trainingLevel,
       };
@@ -110,7 +112,7 @@ clientsRouter.post(
       const client = await Client.create(clientMutation);
       await client.populate(
         "user",
-        "_id email firstName lastName role token phoneNumber notification avatar createdAt updatedAt lastActivity",
+        "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar",
       );
 
       return res.status(200).send(client);
@@ -148,8 +150,6 @@ clientsRouter.put(
       const client = await Client.findOneAndUpdate(
         { user },
         {
-          gender: req.body.gender,
-          timeZone: req.body.timeZone,
           preferredWorkoutType: req.body.preferredWorkoutType,
           trainingLevel: req.body.trainingLevel,
           physicalData: req.body.physicalData,
@@ -161,23 +161,14 @@ clientsRouter.put(
         return res.status(404).send({ error: "Client not found" });
       }
 
-      const dateOfBirth = new Date(req.body.dateOfBirth);
-
-      if (dateOfBirth.toDateString() !== "Invalid Date") {
-        const updatedDateOfBirth = await Client.findOneAndUpdate(
-          { user },
-          { dateOfBirth },
-          { new: true },
-        );
-
-        if (updatedDateOfBirth) {
-          client.dateOfBirth = updatedDateOfBirth.dateOfBirth;
-        }
-      }
-
       await User.findOneAndUpdate(
         { _id: user },
         {
+          gender: req.body.gender,
+          timeZone: req.body.timeZone,
+          dateOfBirth: req.body.dateOfBirth
+            ? new Date(req.body.dateOfBirth)
+            : null,
           firstName: req.body.firstName,
           lastName: req.body.lastName,
           phoneNumber: req.body.phoneNumber,
@@ -185,7 +176,7 @@ clientsRouter.put(
           updatedAt: new Date(),
           lastActivity: new Date(),
         },
-        { new: true },
+        { new: true, runValidators: true },
       );
 
       if (req.body.notification === "true") {
@@ -196,7 +187,7 @@ clientsRouter.put(
 
       await client.populate(
         "user",
-        "_id email firstName lastName role token phoneNumber notification avatar createdAt updatedAt lastActivity",
+        "_id email firstName lastName role token gender timeZone dateOfBirth phoneNumber notification avatar",
       );
 
       return res.status(200).send(client);
