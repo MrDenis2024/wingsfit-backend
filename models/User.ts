@@ -13,8 +13,8 @@ const SALT_WORK_FACTOR = 10;
 const Schema = mongoose.Schema;
 
 const TimeZoneSchema = new Schema({
-   value: String,
-   offset: Number,
+  value: String,
+  offset: Number,
 });
 
 const UserSchema = new Schema<

@@ -18,7 +18,7 @@ app.use("/users", usersRouter);
 app.use("/clients", clientsRouter);
 app.use("/trainers", trainersRouter);
 app.use("/course", coursesRouter);
-app.use("/lessons", lessonsRouter)
+app.use("/lessons", lessonsRouter);
 
 const run = async () => {
   await mongoose.connect(config.database);
