@@ -76,7 +76,7 @@ const run = async () => {
       scheduleLength: "1h",
       price: 150,
       maxClients: 10,
-      user: trainerUser._id
+      user: trainerUser._id,
     },
     {
       title: "Advanced Pilates",
@@ -86,15 +86,15 @@ const run = async () => {
       scheduleLength: "1.5h",
       price: 200,
       maxClients: 5,
-      user: trainerUser._id
-    }
+      user: trainerUser._id,
+    },
   ];
   await Course.create(courses);
 
   const course = await Course.findOne({ title: "Yoga Basics" });
 
-  if(!course){
-    return console.log('Course not found')
+  if (!course) {
+    return console.log("Course not found");
   }
 
   await Lesson.create({
@@ -105,7 +105,7 @@ const run = async () => {
     groupLevel: 2,
     ageLimit: 21,
     description: "A session for advanced practitioners.",
-  })
+  });
 
   await db.close();
 };
