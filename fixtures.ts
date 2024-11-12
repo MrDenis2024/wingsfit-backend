@@ -105,6 +105,7 @@ const run = async () => {
     quantityClients: 10,
     timeZone: "+4 GTM",
     groupLevel: 2,
+    participants:[clientUser?._id],
     ageLimit: 21,
     description: "A session for advanced practitioners.",
   });
