@@ -18,10 +18,6 @@ const TrainerSchema = new Schema<TrainerTypes>({
       message: "There can only be one role",
     },
   },
-  timeZone: {
-    type: String,
-    required: true,
-  },
   courseTypes: {
     type: [String],
     required: true,

@@ -3,14 +3,21 @@ import { Model } from "mongoose";
 export interface UserFields {
   email: string;
   password: string;
+  userName: string;
   role: string;
   token: string;
   googleId?: string;
   __confirmPassword: string;
   firstName: string;
   lastName: string;
+  gender: string;
+  timeZone: {
+    value: string;
+    offset: string;
+  };
   phoneNumber?: string;
   avatar: string;
+  dateOfBirth: Date;
   notification?: boolean;
   createdAt: Date;
   updatedAt: Date;

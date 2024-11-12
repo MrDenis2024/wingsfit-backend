@@ -36,12 +36,12 @@ trainersRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
     if (user._id.equals(trainer.user)) {
       await trainer.populate(
         "user",
-        "email firstName lastName role token phoneNumber notification avatar createdAt updatedAt lastActivity",
+        "email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar createdAt updatedAt lastActivity",
       );
     } else {
       await trainer.populate(
         "user",
-        "email firstName lastName role phoneNumber avatar createdAt updatedAt lastActivity",
+        "email firstName lastName role phoneNumber gender timeZone dateOfBirth avatar createdAt updatedAt lastActivity",
       );
     }
 
@@ -50,6 +50,7 @@ trainersRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
     return next(error);
   }
 });
+
 trainersRouter.post(
   "/",
   auth,
@@ -70,7 +71,8 @@ trainersRouter.post(
         !req.body.firstName ||
         !req.body.lastName ||
         !req.body.timeZone ||
-        !req.body.courseTypes
+        !req.body.courseTypes ||
+        !req.body.gender
       ) {
         return res
           .status(400)
@@ -83,11 +85,16 @@ trainersRouter.post(
           firstName: req.body.firstName,
           lastName: req.body.lastName,
           phoneNumber: req.body.phoneNumber,
+          timeZone: req.body.timeZone,
+          gender: req.body.gender,
+          dateOfBirth: req.body.dateOfBirth
+            ? new Date(req.body.dateOfBirth)
+            : null,
           avatar: req.file ? req.file.filename : null,
           updatedAt: new Date(),
           lastActivity: new Date(),
         },
-        { new: true },
+        { new: true, runValidators: true },
       );
 
       if (req.body.notification === "true") {
@@ -98,7 +105,6 @@ trainersRouter.post(
 
       const trainerMutation = {
         user,
-        timeZone: req.body.timeZone,
         courseTypes: req.body.courseTypes,
         specialization: req.body.specialization,
         experience: req.body.experience,
@@ -110,7 +116,7 @@ trainersRouter.post(
       const trainer = await Trainer.create(trainerMutation);
       await trainer.populate(
         "user",
-        "_id email firstName lastName role token phoneNumber notification avatar createdAt updatedAt lastActivity",
+        "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar",
       );
 
       return res.status(200).send(trainer);
@@ -134,7 +140,8 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
       !req.body.firstName ||
       !req.body.lastName ||
       !req.body.timeZone ||
-      !req.body.courseTypes
+      !req.body.courseTypes ||
+      !req.body.gender
     ) {
       return res
         .status(400)
@@ -144,7 +151,6 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
     const trainer = await Trainer.findOneAndUpdate(
       { user },
       {
-        timeZone: req.body.timeZone,
         courseTypes: req.body.courseTypes,
         specialization: req.body.specialization,
         experience: req.body.experience,
@@ -165,12 +171,17 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         phoneNumber: req.body.phoneNumber,
+        timeZone: req.body.timeZone,
+        gender: req.body.gender,
+        dateOfBirth: req.body.dateOfBirth
+          ? new Date(req.body.dateOfBirth)
+          : null,
         avatar: req.file ? req.file.filename : null,
         createdAt: new Date(),
         updatedAt: new Date(),
         lastActivity: new Date(),
       },
-      { new: true },
+      { new: true, runValidators: true },
     );
 
     if (req.body.notification === "true") {
@@ -181,7 +192,7 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
 
     await trainer.populate(
       "user",
-      "_id email firstName lastName role token phoneNumber notification avatar createdAt updatedAt lastActivity",
+      "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar",
     );
 
     return res.status(200).send(trainer);
