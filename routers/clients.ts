@@ -112,7 +112,7 @@ clientsRouter.post(
       const client = await Client.create(clientMutation);
       await client.populate(
         "user",
-        "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar createdAt updatedAt lastActivity",
+        "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar",
       );
 
       return res.status(200).send(client);
@@ -187,7 +187,7 @@ clientsRouter.put(
 
       await client.populate(
         "user",
-        "_id email firstName lastName role token gender timeZone dateOfBirth phoneNumber notification avatar createdAt updatedAt lastActivity",
+        "_id email firstName lastName role token gender timeZone dateOfBirth phoneNumber notification avatar",
       );
 
       return res.status(200).send(client);

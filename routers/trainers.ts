@@ -116,7 +116,7 @@ trainersRouter.post(
       const trainer = await Trainer.create(trainerMutation);
       await trainer.populate(
         "user",
-        "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar createdAt updatedAt lastActivity",
+        "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar",
       );
 
       return res.status(200).send(trainer);
@@ -192,7 +192,7 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
 
     await trainer.populate(
       "user",
-      "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar createdAt updatedAt lastActivity",
+      "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar",
     );
 
     return res.status(200).send(trainer);
