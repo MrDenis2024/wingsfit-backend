@@ -22,6 +22,7 @@ app.use("/clients", clientsRouter);
 app.use("/trainers", trainersRouter);
 app.use("/course", coursesRouter);
 app.use("/lessons", lessonsRouter);
+
 app.use("/lessonType", lessonTypeRouter);
 app.use("/review", trainerReviewRouter);
 

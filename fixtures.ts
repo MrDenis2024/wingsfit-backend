@@ -120,6 +120,7 @@ const run = async () => {
     description: "A session for advanced practitioners.",
   });
 
+
   await LessonType.create(
     {
       name: "Yoga",
