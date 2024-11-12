@@ -14,7 +14,7 @@ const Schema = mongoose.Schema;
 
 const TimeZoneSchema = new Schema({
   value: String,
-  offset: Number,
+  offset: String,
 });
 
 const UserSchema = new Schema<
