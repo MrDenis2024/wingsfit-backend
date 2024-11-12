@@ -71,7 +71,8 @@ trainersRouter.post(
         !req.body.firstName ||
         !req.body.lastName ||
         !req.body.timeZone ||
-        !req.body.courseTypes || !req.body.gender
+        !req.body.courseTypes ||
+        !req.body.gender
       ) {
         return res
           .status(400)
@@ -86,7 +87,9 @@ trainersRouter.post(
           phoneNumber: req.body.phoneNumber,
           timeZone: req.body.timeZone,
           gender: req.body.gender,
-          dateOfBirth: req.body.dateOfBirth ? new Date(req.body.dateOfBirth) : null,
+          dateOfBirth: req.body.dateOfBirth
+            ? new Date(req.body.dateOfBirth)
+            : null,
           avatar: req.file ? req.file.filename : null,
           updatedAt: new Date(),
           lastActivity: new Date(),
@@ -137,7 +140,8 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
       !req.body.firstName ||
       !req.body.lastName ||
       !req.body.timeZone ||
-      !req.body.courseTypes || !req.body.gender
+      !req.body.courseTypes ||
+      !req.body.gender
     ) {
       return res
         .status(400)
@@ -169,7 +173,9 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
         phoneNumber: req.body.phoneNumber,
         timeZone: req.body.timeZone,
         gender: req.body.gender,
-        dateOfBirth: req.body.dateOfBirth ? new Date(req.body.dateOfBirth) : null,
+        dateOfBirth: req.body.dateOfBirth
+          ? new Date(req.body.dateOfBirth)
+          : null,
         avatar: req.file ? req.file.filename : null,
         createdAt: new Date(),
         updatedAt: new Date(),

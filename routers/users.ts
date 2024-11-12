@@ -20,8 +20,8 @@ usersRouter.get("/", async (_req, res, next) => {
 usersRouter.post("/", async (req, res, next) => {
   try {
     const role = req.query.role as string;
-    if(!req.body.email) {
-      return res.status(400).send({error: "Email is required"});
+    if (!req.body.email) {
+      return res.status(400).send({ error: "Email is required" });
     }
 
     if (!role || (role !== "client" && role !== "trainer")) {

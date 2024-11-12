@@ -85,7 +85,9 @@ clientsRouter.post(
           phoneNumber: req.body.phoneNumber,
           gender: req.body.gender,
           timeZone: req.body.timeZone,
-          dateOfBirth: req.body.dateOfBirth?  new Date(req.body.dateOfBirth) : null,
+          dateOfBirth: req.body.dateOfBirth
+            ? new Date(req.body.dateOfBirth)
+            : null,
           avatar: req.file ? req.file.filename : null,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -110,7 +112,7 @@ clientsRouter.post(
       const client = await Client.create(clientMutation);
       await client.populate(
         "user",
-        "_id email firstName lastName role token phoneNumber gender dateOfBirth notification avatar createdAt updatedAt lastActivity",
+        "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar createdAt updatedAt lastActivity",
       );
 
       return res.status(200).send(client);
@@ -164,7 +166,9 @@ clientsRouter.put(
         {
           gender: req.body.gender,
           timeZone: req.body.timeZone,
-          dateOfBirth: req.body.dateOfBirth ? new Date(req.body.dateOfBirth) : null,
+          dateOfBirth: req.body.dateOfBirth
+            ? new Date(req.body.dateOfBirth)
+            : null,
           firstName: req.body.firstName,
           lastName: req.body.lastName,
           phoneNumber: req.body.phoneNumber,
@@ -183,7 +187,7 @@ clientsRouter.put(
 
       await client.populate(
         "user",
-        "_id email firstName lastName role token gender dateOfBirth phoneNumber notification avatar createdAt updatedAt lastActivity",
+        "_id email firstName lastName role token gender timeZone dateOfBirth phoneNumber notification avatar createdAt updatedAt lastActivity",
       );
 
       return res.status(200).send(client);
