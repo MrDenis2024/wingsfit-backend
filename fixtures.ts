@@ -115,32 +115,40 @@ const run = async () => {
     quantityClients: 10,
     timeZone: "+4 GTM",
     groupLevel: 2,
-    participants:[clientUser?._id],
+    participants: [clientUser?._id],
     ageLimit: 21,
     description: "A session for advanced practitioners.",
   });
 
-  await LessonType.create({
-    name: "Yoga",
-    description: "An introductory course on yoga.",
-    isPublished: false,
-  }, {
-    name: "Fitness",
-    description: "An introductory course on fitness.",
-    isPublished: false,
-  });
+  await LessonType.create(
+    {
+      name: "Yoga",
+      description: "An introductory course on yoga.",
+      isPublished: false,
+    },
+    {
+      name: "Fitness",
+      description: "An introductory course on fitness.",
+      isPublished: false,
+    },
+  );
 
-  await TrainerReview.create({
-    clientId: clientUser._id,
-    trainerId: trainerUser._id,
-    rating: 4,
-    comment: "The coach is just wonderful! Classes are always held at a high level, the coach explains the material clearly and accessible. Thanks to his approach, I quickly improved my results. I highly recommend it!"
-  },{
-    clientId: clientUser._id,
-    trainerId: trainerUser._id,
-    rating: 5,
-    comment: "The coach explains the basic exercises well, but I would like to pay more attention to technique and individual characteristics. In general, classes are useful, but there are places for improvement."
-  })
+  await TrainerReview.create(
+    {
+      clientId: clientUser._id,
+      trainerId: trainerUser._id,
+      rating: 4,
+      comment:
+        "The coach is just wonderful! Classes are always held at a high level, the coach explains the material clearly and accessible. Thanks to his approach, I quickly improved my results. I highly recommend it!",
+    },
+    {
+      clientId: clientUser._id,
+      trainerId: trainerUser._id,
+      rating: 5,
+      comment:
+        "The coach explains the basic exercises well, but I would like to pay more attention to technique and individual characteristics. In general, classes are useful, but there are places for improvement.",
+    },
+  );
 
   await db.close();
 };
