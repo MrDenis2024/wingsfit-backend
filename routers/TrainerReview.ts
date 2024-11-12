@@ -4,6 +4,7 @@ import auth, {RequestWithUser} from "../middleware/auth";
 import Course from "../models/Course";
 import Lesson from "../models/Lesson";
 import {Types} from "mongoose";
+import User from "../models/User";
 
 export const trainerReviewRouter = express.Router();
 
@@ -32,6 +33,10 @@ trainerReviewRouter.post("/", auth ,async (req: RequestWithUser, res, next) => {
     try {
         if (!(clientId instanceof Types.ObjectId)) {
             return res.status(400).json({ error: 'Invalid Client ID.' });
+        }
+        const isTrainer = await User.findById(trainerId);
+        if (!isTrainer || isTrainer.role !== "trainer") {
+            return res.status(404).json({ error: 'Trainer ID is wrong or user is not a trainer' });
         }
 
         const course = await Course.findOne({ user: trainerId });
