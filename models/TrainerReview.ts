@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
+import {ReviewTypes} from "../types/reviewTypes";
 
 const Schema = mongoose.Schema;
 
-const TrainerReviewSchema = new Schema({
+const TrainerReviewSchema = new Schema<ReviewTypes>({
     clientId:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
