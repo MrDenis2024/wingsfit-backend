@@ -9,39 +9,42 @@ import TrainerReview from "../models/TrainerReview";
 
 const trainersRouter = express.Router();
 
-trainersRouter.get("/", auth ,async (req: RequestWithUser, res, next) => {
+trainersRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
   try {
-      const clientId = req.user?._id;
-      const findClient = await Client.findOne({user:clientId})
+    const clientId = req.user?._id;
+    const findClient = await Client.findOne({ user: clientId });
 
-      if (!findClient) {
-          return res.status(404).send({ message: "Client not found" });
+    if (!findClient) {
+      return res.status(404).send({ message: "Client not found" });
+    }
+    const preferredWorkoutType = findClient.preferredWorkoutType;
+
+    const trainers = await Trainer.find({
+      courseTypes: { $in: [preferredWorkoutType] },
+    });
+
+    for (let trainer of trainers) {
+      const reviews = await TrainerReview.find({ trainerId: trainer.user });
+
+      if (reviews.length > 0) {
+        const totalRating = reviews.reduce(
+          (sum, review) => sum + review.rating,
+          0,
+        );
+        let averageRating = totalRating / reviews.length;
+
+        averageRating = parseFloat(averageRating.toFixed(1));
+
+        trainer.rating = averageRating;
+        await trainer.save();
+      } else {
+        trainer.rating = 0;
       }
-      const preferredWorkoutType = findClient.preferredWorkoutType;
+    }
 
-      const trainers = await Trainer.find({
-          courseTypes: { $in: [preferredWorkoutType] }
-      });
+    const sortedTrainers = trainers.sort((a, b) => b.rating - a.rating);
 
-      for (let trainer of trainers) {
-          const reviews = await TrainerReview.find({ trainerId: trainer.user });
-
-          if (reviews.length > 0) {
-              const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-              let averageRating = totalRating / reviews.length;
-
-              averageRating = parseFloat(averageRating.toFixed(1));
-
-              trainer.rating = averageRating;
-              await trainer.save();
-          } else {
-              trainer.rating = 0;
-          }
-      }
-
-      const sortedTrainers = trainers.sort((a, b) => b.rating - a.rating);
-
-      return res.status(200).send(sortedTrainers);
+    return res.status(200).send(sortedTrainers);
   } catch (error) {
     return next(error);
   }

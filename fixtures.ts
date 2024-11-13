@@ -50,7 +50,7 @@ const run = async () => {
     certificates: "Certified Dance Instructor",
     description: "Professional dance trainer with a love for rhythm.",
     availableDays: "Monday, Wednesday, Friday",
-  })
+  });
 
   const trainerUser2 = new User({
     email: "trainer2@fit.local",
@@ -77,7 +77,8 @@ const run = async () => {
     specialization: "Fitness",
     experience: "6 years",
     certificates: "Certified Fitness Trainer",
-    description: "Experienced fitness coach with a focus on holistic well-being.",
+    description:
+      "Experienced fitness coach with a focus on holistic well-being.",
     availableDays: "Tuesday, Thursday, Saturday",
   });
 
@@ -209,39 +210,38 @@ const run = async () => {
   );
 
   await TrainerReview.create(
-      {
-        clientId: clientUser._id,
-        trainerId: trainerUser2._id,
-        rating: 5,
-        comment:
-            "The classes are very motivating! The coach pushes me to do my best while maintaining a positive atmosphere. Highly recommend for anyone looking for a fitness challenge!",
-      },
-      {
-        clientId: clientUser._id,
-        trainerId: trainerUser2._id,
-        rating: 4,
-        comment:
-            "Great trainer, but sometimes the schedule can be a bit tight. However, the classes are definitely worth it, and I feel stronger after each session.",
-      }
+    {
+      clientId: clientUser._id,
+      trainerId: trainerUser2._id,
+      rating: 5,
+      comment:
+        "The classes are very motivating! The coach pushes me to do my best while maintaining a positive atmosphere. Highly recommend for anyone looking for a fitness challenge!",
+    },
+    {
+      clientId: clientUser._id,
+      trainerId: trainerUser2._id,
+      rating: 4,
+      comment:
+        "Great trainer, but sometimes the schedule can be a bit tight. However, the classes are definitely worth it, and I feel stronger after each session.",
+    },
   );
 
   await TrainerReview.create(
-      {
-        clientId: clientUser._id,
-        trainerId: trainerUser3._id,
-        rating: 5,
-        comment:
-            "Fantastic swimming instructor! The lessons are tailored to each individual's skill level, and I feel more confident in the water after every class.",
-      },
-      {
-        clientId: clientUser._id,
-        trainerId: trainerUser3._id,
-        rating: 4,
-        comment:
-            "I enjoy the lessons, but sometimes I wish we could have more time in the pool. Overall, the trainer is great, and I'm improving.",
-      }
+    {
+      clientId: clientUser._id,
+      trainerId: trainerUser3._id,
+      rating: 5,
+      comment:
+        "Fantastic swimming instructor! The lessons are tailored to each individual's skill level, and I feel more confident in the water after every class.",
+    },
+    {
+      clientId: clientUser._id,
+      trainerId: trainerUser3._id,
+      rating: 4,
+      comment:
+        "I enjoy the lessons, but sometimes I wish we could have more time in the pool. Overall, the trainer is great, and I'm improving.",
+    },
   );
-
 
   await db.close();
 };
