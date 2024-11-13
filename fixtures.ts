@@ -21,6 +21,15 @@ const run = async () => {
     console.log("skipping drop");
   }
 
+  const superAdmin = new User({
+    userName: "superAdmin",
+    password: "superAdmin",
+    confirmPassword: "superAdmin",
+    role: "superAdmin",
+  });
+  superAdmin.getToken();
+  await superAdmin.save();
+
   const trainerUser = new User({
     email: "trainer@fit.local",
     password: "test",
@@ -117,15 +126,18 @@ const run = async () => {
     description: "A session for advanced practitioners.",
   });
 
-  await LessonType.create({
-    name: "Yoga",
-    description: "An introductory course on yoga.",
-    isPublished: false,
-  }, {
-    name: "Fitness",
-    description: "An introductory course on fitness.",
-    isPublished: false,
-  });
+  await LessonType.create(
+    {
+      name: "Yoga",
+      description: "An introductory course on yoga.",
+      isPublished: false,
+    },
+    {
+      name: "Fitness",
+      description: "An introductory course on fitness.",
+      isPublished: false,
+    },
+  );
 
   await db.close();
 };
