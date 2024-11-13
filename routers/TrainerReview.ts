@@ -11,7 +11,8 @@ export const trainerReviewRouter = express.Router();
 trainerReviewRouter.get("/:id", async (req, res) => {
   const trainerId = req.params.id;
 
-  const oneTrainer = await TrainerReview.findById(trainerId);
+  const oneTrainer = await TrainerReview.find({ trainerId });
+
 
   if (!oneTrainer) {
     return res
@@ -72,12 +73,11 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
     }
 
     if (!isParticipant) {
-      return res
-        .status(403)
-        .send({
-          error:
-            "You must have attended a session with this trainer to leave a review.",
-        });
+      return res.status(403).send({
+        error:
+          "You must have attended a session with this trainer to leave a review.",
+      });
+
     }
 
     const newReview = new TrainerReview({

@@ -7,6 +7,7 @@ import clientsRouter from "./routers/clients";
 import trainersRouter from "./routers/trainers";
 import coursesRouter from "./routers/courses";
 import lessonsRouter from "./routers/lessons";
+import { lessonTypeRouter } from "./routers/lessonTypes";
 import { trainerReviewRouter } from "./routers/TrainerReview";
 import {courseTypesRouter} from "./routers/courseTypes";
 
