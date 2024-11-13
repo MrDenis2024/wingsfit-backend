@@ -7,7 +7,8 @@ import clientsRouter from "./routers/clients";
 import trainersRouter from "./routers/trainers";
 import coursesRouter from "./routers/courses";
 import lessonsRouter from "./routers/lessons";
-import { lessonTypeRouter } from "./routers/lessonTypes";
+import { trainerReviewRouter } from "./routers/TrainerReview";
+import {courseTypesRouter} from "./routers/courseTypes";
 import adminsRouter from "./routers/admins";
 
 const app = express();
@@ -19,9 +20,10 @@ app.use(express.static("public"));
 app.use("/users", usersRouter);
 app.use("/clients", clientsRouter);
 app.use("/trainers", trainersRouter);
-app.use("/course", coursesRouter);
+app.use("/courses", coursesRouter);
 app.use("/lessons", lessonsRouter);
-app.use("/lessonType", lessonTypeRouter);
+app.use("/courseTypes", courseTypesRouter);
+app.use("/review", trainerReviewRouter);
 app.use("/admins", adminsRouter);
 
 const run = async () => {
