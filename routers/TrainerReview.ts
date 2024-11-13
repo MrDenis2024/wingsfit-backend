@@ -11,7 +11,7 @@ export const trainerReviewRouter = express.Router();
 trainerReviewRouter.get("/:id", async (req, res) => {
   const trainerId = req.params.id;
 
-  const oneTrainer = await TrainerReview.findById(trainerId);
+  const oneTrainer = await TrainerReview.find({trainerId});
 
   if (!oneTrainer) {
     return res
