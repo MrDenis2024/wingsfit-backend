@@ -79,9 +79,20 @@ usersRouter.post("/google", async (req, res, next) => {
     const id = payload.sub;
     const user = await User.findOne({ googleId: id });
     if (user) {
+      user.getToken();
+      await user.save();
       return res.status(200).send(user);
     }
     if (!user) {
+      const userByEmail = await User.findOneAndUpdate(
+        { email: email },
+        { googleId: id },
+      );
+      if (userByEmail) {
+        userByEmail.getToken();
+        await userByEmail.save();
+        return res.status(200).send(userByEmail);
+      }
       const role = req.query.role as string;
       if (!role || (role !== "client" && role !== "trainer")) {
         return res.status(400).send({ error: "Role not found or uncorrected" });
@@ -91,7 +102,7 @@ usersRouter.post("/google", async (req, res, next) => {
         email: email,
         password: newPassword,
         confirmPassword: newPassword,
-        googleId: req.body.googleId,
+        googleId: id,
         role: role,
       });
       newUser.getToken();

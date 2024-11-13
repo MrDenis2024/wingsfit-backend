@@ -13,6 +13,7 @@ trainerReviewRouter.get("/:id", async (req, res) => {
 
   const oneTrainer = await TrainerReview.find({ trainerId });
 
+
   if (!oneTrainer) {
     return res
       .status(404)
@@ -76,6 +77,7 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
         error:
           "You must have attended a session with this trainer to leave a review.",
       });
+
     }
 
     const newReview = new TrainerReview({

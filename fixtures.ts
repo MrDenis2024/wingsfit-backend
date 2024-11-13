@@ -208,7 +208,6 @@ const run = async () => {
         "The coach explains the basic exercises well, but I would like to pay more attention to technique and individual characteristics. In general, classes are useful, but there are places for improvement.",
     },
   );
-
   await TrainerReview.create(
     {
       clientId: clientUser._id,
