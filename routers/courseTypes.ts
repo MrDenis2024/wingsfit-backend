@@ -1,38 +1,38 @@
 import express from "express";
-import LessonType from "../models/LessonType";
+import CourseType from "../models/CourseType";
 import auth, { RequestWithUser } from "../middleware/auth";
 import mongoose from "mongoose";
-import { LessonTypeFields } from "../types/lessonTypes";
 import permit from "../middleware/permit";
+import {CourseTypeFields} from "../types/courseTypes";
 
-export const lessonTypeRouter = express.Router();
+export const courseTypesRouter = express.Router();
 
-lessonTypeRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
+courseTypesRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
   try {
     const user = req.user;
     if (!user) return res.status(401).send({ error: "User not found" });
 
-    const allLessonTypes = await LessonType.find();
-    return res.send(allLessonTypes);
+    const allCourseTypes = await CourseType.find();
+    return res.send(allCourseTypes);
   } catch (error) {
     return next(error);
   }
 });
 
-lessonTypeRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
+courseTypesRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
   try {
     const user = req.user;
     if (!user) return res.status(401).send({ error: "User not found" });
 
-    const lessonTypeMutation: LessonTypeFields = {
+    const courseTypeMutation: CourseTypeFields = {
       name: req.body.name,
       description: req.body.description,
     };
 
-    const lessonType = new LessonType(lessonTypeMutation);
-    await lessonType.save();
+    const courseType = new CourseType(courseTypeMutation);
+    await courseType.save();
 
-    return res.status(200).send(lessonType);
+    return res.status(200).send(courseType);
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
       return res.status(400).send(error);
@@ -41,7 +41,7 @@ lessonTypeRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
   }
 });
 
-lessonTypeRouter.put(
+courseTypesRouter.put(
   "/:id",
   auth,
   permit("admin"),
@@ -51,16 +51,16 @@ lessonTypeRouter.put(
         return res.status(400).send({ error: "ID is not valid" });
       }
 
-      const lessonType = await LessonType.findById(req.params.id);
+      const courseType = await CourseType.findById(req.params.id);
 
-      if (!lessonType) {
-        return res.status(404).send({ error: "LessonType not found" });
+      if (!courseType) {
+        return res.status(404).send({ error: "CourseType not found" });
       }
 
-      lessonType.isPublished = !lessonType.isPublished;
+      courseType.isPublished = !courseType.isPublished;
 
-      await lessonType.save();
-      return res.status(200).send(lessonType);
+      await courseType.save();
+      return res.status(200).send(courseType);
     } catch (error) {
       return next(error);
     }

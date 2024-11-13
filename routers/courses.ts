@@ -1,6 +1,7 @@
 import express from "express";
 import auth, { RequestWithUser } from "../middleware/auth";
 import Course from "../models/Course";
+import {imagesUpload} from "../multer";
 
 const coursesRouter = express.Router();
 
@@ -21,7 +22,8 @@ coursesRouter.get("/:id", async (req, res, next) => {
     return next(error);
   }
 });
-coursesRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
+
+coursesRouter.post("/", auth, imagesUpload.single("image"), async (req: RequestWithUser, res, next) => {
   try {
     const user = req.user;
     if (!user) return res.status(401).send({ error: "User not found" });
@@ -31,15 +33,23 @@ coursesRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
       });
     }
 
+    const courseType = req.body.courseType;
+
+    if (!courseType) {
+      return res.status(401).send({ error: 'courseType not provided' });
+    }
+
     const courseMutation = {
       user: user._id,
       title: req.body.title,
+      courseType: req.body.courseType,
       description: req.body.description,
       format: req.body.format,
       schedule: req.body.schedule,
       scheduleLength: req.body.scheduleLength,
       price: req.body.price,
       maxClients: req.body.maxClients,
+      image: req.file ? req.file.filename : null,
     };
     const newCourse = await Course.create(courseMutation);
     return res.status(200).send(newCourse);

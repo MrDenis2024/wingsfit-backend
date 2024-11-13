@@ -5,7 +5,7 @@ import Trainer from "./models/Trainer";
 import Client from "./models/Client";
 import Course from "./models/Course";
 import Lesson from "./models/Lesson";
-import LessonType from "./models/LessonType";
+import CourseType from "./models/CourseType";
 import TrainerReview from "./models/TrainerReview";
 
 const run = async () => {
@@ -17,8 +17,9 @@ const run = async () => {
     await db.dropCollection("users");
     await db.dropCollection("courses");
     await db.dropCollection("lessons");
-    await db.dropCollection("lessontypes");
+    await db.dropCollection("lessonTypes");
     await db.dropCollection("trainerReview");
+
   } catch (err) {
     console.log("skipping drop");
   }
@@ -138,8 +139,39 @@ const run = async () => {
     physicalData: "Injury in left leg",
   });
 
+  await CourseType.create(
+      {
+        name: "Yoga",
+        description: "An introductory course on yoga.",
+        isPublished: false,
+      },
+      {
+        name: "Fitness",
+        description: "An introductory course on fitness.",
+        isPublished: false,
+      },
+  );
+
+  const [
+    YogaTypes,
+    FitnessTypes,
+  ] = await CourseType.create([
+    {
+      name: "Yoga",
+      description: "An introductory course on yoga.",
+      isPublished: false,
+    },
+    {
+      name: "Fitness",
+      description: "An introductory course on fitness.",
+      isPublished: false,
+    },
+  ]);
+
   const courses = [
     {
+      user: trainerUser._id,
+      courseType: YogaTypes._id,
       title: "Yoga Basics",
       description: "An introductory course on yoga.",
       format: "group",
@@ -148,8 +180,11 @@ const run = async () => {
       price: 150,
       maxClients: 10,
       user: trainerUser1._id,
+
     },
     {
+      user: trainerUser._id,
+      courseType: FitnessTypes._id,
       title: "Advanced Pilates",
       description: "For experienced practitioners.",
       format: "single",
@@ -191,7 +226,6 @@ const run = async () => {
       isPublished: false,
     },
   );
-
   await TrainerReview.create(
     {
       clientId: clientUser._id,
