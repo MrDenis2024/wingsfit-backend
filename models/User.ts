@@ -45,19 +45,19 @@ const UserSchema = new Schema<
       },
     },
     userName: {
-        type: String,
-        unique: true,
-        sparse: true,
-        validate: {
-            validator: async function (value: string): Promise<boolean> {
-                if (!(this as HydratedDocument<UserFields>).isModified("userName")) {
-                    return true;
-                }
-                const admin = await User.findOne({ userName: value });
-                return !admin;
-            },
-            message: "This admin userName is already registered!",
+      type: String,
+      unique: true,
+      sparse: true,
+      validate: {
+        validator: async function (value: string): Promise<boolean> {
+          if (!(this as HydratedDocument<UserFields>).isModified("userName")) {
+            return true;
+          }
+          const admin = await User.findOne({ userName: value });
+          return !admin;
         },
+        message: "This admin userName is already registered!",
+      },
     },
     password: {
       type: String,

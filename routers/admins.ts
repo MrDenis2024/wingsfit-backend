@@ -38,40 +38,80 @@ adminsRouter.post("/", auth, permit("superAdmin"), async (req, res, next) => {
   }
 });
 
-adminsRouter.post('/sessionsAdmin', async (req, res, next) => {
+adminsRouter.post("/sessionsAdmin", async (req, res, next) => {
   try {
     if (!req.body.userName || !req.body.password) {
-      return res.status(400).send({ error: "Username and password are required" });
+      return res
+        .status(400)
+        .send({ error: "Username and password are required" });
     }
     const admin = await User.findOne({ userName: req.body.userName });
     if (!admin) {
-      return res.status(400).send({ error: "Admin not found or password is incorrect!" });
+      return res
+        .status(400)
+        .send({ error: "Admin not found or password is incorrect!" });
     }
     const isMatch = await admin.checkPassword(req.body.password);
     if (!isMatch) {
-      return res.status(400).send({ error: "Admin not found or password is incorrect!" });
+      return res
+        .status(400)
+        .send({ error: "Admin not found or password is incorrect!" });
     }
     admin.getToken();
     await admin.save();
     return res.status(200).send(admin);
   } catch (error) {
-    return next(error)
-  }
-});
-
-adminsRouter.delete("/:id", auth, permit("superAdmin"), async (req, res, next) => {
-  try {
-    const admin = await User.findById(req.params.id);
-    if (admin === null || admin.role !== "admin") {
-      return res.status(404).send({error: "Admin not found"});
-    }
-
-    await User.deleteOne({ _id: req.params.id });
-
-    return res.send({message: 'Admin deleted successfully.'});
-  } catch (error) {
     return next(error);
   }
 });
+
+adminsRouter.patch(
+  "/:id/changePassword",
+  auth,
+  permit("superAdmin"),
+  async (req, res, next) => {
+    try {
+      if (!req.body.newPassword) {
+        return res.status(400).send({ error: "New password is required" });
+      }
+
+      const admin = await User.findById(req.params.id);
+      if (!admin || admin.role !== "admin") {
+        return res.status(400).send({ error: "Admin not found " });
+      }
+
+      admin.password = req.body.newPassword;
+      admin.confirmPassword = req.body.newPassword;
+      await admin.save();
+
+      return res.send({ message: "Password updated successfully!" });
+    } catch (error) {
+      if (error instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send(error);
+      }
+      return next(error);
+    }
+  },
+);
+
+adminsRouter.delete(
+  "/:id",
+  auth,
+  permit("superAdmin"),
+  async (req, res, next) => {
+    try {
+      const admin = await User.findById(req.params.id);
+      if (admin === null || admin.role !== "admin") {
+        return res.status(404).send({ error: "Admin not found" });
+      }
+
+      await User.deleteOne({ _id: req.params.id });
+
+      return res.send({ message: "Admin deleted successfully." });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 export default adminsRouter;
