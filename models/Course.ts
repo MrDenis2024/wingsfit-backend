@@ -1,6 +1,7 @@
 import mongoose, { Types } from "mongoose";
 import User from "./User";
 import { CourseTypes } from "../types/courseTypes";
+import CourseType from "./CourseType";
 
 const Schema = mongoose.Schema;
 
@@ -16,6 +17,18 @@ const CourseSchema = new Schema<CourseTypes>({
       },
       message: "There can only be one role",
     },
+  },
+  courseType: {
+    type: Schema.Types.ObjectId,
+    ref: 'CourseType',
+    required: true,
+    validate: {
+      validator: async (value: Types.ObjectId) => {
+        const courseType = await CourseType.findById(value);
+        return Boolean(courseType);
+      },
+      message: 'CourseType does not exist',
+    }
   },
   title: {
     type: String,
@@ -40,12 +53,12 @@ const CourseSchema = new Schema<CourseTypes>({
   price: {
     type: Number,
   },
-  image: {
-    type: String,
-  },
   maxClients: {
     type: Number,
     required: true,
+  },
+  image: {
+    type: String,
   },
 });
 

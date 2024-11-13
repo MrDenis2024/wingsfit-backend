@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
 
-const LessonTypeSchema = new Schema({
+const CourseTypeSchema = new Schema({
   name: {
     type: String,
     required: true,
@@ -14,6 +14,6 @@ const LessonTypeSchema = new Schema({
   },
 });
 
-const LessonType = mongoose.model("LessonType", LessonTypeSchema);
+const CourseType = mongoose.model("CourseType", CourseTypeSchema);
 
-export default LessonType;
+export default CourseType;
