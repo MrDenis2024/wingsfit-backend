@@ -25,7 +25,7 @@ clientsRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
       return res.status(400).send({ error: "Invalid client ID" });
 
     const client = await Client.findOne({
-      _id: req.params.id,
+      user: req.params.id,
     });
 
     if (!client) {
@@ -35,12 +35,12 @@ clientsRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
     if (user._id.equals(client.user)) {
       await client.populate(
         "user",
-        "email firstName lastName role phoneNumber gender timeZone dateOfBirth notification avatar createdAt updatedAt lastActivity",
+        "email firstName lastName role phoneNumber gender timeZone dateOfBirth notification avatar",
       );
     } else {
       await client.populate(
         "user",
-        "email firstName lastName role phoneNumber gender timeZone dateOfBirth avatar createdAt updatedAt lastActivity",
+        "email firstName lastName role phoneNumber gender timeZone dateOfBirth avatar",
       );
     }
 

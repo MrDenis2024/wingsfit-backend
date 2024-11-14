@@ -20,15 +20,15 @@ const CourseSchema = new Schema<CourseTypes>({
   },
   courseType: {
     type: Schema.Types.ObjectId,
-    ref: 'CourseType',
+    ref: "CourseType",
     required: true,
     validate: {
       validator: async (value: Types.ObjectId) => {
         const courseType = await CourseType.findById(value);
         return Boolean(courseType);
       },
-      message: 'CourseType does not exist',
-    }
+      message: "CourseType does not exist",
+    },
   },
   title: {
     type: String,
