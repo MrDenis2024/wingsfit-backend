@@ -51,11 +51,15 @@ usersRouter.post("/sessions", async (req, res, next) => {
     }
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
-      return res.status(400).send({ error: "User not found!" });
+      return res
+        .status(400)
+        .send({ error: "User not found or password is incorrect!" });
     }
     const isMatch = await user.checkPassword(req.body.password);
     if (!isMatch) {
-      return res.status(400).send({ error: "Password is wrong!" });
+      return res
+        .status(400)
+        .send({ error: "User not found or password is incorrect!" });
     }
     user.getToken();
     await user.save();
@@ -133,6 +137,39 @@ usersRouter.patch(
         .status(200)
         .send({ message: "Last activity updated successfully!" });
     } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+usersRouter.patch(
+  "/changePassword",
+  auth,
+  async (req: RequestWithUser, res, next) => {
+    try {
+      if (!req.body.oldPassword || !req.body.newPassword) {
+        return res
+          .status(400)
+          .send({ error: "Old password and new password is required" });
+      }
+
+      const user = await User.findById(req.user);
+      if (!user) {
+        return res.status(401).send({ error: "User not found!" });
+      }
+      const isMatch = await user.checkPassword(req.body.oldPassword);
+      if (!isMatch) {
+        return res.status(400).send({ error: "Old password is incorrect!" });
+      }
+      user.password = req.body.newPassword;
+      user.confirmPassword = req.body.newPassword;
+      await user.save();
+
+      return res.send({ message: "Password updated successfully!" });
+    } catch (error) {
+      if (error instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send(error);
+      }
       return next(error);
     }
   },

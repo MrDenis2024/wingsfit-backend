@@ -17,11 +17,22 @@ const run = async () => {
     await db.dropCollection("users");
     await db.dropCollection("courses");
     await db.dropCollection("lessons");
+    await db.dropCollection("lessonTypes");
+    await db.dropCollection("trainerReview");
     await db.dropCollection("courseTypes");
     await db.dropCollection("trainerReviews");
   } catch (err) {
     console.log("skipping drop");
   }
+
+  const superAdmin = new User({
+    userName: "superAdmin",
+    password: "superAdmin",
+    confirmPassword: "superAdmin",
+    role: "superAdmin",
+  });
+  superAdmin.getToken();
+  await superAdmin.save();
 
   const trainerUser1 = new User({
     email: "trainer@fit.local",
@@ -182,6 +193,20 @@ const run = async () => {
     description: "A session for advanced practitioners.",
   });
 
+
+  await CourseType.create(
+    {
+      name: "Yoga",
+      description: "An introductory course on yoga.",
+      isPublished: false,
+    },
+    {
+      name: "Fitness",
+      description: "An introductory course on fitness.",
+      isPublished: false,
+    },
+  );
+  
   await TrainerReview.create([
     {
       clientId: clientUser._id,

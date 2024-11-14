@@ -8,6 +8,8 @@ import trainersRouter from "./routers/trainers";
 import coursesRouter from "./routers/courses";
 import lessonsRouter from "./routers/lessons";
 import { trainerReviewRouter } from "./routers/TrainerReview";
+import {courseTypesRouter} from "./routers/courseTypes";
+import adminsRouter from "./routers/admins";
 import { courseTypesRouter } from "./routers/courseTypes";
 
 const app = express();
@@ -23,6 +25,7 @@ app.use("/courses", coursesRouter);
 app.use("/lessons", lessonsRouter);
 app.use("/courseTypes", courseTypesRouter);
 app.use("/review", trainerReviewRouter);
+app.use("/admins", adminsRouter);
 
 const run = async () => {
   await mongoose.connect(config.database);

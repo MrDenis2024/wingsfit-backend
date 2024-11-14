@@ -28,6 +28,7 @@ const UserSchema = new Schema<
     email: {
       type: String,
       unique: true,
+      sparse: true,
       match: [
         /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,5})+$/,
         "Please fill a valid email address",
@@ -43,7 +44,21 @@ const UserSchema = new Schema<
         message: "This user is already registered!",
       },
     },
-    userName: String,
+    userName: {
+      type: String,
+      unique: true,
+      sparse: true,
+      validate: {
+        validator: async function (value: string): Promise<boolean> {
+          if (!(this as HydratedDocument<UserFields>).isModified("userName")) {
+            return true;
+          }
+          const admin = await User.findOne({ userName: value });
+          return !admin;
+        },
+        message: "This admin userName is already registered!",
+      },
+    },
     password: {
       type: String,
       required: true,
