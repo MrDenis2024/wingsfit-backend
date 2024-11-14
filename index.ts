@@ -10,6 +10,7 @@ import lessonsRouter from "./routers/lessons";
 import { trainerReviewRouter } from "./routers/TrainerReview";
 import {courseTypesRouter} from "./routers/courseTypes";
 import adminsRouter from "./routers/admins";
+import { courseTypesRouter } from "./routers/courseTypes";
 
 const app = express();
 const port = 8000;

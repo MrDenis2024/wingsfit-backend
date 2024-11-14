@@ -3,7 +3,7 @@ import CourseType from "../models/CourseType";
 import auth, { RequestWithUser } from "../middleware/auth";
 import mongoose from "mongoose";
 import permit from "../middleware/permit";
-import {CourseTypeFields} from "../types/courseTypes";
+import { CourseTypeFields } from "../types/courseTypes";
 
 export const courseTypesRouter = express.Router();
 

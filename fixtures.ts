@@ -19,6 +19,8 @@ const run = async () => {
     await db.dropCollection("lessons");
     await db.dropCollection("lessonTypes");
     await db.dropCollection("trainerReview");
+    await db.dropCollection("courseTypes");
+    await db.dropCollection("trainerReviews");
   } catch (err) {
     console.log("skipping drop");
   }
@@ -37,10 +39,7 @@ const run = async () => {
     password: "test",
     confirmPassword: "test",
     role: "trainer",
-    timeZone: {
-      value: "asd",
-      offset: "+6",
-    },
+    timeZone: { value: "asd", offset: "+6" },
     gender: "male",
     dateOfBirth: new Date("1990-11-15"),
     firstName: "Vasya",
@@ -66,10 +65,7 @@ const run = async () => {
     password: "test2",
     confirmPassword: "test2",
     role: "trainer",
-    timeZone: {
-      value: "asd",
-      offset: "+5",
-    },
+    timeZone: { value: "asd", offset: "+5" },
     gender: "female",
     dateOfBirth: new Date("1990-08-17"),
     firstName: "Anna",
@@ -96,10 +92,7 @@ const run = async () => {
     password: "test3",
     confirmPassword: "test3",
     role: "trainer",
-    timeZone: {
-      value: "asd",
-      offset: "+7",
-    },
+    timeZone: { value: "asd", offset: "+7" },
     gender: "female",
     dateOfBirth: new Date("1992-03-10"),
     firstName: "Olga",
@@ -126,10 +119,7 @@ const run = async () => {
     confirmPassword: "test",
     role: "client",
     gender: "other",
-    timeZone: {
-      value: "asd",
-      offset: "+6",
-    },
+    timeZone: { value: "asd", offset: "+6" },
     dateOfBirth: new Date("1995-05-15"),
     firstName: "Jane",
     lastName: "Doe",
@@ -147,23 +137,7 @@ const run = async () => {
     physicalData: "Injury in left leg",
   });
 
-  await CourseType.create(
-      {
-        name: "Yoga",
-        description: "An introductory course on yoga.",
-        isPublished: false,
-      },
-      {
-        name: "Fitness",
-        description: "An introductory course on fitness.",
-        isPublished: false,
-      },
-  );
-
-  const [
-    YogaTypes,
-    FitnessTypes,
-  ] = await CourseType.create([
+  const [YogaTypes, FitnessTypes] = await CourseType.create([
     {
       name: "Yoga",
       description: "An introductory course on yoga.",
@@ -178,6 +152,7 @@ const run = async () => {
 
   const courses = [
     {
+      user: trainerUser1._id,
       courseType: YogaTypes._id,
       title: "Yoga Basics",
       description: "An introductory course on yoga.",
@@ -186,9 +161,9 @@ const run = async () => {
       scheduleLength: "1h",
       price: 150,
       maxClients: 10,
-      user: trainerUser1._id,
     },
     {
+      user: trainerUser1._id,
       courseType: FitnessTypes._id,
       title: "Advanced Pilates",
       description: "For experienced practitioners.",
@@ -197,7 +172,6 @@ const run = async () => {
       scheduleLength: "1.5h",
       price: 200,
       maxClients: 5,
-      user: trainerUser1._id,
     },
   ];
   await Course.create(courses);
@@ -212,8 +186,9 @@ const run = async () => {
     course: course._id,
     title: "Advanced Training",
     quantityClients: 10,
-    timeZone: "+4 GTM",
+    timeZone: "+4 GMT",
     groupLevel: 2,
+    participants: [clientUser._id],
     ageLimit: 21,
     description: "A session for advanced practitioners.",
   });
@@ -231,7 +206,8 @@ const run = async () => {
       isPublished: false,
     },
   );
-  await TrainerReview.create(
+  
+  await TrainerReview.create([
     {
       clientId: clientUser._id,
       trainerId: trainerUser1._id,
@@ -246,8 +222,6 @@ const run = async () => {
       comment:
         "The coach explains the basic exercises well, but I would like to pay more attention to technique and individual characteristics. In general, classes are useful, but there are places for improvement.",
     },
-  );
-  await TrainerReview.create(
     {
       clientId: clientUser._id,
       trainerId: trainerUser2._id,
@@ -262,9 +236,6 @@ const run = async () => {
       comment:
         "Great trainer, but sometimes the schedule can be a bit tight. However, the classes are definitely worth it, and I feel stronger after each session.",
     },
-  );
-
-  await TrainerReview.create(
     {
       clientId: clientUser._id,
       trainerId: trainerUser3._id,
@@ -279,7 +250,8 @@ const run = async () => {
       comment:
         "I enjoy the lessons, but sometimes I wish we could have more time in the pool. Overall, the trainer is great, and I'm improving.",
     },
-  );
+  ]);
+
   await db.close();
 };
 
