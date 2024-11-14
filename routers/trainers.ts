@@ -59,8 +59,7 @@ trainersRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
       return res.status(400).send({ error: "Invalid trainer ID" });
 
     const trainer = await Trainer.findOne({
-      _id: req.params.id,
-      user,
+      user: req.params.id,
     });
 
     if (!trainer) {
