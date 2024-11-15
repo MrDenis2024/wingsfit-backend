@@ -1,13 +1,27 @@
 import express from "express";
-import auth, { RequestWithUser } from "../middleware/auth";
+import auth, {RequestWithUser} from "../middleware/auth";
 import Course from "../models/Course";
-import { imagesUpload } from "../multer";
+import {imagesUpload} from "../multer";
+import User from "../models/User";
 
 const coursesRouter = express.Router();
 
 coursesRouter.get("/", async (req, res) => {
-  const allCourses = await Course.find();
-  return res.status(200).send(allCourses);
+  const { trainerId } = req.query;
+
+  if(!trainerId){
+    const allCourses = await Course.find();
+    return res.status(200).send(allCourses);
+  }
+
+  const findTrainer = await User.findById(trainerId);
+
+  if(!findTrainer || findTrainer.role !== 'trainer') {
+    return res.status(404).send({ error: "The user is not a trainer or not found" });
+  }
+
+  const oneTrainer = await Course.find({user: trainerId});
+  return res.status(200).send(oneTrainer);
 });
 
 coursesRouter.get("/:id", async (req, res, next) => {
