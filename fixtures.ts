@@ -77,6 +77,35 @@ const run = async () => {
   });
   await trainer2.save();
 
+  const trainerUser3 = new User({
+    email: "trainer3@fit.local",
+    password: "test3",
+    confirmPassword: "test3",
+    role: "trainer",
+    timeZone: { value: "GMT+7", offset: "+7" },
+    gender: "female",
+    dateOfBirth: new Date("1992-03-10"),
+    firstName: "Olga",
+    lastName: "Kovaleva",
+    phoneNumber: "1234567893",
+    notification: true,
+    lastActivity: new Date("2024-11-10"),
+  });
+  trainerUser3.getToken();
+  await trainerUser3.save();
+
+  const trainer3 = new Trainer({
+    user: trainerUser3._id,
+    courseTypes: ["fitness", "yoga", "pilates"],
+    specialization: "Fitness",
+    experience: "6 years",
+    certificates: "Certified Fitness Trainer",
+    description:
+      "Experienced fitness coach with a focus on holistic well-being.",
+    availableDays: "Tuesday, Thursday, Saturday",
+  });
+  await trainer3.save();
+
   const clientUser = new User({
     email: "client@fit.local",
     password: "test",
@@ -114,6 +143,7 @@ const run = async () => {
     physicalData: "Injury in left leg",
     preferredWorkoutType: "yoga",
     trainingLevel: "beginner",
+    subscribes: [trainer1._id, trainer2._id],
   });
   await client.save();
 
@@ -122,6 +152,7 @@ const run = async () => {
     physicalData: "No injuries",
     preferredWorkoutType: "aerobics",
     trainingLevel: "intermediate",
+    subscribes: [trainer2._id, trainer3._id],
   });
   await client2.save();
 
