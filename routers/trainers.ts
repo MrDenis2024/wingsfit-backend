@@ -13,7 +13,7 @@ trainersRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
   try {
     const clientId = req.user?._id;
 
-    if(req.user?.role === 'trainer'){
+    if (req.user?.role === "trainer") {
       const allTrainers = await Trainer.find();
       return res.status(200).send(allTrainers);
     }
