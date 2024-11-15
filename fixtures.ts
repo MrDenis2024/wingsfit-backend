@@ -7,6 +7,7 @@ import Course from "./models/Course";
 import Lesson from "./models/Lesson";
 import CourseType from "./models/CourseType";
 import TrainerReview from "./models/TrainerReview";
+import Group from "./models/Group";
 
 const run = async () => {
   await mongoose.connect(config.database);
@@ -17,10 +18,9 @@ const run = async () => {
     await db.dropCollection("users");
     await db.dropCollection("courses");
     await db.dropCollection("lessons");
-    await db.dropCollection("lessonTypes");
-    await db.dropCollection("trainerReview");
-    await db.dropCollection("courseTypes");
-    await db.dropCollection("trainerReviews");
+    await db.dropCollection("trainerreview");
+    await db.dropCollection("coursetypes");
+    await db.dropCollection("groups");
   } catch (err) {
     console.log("skipping drop");
   }
@@ -35,11 +35,11 @@ const run = async () => {
   await superAdmin.save();
 
   const trainerUser1 = new User({
-    email: "trainer@fit.local",
+    email: "trainer1@fit.local",
     password: "test",
     confirmPassword: "test",
     role: "trainer",
-    timeZone: { value: "asd", offset: "+6" },
+    timeZone: { value: "GMT+1", offset: "+1" },
     gender: "male",
     dateOfBirth: new Date("1990-11-15"),
     firstName: "Vasya",
@@ -50,49 +50,50 @@ const run = async () => {
   trainerUser1.getToken();
   await trainerUser1.save();
 
-  await Trainer.create({
-    user: trainerUser1._id,
-    courseTypes: ["rumba", "tango", "lambada"],
-    specialization: "Dance",
-    experience: "5 years",
-    certificates: "Certified Dance Instructor",
-    description: "Professional dance trainer with a love for rhythm.",
-    availableDays: "Monday, Wednesday, Friday",
-  });
-
   const trainerUser2 = new User({
     email: "trainer2@fit.local",
-    password: "test2",
-    confirmPassword: "test2",
+    password: "test",
+    confirmPassword: "test",
     role: "trainer",
-    timeZone: { value: "asd", offset: "+5" },
+    timeZone: { value: "GMT+2", offset: "+2" },
     gender: "female",
-    dateOfBirth: new Date("1990-08-17"),
+    dateOfBirth: new Date("1985-04-20"),
     firstName: "Anna",
-    lastName: "Smirnova",
-    phoneNumber: "1234567892",
-    notification: true,
+    lastName: "Ivanova",
+    phoneNumber: "0987654321",
+    notification: false,
   });
   trainerUser2.getToken();
   await trainerUser2.save();
 
-  await Trainer.create({
+  const trainer1 = new Trainer({
+    user: trainerUser1._id,
+    courseTypes: ["yoga", "pilates"],
+    specialization: "Yoga and Pilates",
+    experience: "5 years",
+    certificates: "Certified Yoga Instructor",
+    description: "Expert in yoga with 5 years of experience.",
+    availableDays: "Monday, Wednesday, Friday",
+  });
+  await trainer1.save();
+
+  const trainer2 = new Trainer({
     user: trainerUser2._id,
-    courseTypes: ["fitness", "yoga", "pilates"],
-    specialization: "Fitness",
-    experience: "6 years",
-    certificates: "Certified Fitness Trainer",
-    description:
-      "Experienced fitness coach with a focus on holistic well-being.",
+    courseTypes: ["aerobics", "stretching"],
+    specialization: "Aerobics",
+    experience: "8 years",
+    certificates: "Certified Aerobics Instructor",
+    description: "Passionate about fitness and flexibility.",
     availableDays: "Tuesday, Thursday, Saturday",
   });
+  await trainer2.save();
 
   const trainerUser3 = new User({
     email: "trainer3@fit.local",
     password: "test3",
     confirmPassword: "test3",
     role: "trainer",
-    timeZone: { value: "asd", offset: "+7" },
+    timeZone: { value: "GMT+7", offset: "+7" },
     gender: "female",
     dateOfBirth: new Date("1992-03-10"),
     firstName: "Olga",
@@ -104,31 +105,28 @@ const run = async () => {
   trainerUser3.getToken();
   await trainerUser3.save();
 
-  const trainer3 = await Trainer.create({
+  const trainer3 = new Trainer({
     user: trainerUser3._id,
-    courseTypes: ["swimming", "water aerobics"],
-    specialization: "Swimming",
-    experience: "4 years",
-    certificates: "Certified Swimming Instructor",
-    description: "Skilled swimming coach for all levels of training.",
-    availableDays: "Monday, Wednesday, Sunday",
+    courseTypes: ["fitness", "yoga", "pilates"],
+    specialization: "Fitness",
+    experience: "6 years",
+    certificates: "Certified Fitness Trainer",
+    description:
+      "Experienced fitness coach with a focus on holistic well-being.",
+    availableDays: "Tuesday, Thursday, Saturday",
   });
+  await trainer3.save();
 
   const clientUser = new User({
     email: "client@fit.local",
     password: "test",
     confirmPassword: "test",
     role: "client",
-    gender: "other",
-    timeZone: {
-      value: "asd",
-      offset: "+6",
-    },
-    createdAt: new Date("2024-11-10"),
-    updatedAt: new Date("2024-11-10"),
-    dateOfBirth: new Date("1995-05-15"),
-    firstName: "Jane",
-    lastName: "Doe",
+    timeZone: { value: "GMT+3", offset: "+3" },
+    gender: "female",
+    dateOfBirth: new Date("2000-08-10"),
+    firstName: "Maria",
+    lastName: "Petrova",
     phoneNumber: "1122334455",
     notification: true,
     lastActivity: new Date("2024-11-10"),
@@ -141,150 +139,199 @@ const run = async () => {
     password: "test",
     confirmPassword: "test",
     role: "client",
-    gender: "other",
-    timeZone: {
-      value: "asd",
-      offset: "+6",
-    },
-    createdAt: new Date("2024-11-10"),
-    updatedAt: new Date("2024-11-10"),
+    timeZone: { value: "GMT+4", offset: "+4" },
+    gender: "male",
     dateOfBirth: new Date("1995-05-15"),
-    firstName: "Sara",
-    lastName: "Conor",
-    phoneNumber: "1122334455",
+    firstName: "Alex",
+    lastName: "Smirnov",
+    phoneNumber: "9988776655",
     notification: true,
-    lastActivity: new Date("2024-08-10"),
+    lastActivity: new Date("2024-08-13"),
   });
   clientUser2.getToken();
   await clientUser2.save();
 
-  await Client.create({
+  const client = new Client({
     user: clientUser._id,
-    subscribes: [],
+    physicalData: "Injury in left leg",
     preferredWorkoutType: "yoga",
     trainingLevel: "beginner",
-    physicalData: "Injury in left leg",
+    subscribes: [],
   });
+  await client.save();
 
-  await Client.create({
+  const client2 = new Client({
     user: clientUser2._id,
+    physicalData: "No injuries",
+    preferredWorkoutType: "aerobics",
+    trainingLevel: "intermediate",
     subscribes: [],
-    preferredWorkoutType: "yoga",
-    trainingLevel: "beginner",
-    physicalData: "Injury in left leg",
   });
+  await client2.save();
 
-  const [YogaTypes, FitnessTypes] = await CourseType.create([
-    {
-      name: "Yoga",
-      description: "An introductory course on yoga.",
-      isPublished: false,
-    },
-    {
-      name: "Fitness",
-      description: "An introductory course on fitness.",
-      isPublished: false,
-    },
-  ]);
+  const yogaCourseType = new CourseType({
+    name: "Yoga",
+    description: "Yoga for all levels",
+  });
+  await yogaCourseType.save();
 
-  const courses = [
-    {
-      user: trainerUser1._id,
-      courseType: YogaTypes._id,
-      title: "Yoga Basics",
-      description: "An introductory course on yoga.",
-      format: "group",
-      schedule: "Monday, Wednesday, Friday",
-      scheduleLength: "1h",
-      price: 150,
-      maxClients: 10,
-    },
-    {
-      user: trainerUser1._id,
-      courseType: FitnessTypes._id,
-      title: "Advanced Pilates",
-      description: "For experienced practitioners.",
-      format: "single",
-      schedule: "Tuesday, Thursday",
-      scheduleLength: "1.5h",
-      price: 200,
-      maxClients: 5,
-    },
-  ];
-  await Course.create(courses);
+  const pilatesCourseType = new CourseType({
+    name: "Pilates",
+    description: "Pilates for core strength",
+  });
+  await pilatesCourseType.save();
 
-  const course = await Course.findOne({ title: "Yoga Basics" });
+  const aerobicsCourseType = new CourseType({
+    name: "Aerobics",
+    description: "Aerobics for cardiovascular fitness",
+  });
+  await aerobicsCourseType.save();
 
-  if (!course) {
-    return console.log("Course not found");
-  }
+  const stretchingCourseType = new CourseType({
+    name: "Stretching",
+    description: "Stretching exercises for flexibility",
+  });
+  await stretchingCourseType.save();
 
-  await Lesson.create({
-    course: course._id,
-    title: "Advanced Training",
+  const course1 = new Course({
+    title: "Morning Yoga",
+    description: "Start your day with yoga",
+    trainer: trainer1._id,
+    courseType: yogaCourseType._id,
+    duration: 60,
+    schedule: "Monday, Wednesday, Friday",
+    maxClients: 10,
+    scheduleLength: 5,
+    user: trainerUser1._id,
+  });
+  await course1.save();
+
+  const course2 = new Course({
+    title: "Evening Pilates",
+    description: "Relax with evening pilates",
+    trainer: trainer1._id,
+    courseType: pilatesCourseType._id,
+    duration: 60,
+    schedule: "Tuesday, Thursday",
+    maxClients: 10,
+    scheduleLength: 5,
+    user: trainerUser2._id,
+  });
+  await course2.save();
+
+  const course3 = new Course({
+    title: "Cardio Aerobics",
+    description: "A high-energy cardio aerobics class",
+    trainer: trainer2._id,
+    courseType: aerobicsCourseType._id,
+    duration: 60,
+    schedule: "Monday, Wednesday, Friday",
+    maxClients: 15,
+    scheduleLength: 5,
+    user: trainerUser2._id,
+  });
+  await course3.save();
+
+  const course4 = new Course({
+    title: "Stretching and Flexibility",
+    description: "Increase your flexibility with stretching",
+    trainer: trainer2._id,
+    courseType: stretchingCourseType._id,
+    duration: 60,
+    schedule: "Tuesday, Thursday, Saturday",
+    maxClients: 12,
+    scheduleLength: 5,
+    user: trainerUser2._id,
+  });
+  await course4.save();
+
+  const lesson1 = new Lesson({
+    course: course1._id,
+    date: new Date("2024-11-15T07:00:00Z"),
+    duration: 60,
+    trainer: trainer1._id,
     quantityClients: 10,
-    timeZone: "+4 GMT",
     groupLevel: 2,
-    participants: [clientUser._id],
-    ageLimit: 21,
-    description: "A session for advanced practitioners.",
+    timeZone: "GMT+1",
+    title: "Morning Yoga Session",
   });
+  await lesson1.save();
 
-  await CourseType.create(
-    {
-      name: "Yoga",
-      description: "An introductory course on yoga.",
-      isPublished: false,
-    },
-    {
-      name: "Fitness",
-      description: "An introductory course on fitness.",
-      isPublished: false,
-    },
-  );
+  const lesson2 = new Lesson({
+    course: course2._id,
+    date: new Date("2024-11-16T18:00:00Z"),
+    duration: 60,
+    trainer: trainer1._id,
+    quantityClients: 10,
+    groupLevel: 2,
+    timeZone: "GMT+1",
+    title: "Evening Pilates Session",
+  });
+  await lesson2.save();
 
-  await TrainerReview.create([
+  const lesson3 = new Lesson({
+    course: course3._id,
+    date: new Date("2024-11-18T07:00:00Z"),
+    duration: 60,
+    trainer: trainer2._id,
+    quantityClients: 12,
+    groupLevel: 3,
+    timeZone: "GMT+2",
+    title: "Cardio Aerobics Session",
+  });
+  await lesson3.save();
+
+  const lesson4 = new Lesson({
+    course: course4._id,
+    date: new Date("2024-11-19T18:00:00Z"),
+    duration: 60,
+    trainer: trainer2._id,
+    quantityClients: 10,
+    groupLevel: 2,
+    timeZone: "GMT+2",
+    title: "Stretching and Flexibility Session",
+  });
+  await lesson4.save();
+
+  const review1 = new TrainerReview({
+    trainerId: trainer1._id,
+    clientId: client._id,
+    rating: 5,
+    comment: "Excellent yoga class!",
+  });
+  await review1.save();
+
+  const review2 = new TrainerReview({
+    trainerId: trainer1._id,
+    clientId: client._id,
+    rating: 4,
+    comment: "Great aerobics session!",
+  });
+  await review2.save();
+
+  const review3 = new TrainerReview({
+    trainerId: trainer2._id,
+    clientId: client._id,
+    rating: 4,
+    comment: "Great aerobics session, really enjoyed it!",
+  });
+  await review3.save();
+
+  const review4 = new TrainerReview({
+    trainerId: trainer2._id,
+    clientId: client2._id,
+    rating: 5,
+    comment: "Loved the stretching session, feeling more flexible!",
+  });
+  await review4.save();
+
+  await Group.create([
     {
-      clientId: clientUser._id,
-      trainerId: trainerUser1._id,
-      rating: 4,
-      comment:
-        "The coach is just wonderful! Classes are always held at a high level, the coach explains the material clearly and accessible. Thanks to his approach, I quickly improved my results. I highly recommend it!",
-    },
-    {
-      clientId: clientUser._id,
-      trainerId: trainerUser1._id,
-      rating: 5,
-      comment:
-        "The coach explains the basic exercises well, but I would like to pay more attention to technique and individual characteristics. In general, classes are useful, but there are places for improvement.",
-    },
-    {
-      clientId: clientUser._id,
-      trainerId: trainerUser2._id,
-      rating: 5,
-      comment:
-        "The classes are very motivating! The coach pushes me to do my best while maintaining a positive atmosphere. Highly recommend for anyone looking for a fitness challenge!",
-    },
-    {
-      clientId: clientUser._id,
-      trainerId: trainerUser2._id,
-      rating: 4,
-      comment:
-        "Great trainer, but sometimes the schedule can be a bit tight. However, the classes are definitely worth it, and I feel stronger after each session.",
-    },
-    {
-      clientId: clientUser._id,
-      trainerId: trainerUser3._id,
-      rating: 5,
-      comment:
-        "Fantastic swimming instructor! The lessons are tailored to each individual's skill level, and I feel more confident in the water after every class.",
-    },
-    {
-      clientId: clientUser._id,
-      trainerId: trainerUser3._id,
-      rating: 4,
-      comment:
-        "I enjoy the lessons, but sometimes I wish we could have more time in the pool. Overall, the trainer is great, and I'm improving.",
+      title: "Group 1",
+      course: course1._id,
+      clients: [clientUser._id],
+      clientsLimit: course1.maxClients,
+      schedule: course1.schedule,
     },
   ]);
 
