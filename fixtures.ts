@@ -99,6 +99,7 @@ const run = async () => {
     lastName: "Kovaleva",
     phoneNumber: "1234567893",
     notification: true,
+    lastActivity: new Date("2024-11-10"),
   });
   trainerUser3.getToken();
   await trainerUser3.save();
@@ -119,18 +120,54 @@ const run = async () => {
     confirmPassword: "test",
     role: "client",
     gender: "other",
-    timeZone: { value: "asd", offset: "+6" },
+    timeZone: {
+      value: "asd",
+      offset: "+6",
+    },
+    createdAt: new Date("2024-11-10"),
+    updatedAt: new Date("2024-11-10"),
     dateOfBirth: new Date("1995-05-15"),
     firstName: "Jane",
     lastName: "Doe",
     phoneNumber: "1122334455",
     notification: true,
+    lastActivity: new Date("2024-11-10"),
   });
   clientUser.getToken();
   await clientUser.save();
 
+  const clientUser2 = new User({
+    email: "client2@fit.local",
+    password: "test",
+    confirmPassword: "test",
+    role: "client",
+    gender: "other",
+    timeZone: {
+      value: "asd",
+      offset: "+6",
+    },
+    createdAt: new Date("2024-11-10"),
+    updatedAt: new Date("2024-11-10"),
+    dateOfBirth: new Date("1995-05-15"),
+    firstName: "Sara",
+    lastName: "Conor",
+    phoneNumber: "1122334455",
+    notification: true,
+    lastActivity: new Date("2024-08-10"),
+  });
+  clientUser2.getToken();
+  await clientUser2.save();
+
   await Client.create({
     user: clientUser._id,
+    subscribes: [],
+    preferredWorkoutType: "yoga",
+    trainingLevel: "beginner",
+    physicalData: "Injury in left leg",
+  });
+
+  await Client.create({
+    user: clientUser2._id,
     subscribes: [],
     preferredWorkoutType: "yoga",
     trainingLevel: "beginner",
