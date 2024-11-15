@@ -118,6 +118,7 @@ const run = async () => {
     lastName: "Petrova",
     phoneNumber: "1122334455",
     notification: true,
+    lastActivity: new Date("2024-11-10"),
   });
   clientUser.getToken();
   await clientUser.save();
