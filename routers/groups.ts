@@ -62,7 +62,7 @@ groupsRouter.patch("/:id", auth, permit("trainer"), async (req, res, next) => {
       return res.status(400).send({ error: "Group does not exist" });
     }
 
-    if (client.role !== 'client') {
+    if (client.role !== "client") {
       return res.status(400).send({ error: "You can only add a client" });
     }
 
