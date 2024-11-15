@@ -22,7 +22,7 @@ const GroupSchema = new Schema({
     type: Number,
     required: true,
   },
-  scheduled: {
+  schedule: {
     type: [String],
     required: true,
   },

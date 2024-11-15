@@ -22,7 +22,7 @@ groupsRouter.get("/:id", async (req, res, next) => {
 
 groupsRouter.post("/", auth, permit("trainer"), async (req, res, next) => {
   try {
-    const coursesExists = await Course.findById(req.body.course);
+    const coursesExists = await Course.findById(req.query.course);
     if (!coursesExists) {
       return res.status(400).send({ error: "Course does not exist" });
     }
@@ -34,10 +34,10 @@ groupsRouter.post("/", auth, permit("trainer"), async (req, res, next) => {
 
     const newGroup = new Group({
       title: req.body.title,
-      course: req.body.course,
+      course: coursesExists._id,
       clients: req.body.clients,
       clientsLimit: coursesExists.maxClients,
-      scheduled: req.body.scheduled,
+      schedule: coursesExists.schedule,
     });
 
     await newGroup.save();

@@ -7,6 +7,7 @@ import Course from "./models/Course";
 import Lesson from "./models/Lesson";
 import CourseType from "./models/CourseType";
 import TrainerReview from "./models/TrainerReview";
+import Group from "./models/Group";
 
 const run = async () => {
   await mongoose.connect(config.database);
@@ -17,10 +18,9 @@ const run = async () => {
     await db.dropCollection("users");
     await db.dropCollection("courses");
     await db.dropCollection("lessons");
-    await db.dropCollection("lessonTypes");
-    await db.dropCollection("trainerReview");
-    await db.dropCollection("courseTypes");
-    await db.dropCollection("trainerReviews");
+    await db.dropCollection("trainerreview");
+    await db.dropCollection("coursetypes");
+    await db.dropCollection("groups");
   } catch (err) {
     console.log("skipping drop");
   }
@@ -150,7 +150,7 @@ const run = async () => {
     },
   ]);
 
-  const courses = [
+  const [courses1, courses2] = await Course.create([
     {
       user: trainerUser1._id,
       courseType: YogaTypes._id,
@@ -173,8 +173,7 @@ const run = async () => {
       price: 200,
       maxClients: 5,
     },
-  ];
-  await Course.create(courses);
+  ]);
 
   const course = await Course.findOne({ title: "Yoga Basics" });
 
@@ -192,19 +191,6 @@ const run = async () => {
     ageLimit: 21,
     description: "A session for advanced practitioners.",
   });
-
-  await CourseType.create(
-    {
-      name: "Yoga",
-      description: "An introductory course on yoga.",
-      isPublished: false,
-    },
-    {
-      name: "Fitness",
-      description: "An introductory course on fitness.",
-      isPublished: false,
-    },
-  );
 
   await TrainerReview.create([
     {
@@ -248,6 +234,16 @@ const run = async () => {
       rating: 4,
       comment:
         "I enjoy the lessons, but sometimes I wish we could have more time in the pool. Overall, the trainer is great, and I'm improving.",
+    },
+  ]);
+
+  await Group.create([
+    {
+      title: "Group 1",
+      course: courses1._id,
+      clients: [clientUser._id],
+      clientsLimit: courses1.maxClients,
+      schedule: courses1.schedule,
     },
   ]);
 
