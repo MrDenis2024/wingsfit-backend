@@ -230,7 +230,6 @@ const run = async () => {
     description: "A session for advanced practitioners.",
   });
 
-
   await CourseType.create(
     {
       name: "Yoga",
@@ -243,7 +242,7 @@ const run = async () => {
       isPublished: false,
     },
   );
-  
+
   await TrainerReview.create([
     {
       clientId: clientUser._id,
