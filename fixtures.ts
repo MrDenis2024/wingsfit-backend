@@ -7,6 +7,7 @@ import Course from "./models/Course";
 import Lesson from "./models/Lesson";
 import CourseType from "./models/CourseType";
 import TrainerReview from "./models/TrainerReview";
+import Group from "./models/Group";
 
 const run = async () => {
   await mongoose.connect(config.database);
@@ -17,11 +18,21 @@ const run = async () => {
     await db.dropCollection("users");
     await db.dropCollection("courses");
     await db.dropCollection("lessons");
-    await db.dropCollection("courseTypes");
-    await db.dropCollection("trainerReviews");
+    await db.dropCollection("trainerreview");
+    await db.dropCollection("coursetypes");
+    await db.dropCollection("groups");
   } catch (err) {
     console.log("skipping drop");
   }
+
+  const superAdmin = new User({
+    userName: "superAdmin",
+    password: "superAdmin",
+    confirmPassword: "superAdmin",
+    role: "superAdmin",
+  });
+  superAdmin.getToken();
+  await superAdmin.save();
 
   const trainerUser1 = new User({
     email: "trainer1@fit.local",
@@ -135,6 +146,7 @@ const run = async () => {
     lastName: "Smirnov",
     phoneNumber: "9988776655",
     notification: true,
+    lastActivity: new Date("2024-08-13"),
   });
   clientUser2.getToken();
   await clientUser2.save();
@@ -144,7 +156,7 @@ const run = async () => {
     physicalData: "Injury in left leg",
     preferredWorkoutType: "yoga",
     trainingLevel: "beginner",
-    subscribes: [trainer1._id, trainer2._id],
+    subscribes: [],
   });
   await client.save();
 
@@ -153,7 +165,7 @@ const run = async () => {
     physicalData: "No injuries",
     preferredWorkoutType: "aerobics",
     trainingLevel: "intermediate",
-    subscribes: [trainer2._id, trainer3._id],
+    subscribes: [],
   });
   await client2.save();
 
@@ -313,7 +325,16 @@ const run = async () => {
   });
   await review4.save();
 
-  console.log("Fixtures have been successfully loaded!");
+  await Group.create([
+    {
+      title: "Group 1",
+      course: course1._id,
+      clients: [clientUser._id],
+      clientsLimit: course1.maxClients,
+      schedule: course1.schedule,
+    },
+  ]);
+
   await db.close();
 };
 
