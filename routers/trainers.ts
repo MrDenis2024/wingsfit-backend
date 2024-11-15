@@ -12,11 +12,18 @@ const trainersRouter = express.Router();
 trainersRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
   try {
     const clientId = req.user?._id;
+
+    if(req.user?.role === 'trainer'){
+      const allTrainers = await Trainer.find();
+      return res.status(200).send(allTrainers);
+    }
+
     const findClient = await Client.findOne({ user: clientId });
 
     if (!findClient) {
       return res.status(404).send({ message: "Client not found" });
     }
+
     const preferredWorkoutType = findClient.preferredWorkoutType;
 
     const trainers = await Trainer.find({
