@@ -1,7 +1,6 @@
 import express from "express";
 import Trainer from "../models/Trainer";
 import auth, { RequestWithUser } from "../middleware/auth";
-import { imagesUpload } from "../multer";
 import User from "../models/User";
 import mongoose from "mongoose";
 import Client from "../models/Client";
@@ -94,7 +93,6 @@ trainersRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
 trainersRouter.post(
   "/",
   auth,
-  imagesUpload.single("avatar"),
   async (req: RequestWithUser, res, next) => {
     try {
       const user = req.user;
@@ -130,7 +128,6 @@ trainersRouter.post(
           dateOfBirth: req.body.dateOfBirth
             ? new Date(req.body.dateOfBirth)
             : null,
-          avatar: req.file ? req.file.filename : null,
           updatedAt: new Date(),
           lastActivity: new Date(),
         },
@@ -216,7 +213,6 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
         dateOfBirth: req.body.dateOfBirth
           ? new Date(req.body.dateOfBirth)
           : null,
-        avatar: req.file ? req.file.filename : null,
         createdAt: new Date(),
         updatedAt: new Date(),
         lastActivity: new Date(),

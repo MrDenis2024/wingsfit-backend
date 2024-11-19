@@ -13,7 +13,7 @@ export interface UserFields {
   gender: string;
   timeZone: {
     value: string;
-    offset: string;
+    label: string;
   };
   phoneNumber?: string;
   avatar: string | null;
