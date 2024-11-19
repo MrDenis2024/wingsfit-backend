@@ -80,7 +80,10 @@ const UserSchema = new Schema<
     },
     timeZone: TimeZoneSchema,
     dateOfBirth: Date,
-    avatar: String,
+    avatar: {
+      type: String,
+      default: null,
+    },
     notification: {
       type: Boolean,
       default: true,

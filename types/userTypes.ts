@@ -16,7 +16,7 @@ export interface UserFields {
     offset: string;
   };
   phoneNumber?: string;
-  avatar: string;
+  avatar: string | null;
   dateOfBirth: Date;
   notification?: boolean;
   createdAt: Date;
