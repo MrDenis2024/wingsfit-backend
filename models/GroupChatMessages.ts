@@ -10,7 +10,8 @@ const GroupChatMessageSchema = new Schema<GroupChatMessages>({
         required: true,
     },
     author:{
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Users",
         required: true,
     },
     message:{
@@ -18,7 +19,8 @@ const GroupChatMessageSchema = new Schema<GroupChatMessages>({
         required: true,
     },
     createdAt: {
-        type: String,
+        type: Date,
+        default: Date.now,
     },
     isRead: [
         {
@@ -29,7 +31,6 @@ const GroupChatMessageSchema = new Schema<GroupChatMessages>({
             },
             read: {
                 type: Boolean,
-                required: true,
                 default: false,
             },
         },

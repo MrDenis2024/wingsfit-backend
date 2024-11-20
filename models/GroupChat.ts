@@ -13,12 +13,6 @@ const GroupChatSchema = new Schema<ChatType>({
         type: String,
         required: true,
     },
-    subscribers:[
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-        }
-    ],
 })
 
 const GroupChat = mongoose.model("GroupChat", GroupChatSchema);
