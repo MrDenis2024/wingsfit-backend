@@ -7,7 +7,7 @@ const Schema = mongoose.Schema;
 const PrivateChatSchema = new Schema<PrivateChatTypes>({
     firstPerson: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Users",
+        ref: "User",
         required: true,
         validate: {
             validator: async function (firstId: string): Promise<boolean> {
@@ -24,7 +24,7 @@ const PrivateChatSchema = new Schema<PrivateChatTypes>({
     },
     secondPerson: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Users",
+        ref: "User",
         required: true,
         validate: {
             validator: async function (secondId: string): Promise<boolean> {
@@ -37,7 +37,7 @@ const PrivateChatSchema = new Schema<PrivateChatTypes>({
         type: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Users",
+                ref: "User",
             },
         ],
     },
