@@ -11,7 +11,7 @@ const GroupChatMessageSchema = new Schema<GroupChatMessages>({
     },
     author:{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Users",
+        ref: "User",
         required: true,
     },
     message:{
@@ -26,7 +26,7 @@ const GroupChatMessageSchema = new Schema<GroupChatMessages>({
         {
             user: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Users",
+                ref: "User",
                 required: true,
             },
             read: {

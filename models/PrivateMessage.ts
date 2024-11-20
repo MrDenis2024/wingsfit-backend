@@ -11,7 +11,7 @@ const PrivateMessageSchema = new Schema<PrivateMessagesTypes>({
     },
     author:{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Users",
+        ref: "User",
         required: true,
     },
     message:{
@@ -26,7 +26,7 @@ const PrivateMessageSchema = new Schema<PrivateMessagesTypes>({
         {
             user: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Users",
+                ref: "User",
                 required: true,
             },
             read: {
