@@ -1,6 +1,6 @@
 import {Types} from "mongoose";
 
-export interface PrivateChatMessagesTypes {
+export interface PrivateMessagesTypes {
     privateChat: Types.ObjectId | string;
     author: Types.ObjectId | string;
     message: string;

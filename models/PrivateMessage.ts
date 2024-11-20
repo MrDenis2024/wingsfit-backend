@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
-import {PrivateChatMessagesTypes} from "../types/privateChatMessagesTypes";
+import {PrivateMessagesTypes} from "../types/privateMessagesTypes";
 
 const Schema = mongoose.Schema;
 
-const PrivateChatMessageSchema = new Schema<PrivateChatMessagesTypes>({
+const PrivateMessageSchema = new Schema<PrivateMessagesTypes>({
     privateChat:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "PrivateChat",
@@ -37,5 +37,5 @@ const PrivateChatMessageSchema = new Schema<PrivateChatMessagesTypes>({
     ],
 })
 
-const PrivateChatMessage = mongoose.model("PrivateChatMessage", PrivateChatMessageSchema);
-export default PrivateChatMessage;
+const PrivateMessage = mongoose.model("PrivateMessage", PrivateMessageSchema);
+export default PrivateMessage;
