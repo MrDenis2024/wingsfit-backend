@@ -43,5 +43,5 @@ const PrivateChatSchema = new Schema<PrivateChatTypes>({
     },
 })
 
-const PrivateChat = mongoose.model('PrivateChat', PrivateChatSchema);
+const PrivateChat = mongoose.model("PrivateChat", PrivateChatSchema);
 export default PrivateChat;
