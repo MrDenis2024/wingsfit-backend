@@ -14,7 +14,7 @@ const Schema = mongoose.Schema;
 
 const TimeZoneSchema = new Schema({
   value: String,
-  offset: String,
+  label: String,
 });
 
 const UserSchema = new Schema<
@@ -80,7 +80,10 @@ const UserSchema = new Schema<
     },
     timeZone: TimeZoneSchema,
     dateOfBirth: Date,
-    avatar: String,
+    avatar: {
+      type: String,
+      default: null,
+    },
     notification: {
       type: Boolean,
       default: true,

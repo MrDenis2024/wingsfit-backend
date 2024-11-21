@@ -26,6 +26,11 @@ const GroupSchema = new Schema({
     type: [String],
     required: true,
   },
+  trainingLevel: {
+    type: String,
+    enum: ["junior", "middle", "advanced"],
+    required: true,
+  }
 });
 
 const Group = mongoose.model("Group", GroupSchema);
