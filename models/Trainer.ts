@@ -19,7 +19,7 @@ const TrainerSchema = new Schema<TrainerTypes>({
     },
   },
   courseTypes: {
-    type: [String],
+    type: [Schema.Types.ObjectId],
     required: true,
   },
   rating: {
