@@ -55,8 +55,8 @@ adminsRouter.get(
 
 adminsRouter.post("/", auth, permit("superAdmin"), async (req, res, next) => {
   try {
-    if (!req.body.userName) {
-      return res.status(400).send({ error: "Username is required" });
+    if (!req.body.userName || !req.body.password) {
+      return res.status(400).send({ error: "Username and password are required" });
     }
 
     const newAdmin = new User({
