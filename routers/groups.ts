@@ -32,6 +32,7 @@ groupsRouter.post("/", auth, permit("trainer"), async (req, res, next) => {
       course: coursesExists._id,
       clientsLimit: coursesExists.maxClients,
       startTime: req.body.startTime,
+      trainingLevel: req.body.trainingLevel,
     });
 
     await newGroup.save();

@@ -44,7 +44,10 @@ const ClientSchema = new Schema<ClientTypes>({
       },
     ],
   },
-  trainingLevel: String,
+  trainingLevel: {
+    type: String,
+    enum: ["junior", "middle", "advanced"],
+  },
   physicalData: String,
 });
 
