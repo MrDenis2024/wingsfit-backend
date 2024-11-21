@@ -4,6 +4,7 @@ import config from "../config";
 import { OAuth2Client } from "google-auth-library";
 import mongoose from "mongoose";
 import auth, { RequestWithUser } from "../middleware/auth";
+import { imagesUpload } from "../multer";
 
 const usersRouter = express.Router();
 const googleClient = new OAuth2Client(config.google.clientId);
@@ -170,6 +171,28 @@ usersRouter.patch(
       if (error instanceof mongoose.Error.ValidationError) {
         return res.status(400).send(error);
       }
+      return next(error);
+    }
+  },
+);
+
+usersRouter.patch(
+  "/avatar",
+  auth,
+  imagesUpload.single("avatar"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const user = req.user;
+
+      if (!user) {
+        return res.status(401).send({ error: "User not found!" });
+      }
+
+      user.avatar = req.file ? req.file.filename : null;
+      await user.save();
+
+      return res.send(user);
+    } catch (error) {
       return next(error);
     }
   },

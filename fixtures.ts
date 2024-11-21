@@ -39,7 +39,7 @@ const run = async () => {
     password: "test",
     confirmPassword: "test",
     role: "trainer",
-    timeZone: { value: "GMT+1", offset: "+1" },
+    timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
     gender: "male",
     dateOfBirth: new Date("1990-11-15"),
     firstName: "Vasya",
@@ -55,7 +55,7 @@ const run = async () => {
     password: "test",
     confirmPassword: "test",
     role: "trainer",
-    timeZone: { value: "GMT+2", offset: "+2" },
+    timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
     gender: "female",
     dateOfBirth: new Date("1985-04-20"),
     firstName: "Anna",
@@ -71,7 +71,7 @@ const run = async () => {
     courseTypes: ["yoga", "pilates"],
     specialization: "Yoga and Pilates",
     experience: "5 years",
-    certificates: "Certified Yoga Instructor",
+    certificates: [{title: "Первое место по боксу", image: "asd"}],
     description: "Expert in yoga with 5 years of experience.",
     availableDays: "Monday, Wednesday, Friday",
   });
@@ -82,7 +82,7 @@ const run = async () => {
     courseTypes: ["aerobics", "stretching"],
     specialization: "Aerobics",
     experience: "8 years",
-    certificates: "Certified Aerobics Instructor",
+    certificates: [{title: "Первое место по боксу", image: "asd"}],
     description: "Passionate about fitness and flexibility.",
     availableDays: "Tuesday, Thursday, Saturday",
   });
@@ -93,7 +93,7 @@ const run = async () => {
     password: "test3",
     confirmPassword: "test3",
     role: "trainer",
-    timeZone: { value: "GMT+7", offset: "+7" },
+    timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
     gender: "female",
     dateOfBirth: new Date("1992-03-10"),
     firstName: "Olga",
@@ -110,7 +110,7 @@ const run = async () => {
     courseTypes: ["fitness", "yoga", "pilates"],
     specialization: "Fitness",
     experience: "6 years",
-    certificates: "Certified Fitness Trainer",
+    certificates: [{title: "Первое место по боксу", image: "asd"}],
     description:
       "Experienced fitness coach with a focus on holistic well-being.",
     availableDays: "Tuesday, Thursday, Saturday",
@@ -122,7 +122,7 @@ const run = async () => {
     password: "test",
     confirmPassword: "test",
     role: "client",
-    timeZone: { value: "GMT+3", offset: "+3" },
+    timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
     gender: "female",
     dateOfBirth: new Date("2000-08-10"),
     firstName: "Maria",
@@ -139,7 +139,7 @@ const run = async () => {
     password: "test",
     confirmPassword: "test",
     role: "client",
-    timeZone: { value: "GMT+4", offset: "+4" },
+    timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
     gender: "male",
     dateOfBirth: new Date("1995-05-15"),
     firstName: "Alex",
@@ -155,7 +155,7 @@ const run = async () => {
     user: clientUser._id,
     physicalData: "Injury in left leg",
     preferredWorkoutType: "yoga",
-    trainingLevel: "beginner",
+    trainingLevel: "junior",
     subscribes: [],
   });
   await client.save();
@@ -164,7 +164,7 @@ const run = async () => {
     user: clientUser2._id,
     physicalData: "No injuries",
     preferredWorkoutType: "aerobics",
-    trainingLevel: "intermediate",
+    trainingLevel: "middle",
     subscribes: [],
   });
   await client2.save();
@@ -332,6 +332,7 @@ const run = async () => {
       clients: [clientUser._id],
       clientsLimit: course1.maxClients,
       schedule: course1.schedule,
+      trainingLevel: "junior",
     },
   ]);
 

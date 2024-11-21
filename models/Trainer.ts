@@ -4,6 +4,11 @@ import { TrainerTypes } from "../types/trainerTypes";
 
 const Schema = mongoose.Schema;
 
+const TrainerCertificateSchema = new Schema({
+  title: String,
+  image: String,
+});
+
 const TrainerSchema = new Schema<TrainerTypes>({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -28,7 +33,7 @@ const TrainerSchema = new Schema<TrainerTypes>({
   },
   specialization: String,
   experience: String,
-  certificates: String,
+  certificates: [TrainerCertificateSchema],
   description: String,
   availableDays: String,
 });
