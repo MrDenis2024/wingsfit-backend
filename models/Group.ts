@@ -22,7 +22,7 @@ const GroupSchema = new Schema({
     type: Number,
     required: true,
   },
-  schedule: {
+  startTime: {
     type: [String],
     required: true,
   },

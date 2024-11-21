@@ -1,6 +1,7 @@
 import mongoose, { Types } from "mongoose";
 import User from "./User";
 import { ClientTypes } from "../types/clientTypes";
+import CourseType from "./CourseType";
 
 const Schema = mongoose.Schema;
 
@@ -28,7 +29,20 @@ const ClientSchema = new Schema<ClientTypes>({
     type: [Schema.Types.ObjectId],
   },
   preferredWorkoutType: {
-    type: [Schema.Types.ObjectId],
+    type: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'CourseType',
+        unique: true,
+        validate: {
+          validator: async(value: Types.ObjectId)=>{
+            const courseType = await CourseType.findById(value);
+            return Boolean(courseType);
+          },
+          message: "Course type does not exist!",
+        }
+      }
+    ],
   },
   trainingLevel: String,
   physicalData: String,
