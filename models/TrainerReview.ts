@@ -20,10 +20,7 @@ const TrainerReviewSchema = new Schema<ReviewTypes>({
     min: 1,
     max: 5,
   },
-  comment: {
-    type: String,
-    required: true,
-  },
+  comment: String,
   createdAt: {
     type: String,
   },

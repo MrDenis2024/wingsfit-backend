@@ -28,7 +28,10 @@ const ClientSchema = new Schema<ClientTypes>({
     type: [Schema.Types.ObjectId],
   },
   preferredWorkoutType: String,
-  trainingLevel: String,
+  trainingLevel: {
+    type: String,
+    enum: ["junior", "middle", "advanced"],
+  },
   physicalData: String,
 });
 

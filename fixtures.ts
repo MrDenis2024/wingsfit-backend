@@ -71,7 +71,7 @@ const run = async () => {
     courseTypes: ["yoga", "pilates"],
     specialization: "Yoga and Pilates",
     experience: "5 years",
-    certificates: "Certified Yoga Instructor",
+    certificates: [{title: "Первое место по боксу", image: "asd"}],
     description: "Expert in yoga with 5 years of experience.",
     availableDays: "Monday, Wednesday, Friday",
   });
@@ -82,7 +82,7 @@ const run = async () => {
     courseTypes: ["aerobics", "stretching"],
     specialization: "Aerobics",
     experience: "8 years",
-    certificates: "Certified Aerobics Instructor",
+    certificates: [{title: "Первое место по боксу", image: "asd"}],
     description: "Passionate about fitness and flexibility.",
     availableDays: "Tuesday, Thursday, Saturday",
   });
@@ -110,7 +110,7 @@ const run = async () => {
     courseTypes: ["fitness", "yoga", "pilates"],
     specialization: "Fitness",
     experience: "6 years",
-    certificates: "Certified Fitness Trainer",
+    certificates: [{title: "Первое место по боксу", image: "asd"}],
     description:
       "Experienced fitness coach with a focus on holistic well-being.",
     availableDays: "Tuesday, Thursday, Saturday",
@@ -155,7 +155,7 @@ const run = async () => {
     user: clientUser._id,
     physicalData: "Injury in left leg",
     preferredWorkoutType: "yoga",
-    trainingLevel: "beginner",
+    trainingLevel: "junior",
     subscribes: [],
   });
   await client.save();
@@ -164,7 +164,7 @@ const run = async () => {
     user: clientUser2._id,
     physicalData: "No injuries",
     preferredWorkoutType: "aerobics",
-    trainingLevel: "intermediate",
+    trainingLevel: "middle",
     subscribes: [],
   });
   await client2.save();
@@ -332,6 +332,7 @@ const run = async () => {
       clients: [clientUser._id],
       clientsLimit: course1.maxClients,
       schedule: course1.schedule,
+      trainingLevel: "junior",
     },
   ]);
 
