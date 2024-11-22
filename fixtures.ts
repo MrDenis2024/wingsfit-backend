@@ -18,7 +18,7 @@ const run = async () => {
     await db.dropCollection("users");
     await db.dropCollection("courses");
     await db.dropCollection("lessons");
-    await db.dropCollection("trainerreview");
+    await db.dropCollection("trainerreviews");
     await db.dropCollection("coursetypes");
     await db.dropCollection("groups");
   } catch (err) {
@@ -294,32 +294,32 @@ const run = async () => {
   await lesson4.save();
 
   const review1 = new TrainerReview({
-    trainerId: trainer1._id,
-    clientId: client._id,
+    trainerId: trainerUser1._id,
+    clientId: clientUser._id,
     rating: 5,
     comment: "Excellent yoga class!",
   });
   await review1.save();
 
   const review2 = new TrainerReview({
-    trainerId: trainer1._id,
-    clientId: client._id,
+    trainerId: trainerUser1._id,
+    clientId: clientUser._id,
     rating: 4,
     comment: "Great aerobics session!",
   });
   await review2.save();
 
   const review3 = new TrainerReview({
-    trainerId: trainer2._id,
-    clientId: client._id,
+    trainerId: trainerUser2._id,
+    clientId: clientUser2._id,
     rating: 4,
     comment: "Great aerobics session, really enjoyed it!",
   });
   await review3.save();
 
   const review4 = new TrainerReview({
-    trainerId: trainer2._id,
-    clientId: client2._id,
+    trainerId: trainerUser2._id,
+    clientId: clientUser2._id,
     rating: 5,
     comment: "Loved the stretching session, feeling more flexible!",
   });
