@@ -28,7 +28,6 @@ const TrainerSchema = new Schema<TrainerTypes>({
     {
       type: Schema.Types.ObjectId,
       ref: "CourseType",
-      // unique: true,
       validate: {
         validator: async (value: Types.ObjectId) => {
           const courseType = await CourseType.findById(value);
