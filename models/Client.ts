@@ -28,22 +28,19 @@ const ClientSchema = new Schema<ClientTypes>({
   subscribes: {
     type: [Schema.Types.ObjectId],
   },
-  preferredWorkoutType: {
-    type: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "CourseType",
-        unique: true,
-        validate: {
-          validator: async (value: Types.ObjectId) => {
-            const courseType = await CourseType.findById(value);
-            return Boolean(courseType);
-          },
-          message: "Course type does not exist!",
+  preferredWorkoutType: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "CourseType",
+      validate: {
+        validator: async (value: Types.ObjectId) => {
+          const courseType = await CourseType.findById(value);
+          return Boolean(courseType);
         },
+        message: "Course type does not exist!",
       },
-    ],
-  },
+    },
+  ],
   trainingLevel: {
     type: String,
     enum: ["junior", "middle", "advanced"],

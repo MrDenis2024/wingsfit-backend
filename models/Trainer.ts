@@ -24,23 +24,19 @@ const TrainerSchema = new Schema<TrainerTypes>({
       message: "There can only be one role",
     },
   },
-  courseTypes: {
-    type: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "CourseType",
-        unique: true,
-        validate: {
-          validator: async (value: Types.ObjectId) => {
-            const courseType = await CourseType.findById(value);
-            return Boolean(courseType);
-          },
-          message: "Course type does not exist!",
+  courseTypes: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "CourseType",
+      validate: {
+        validator: async (value: Types.ObjectId) => {
+          const courseType = await CourseType.findById(value);
+          return Boolean(courseType);
         },
+        message: "Course type does not exist!",
       },
-    ],
-    required: true,
-  },
+    },
+  ],
   rating: {
     type: Number,
     default: 0,
