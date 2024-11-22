@@ -30,7 +30,7 @@ const GroupSchema = new Schema({
     type: String,
     enum: ["junior", "middle", "advanced"],
     required: true,
-  }
+  },
 });
 
 const Group = mongoose.model("Group", GroupSchema);

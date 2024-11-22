@@ -34,6 +34,30 @@ const run = async () => {
   superAdmin.getToken();
   await superAdmin.save();
 
+  const yogaCourseType = new CourseType({
+    name: "Yoga",
+    description: "Yoga for all levels",
+  });
+  await yogaCourseType.save();
+
+  const pilatesCourseType = new CourseType({
+    name: "Pilates",
+    description: "Pilates for core strength",
+  });
+  await pilatesCourseType.save();
+
+  const aerobicsCourseType = new CourseType({
+    name: "Aerobics",
+    description: "Aerobics for cardiovascular fitness",
+  });
+  await aerobicsCourseType.save();
+
+  const stretchingCourseType = new CourseType({
+    name: "Stretching",
+    description: "Stretching exercises for flexibility",
+  });
+  await stretchingCourseType.save();
+
   const trainerUser1 = new User({
     email: "trainer1@fit.local",
     password: "test",
@@ -68,10 +92,10 @@ const run = async () => {
 
   const trainer1 = new Trainer({
     user: trainerUser1._id,
-    courseTypes: ["yoga", "pilates"],
+    courseTypes: [yogaCourseType._id, pilatesCourseType._id],
     specialization: "Yoga and Pilates",
     experience: "5 years",
-    certificates: [{title: "Первое место по боксу", image: "asd"}],
+    certificates: [{ title: "Первое место по боксу", image: "asd" }],
     description: "Expert in yoga with 5 years of experience.",
     availableDays: "Monday, Wednesday, Friday",
   });
@@ -79,10 +103,10 @@ const run = async () => {
 
   const trainer2 = new Trainer({
     user: trainerUser2._id,
-    courseTypes: ["aerobics", "stretching"],
+    courseTypes: [aerobicsCourseType._id, stretchingCourseType._id],
     specialization: "Aerobics",
     experience: "8 years",
-    certificates: [{title: "Первое место по боксу", image: "asd"}],
+    certificates: [{ title: "Первое место по боксу", image: "asd" }],
     description: "Passionate about fitness and flexibility.",
     availableDays: "Tuesday, Thursday, Saturday",
   });
@@ -107,10 +131,10 @@ const run = async () => {
 
   const trainer3 = new Trainer({
     user: trainerUser3._id,
-    courseTypes: ["fitness", "yoga", "pilates"],
+    courseTypes: [yogaCourseType._id, pilatesCourseType._id],
     specialization: "Fitness",
     experience: "6 years",
-    certificates: [{title: "Первое место по боксу", image: "asd"}],
+    certificates: [{ title: "Первое место по боксу", image: "asd" }],
     description:
       "Experienced fitness coach with a focus on holistic well-being.",
     availableDays: "Tuesday, Thursday, Saturday",
@@ -154,7 +178,7 @@ const run = async () => {
   const client = new Client({
     user: clientUser._id,
     physicalData: "Injury in left leg",
-    preferredWorkoutType: "yoga",
+    preferredWorkoutType: [aerobicsCourseType._id, stretchingCourseType._id],
     trainingLevel: "junior",
     subscribes: [],
   });
@@ -163,35 +187,11 @@ const run = async () => {
   const client2 = new Client({
     user: clientUser2._id,
     physicalData: "No injuries",
-    preferredWorkoutType: "aerobics",
+    preferredWorkoutType: [aerobicsCourseType._id, stretchingCourseType._id],
     trainingLevel: "middle",
     subscribes: [],
   });
   await client2.save();
-
-  const yogaCourseType = new CourseType({
-    name: "Yoga",
-    description: "Yoga for all levels",
-  });
-  await yogaCourseType.save();
-
-  const pilatesCourseType = new CourseType({
-    name: "Pilates",
-    description: "Pilates for core strength",
-  });
-  await pilatesCourseType.save();
-
-  const aerobicsCourseType = new CourseType({
-    name: "Aerobics",
-    description: "Aerobics for cardiovascular fitness",
-  });
-  await aerobicsCourseType.save();
-
-  const stretchingCourseType = new CourseType({
-    name: "Stretching",
-    description: "Stretching exercises for flexibility",
-  });
-  await stretchingCourseType.save();
 
   const course1 = new Course({
     title: "Morning Yoga",

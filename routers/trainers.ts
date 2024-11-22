@@ -2,11 +2,11 @@ import express from "express";
 import Trainer from "../models/Trainer";
 import auth, { RequestWithUser } from "../middleware/auth";
 import User from "../models/User";
-import mongoose, {Types} from "mongoose";
+import mongoose, { Types } from "mongoose";
 import Client from "../models/Client";
 import TrainerReview from "../models/TrainerReview";
 import permit from "../middleware/permit";
-import {imagesUpload} from "../multer";
+import { imagesUpload } from "../multer";
 
 const trainersRouter = express.Router();
 
@@ -236,71 +236,89 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
   }
 });
 
-trainersRouter.patch("/certificates", auth, permit("trainer"),  imagesUpload.single("certificate"), async (req: RequestWithUser, res, next) => {
-  try {
-    const user = req.user;
+trainersRouter.patch(
+  "/certificates",
+  auth,
+  permit("trainer"),
+  imagesUpload.single("certificate"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const user = req.user;
 
-    if(!user) return res.status(400).send({ error: "User not found" });
+      if (!user) return res.status(400).send({ error: "User not found" });
 
-    if(!req.file || !req.body.title) {
-      return res.status(400).send({error: "Both certificate file and title are required"});
-    }
+      if (!req.file || !req.body.title) {
+        return res
+          .status(400)
+          .send({ error: "Both certificate file and title are required" });
+      }
 
-    const trainer = await Trainer.findOne({ user: user._id });
+      const trainer = await Trainer.findOne({ user: user._id });
 
-    if (!trainer) {
-      return res.status(404).send({ error: "Trainer not found" });
-    }
+      if (!trainer) {
+        return res.status(404).send({ error: "Trainer not found" });
+      }
 
-    const newCertificate = {
-      _id: new Types.ObjectId(),
-      title: req.body.title,
-      image: req.file.filename,
-    };
+      const newCertificate = {
+        _id: new Types.ObjectId(),
+        title: req.body.title,
+        image: req.file.filename,
+      };
 
-    trainer.certificates.push(newCertificate);
-    await trainer.save();
+      trainer.certificates.push(newCertificate);
+      await trainer.save();
 
-    await trainer.populate(
+      await trainer.populate(
         "user",
         "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar",
-    );
+      );
 
-    return res.send(trainer);
-  } catch (error) {
-    if (error instanceof mongoose.Error.ValidationError) {
-      return res.status(400).send(error);
+      return res.send(trainer);
+    } catch (error) {
+      if (error instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send(error);
+      }
+
+      return next(error);
     }
+  },
+);
 
-    return next(error);
-  }
-});
+trainersRouter.delete(
+  "/certificates/:id",
+  auth,
+  permit("trainer", "admin", "superAdmin"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const user = req.user;
 
-trainersRouter.delete("/certificates/:id", auth, permit("trainer", "admin", "superAdmin"), async (req: RequestWithUser, res, next) => {
-  try {
-    const user = req.user;
+      if (!user) {
+        return res.status(400).send({ error: "User not found" });
+      }
 
-    if (!user) {
-      return res.status(400).send({ error: "User not found" });
-    }
+      const condition =
+        user.role === "trainer"
+          ? { user: user._id, "certificates._id": req.params.id }
+          : { "certificates._id": req.params.id };
 
-    const condition = user.role === "trainer" ? { user: user._id, "certificates._id": req.params.id } : { "certificates._id": req.params.id };
+      const trainer = await Trainer.findOne(condition);
 
-    const trainer = await Trainer.findOne(condition);
+      if (!trainer) {
+        return res.status(404).send({ error: "Certificate not found" });
+      }
 
-    if (!trainer) {
-      return res.status(404).send({ error: "Certificate not found" });
-    }
-
-    await Trainer.updateOne(
+      await Trainer.updateOne(
         { "certificates._id": req.params.id },
-        { $pull: { certificates: { _id: req.params.id } } }
-    );
+        { $pull: { certificates: { _id: req.params.id } } },
+      );
 
-    return res.status(200).send({ message: "Certificate deleted successfully" });
-  } catch (error) {
-    return next(error);
-  }
-});
+      return res
+        .status(200)
+        .send({ message: "Certificate deleted successfully" });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 export default trainersRouter;
