@@ -27,17 +27,11 @@ groupsRouter.post("/", auth, permit("trainer"), async (req, res, next) => {
       return res.status(400).send({ error: "Course does not exist" });
     }
 
-    const existingClients = await User.find({ _id: { $in: req.body.clients } });
-    if (existingClients.length !== req.body.clients.length) {
-      return res.status(400).send({ error: "Not all clients found" });
-    }
-
     const newGroup = new Group({
       title: req.body.title,
       course: coursesExists._id,
-      clients: req.body.clients,
       clientsLimit: coursesExists.maxClients,
-      schedule: coursesExists.schedule,
+      startTime: req.body.startTime,
       trainingLevel: req.body.trainingLevel,
     });
 

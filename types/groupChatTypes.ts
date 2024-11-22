@@ -1,6 +1,6 @@
-import {Types} from "mongoose";
+import { Types } from "mongoose";
 
 export interface ChatType {
-    group: Types.ObjectId | string;
-    title: string;
+  group: Types.ObjectId | string;
+  title: string;
 }

@@ -8,7 +8,7 @@ export interface Certificates {
 
 export interface TrainerTypes {
   user: Types.ObjectId | string;
-  courseTypes: string[];
+  courseTypes: Types.ObjectId[];
   specialization: string;
   experience: string;
   certificates: Certificates[];
