@@ -106,7 +106,7 @@ clientsRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
     const client = await Client.create(clientMutation);
     await client.populate(
       "user",
-      "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar",
+      "_id email firstName lastName role phoneNumber gender timeZone dateOfBirth notification avatar",
     );
 
     return res.status(200).send(client);
@@ -175,7 +175,7 @@ clientsRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
 
     await client.populate(
       "user",
-      "_id email firstName lastName role token gender timeZone dateOfBirth phoneNumber notification avatar",
+      "_id email firstName lastName role gender timeZone dateOfBirth phoneNumber notification avatar",
     );
 
     return res.status(200).send(client);
