@@ -1,17 +1,16 @@
 import express from "express";
 import TrainerReview from "../models/TrainerReview";
-import auth, { RequestWithUser } from "../middleware/auth";
+import auth, {RequestWithUser} from "../middleware/auth";
 import Course from "../models/Course";
 import Lesson from "../models/Lesson";
-import { Types } from "mongoose";
-import User from "../models/User";
+import {Types} from "mongoose";
 
 export const trainerReviewRouter = express.Router();
 
 trainerReviewRouter.get("/:id", async (req, res) => {
   const trainerId = req.params.id;
 
-  const oneTrainer = await TrainerReview.find({ trainerId });
+  const oneTrainer = await TrainerReview.find({ trainerId }).populate("clientId" , "firstName");
 
   if (!oneTrainer) {
     return res
@@ -32,8 +31,7 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
     isEmpty(trainerId) ||
     !rating ||
     rating < 1 ||
-    rating > 5 ||
-    isEmpty(comment)
+    rating > 5
   ) {
     return res
       .status(400)
@@ -43,12 +41,6 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
   try {
     if (!(clientId instanceof Types.ObjectId)) {
       return res.status(400).send({ error: "Invalid Client ID." });
-    }
-    const isTrainer = await User.findById(trainerId);
-    if (!isTrainer || isTrainer.role !== "trainer") {
-      return res
-        .status(404)
-        .send({ error: "Trainer ID is wrong or user is not a trainer" });
     }
 
     const course = await Course.findOne({ user: trainerId });
@@ -81,7 +73,7 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
     const newReview = new TrainerReview({
       clientId,
       trainerId,
-      comment,
+      comment: comment ?? null,
       rating,
     });
 

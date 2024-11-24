@@ -77,7 +77,7 @@ trainersRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
     if (user._id.equals(trainer.user)) {
       await trainer.populate(
         "user",
-        "email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar createdAt updatedAt lastActivity",
+        "email firstName lastName role phoneNumber gender timeZone dateOfBirth notification avatar createdAt updatedAt lastActivity",
       );
     } else {
       await trainer.populate(
@@ -150,7 +150,7 @@ trainersRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
     const trainer = await Trainer.create(trainerMutation);
     await trainer.populate(
       "user",
-      "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar",
+      "_id email firstName lastName role phoneNumber gender timeZone dateOfBirth notification avatar",
     );
 
     return res.status(200).send(trainer);
@@ -223,7 +223,7 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
 
     await trainer.populate(
       "user",
-      "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar",
+      "_id email firstName lastName role phoneNumber gender timeZone dateOfBirth notification avatar",
     );
 
     return res.status(200).send(trainer);
@@ -270,7 +270,7 @@ trainersRouter.patch(
 
       await trainer.populate(
         "user",
-        "_id email firstName lastName role token phoneNumber gender timeZone dateOfBirth notification avatar",
+        "_id email firstName lastName role phoneNumber gender timeZone dateOfBirth notification avatar",
       );
 
       return res.send(trainer);
