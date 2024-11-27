@@ -327,11 +327,30 @@ const run = async () => {
 
   await Group.create([
     {
+      trainer: trainerUser1._id,
       title: "Group 1",
       course: course1._id,
-      clients: [clientUser._id],
+      clients: [clientUser._id , clientUser2._id],
       clientsLimit: course1.maxClients,
       schedule: course1.schedule,
+      trainingLevel: "junior",
+    },
+    {
+      trainer: trainerUser1._id,
+      title: "Group 1/1",
+      course: course1._id,
+      clients: [clientUser2._id],
+      clientsLimit: course1.maxClients,
+      schedule: course1.schedule,
+      trainingLevel: "middle",
+    },
+    {
+      trainer: trainerUser1._id,
+      title: "Group 2",
+      course: course2._id,
+      clients: [clientUser._id , clientUser2._id],
+      clientsLimit: course2.maxClients,
+      schedule: course2.schedule,
       trainingLevel: "junior",
     },
   ]);
