@@ -81,6 +81,7 @@ trainerStatisticsRouter.get(
             name: { $first: "$clientData.firstName" },
             lastName: { $first: "$clientData.lastName" },
             phoneNumber: { $first: "$clientData.phoneNumber" },
+            email: { $first: "$clientData.email" },
             groups: { $addToSet: "$title" },
             courses: { $addToSet: "$courseData.title" },
           },
