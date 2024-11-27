@@ -52,15 +52,6 @@ trainerStatisticsRouter.get(
       const userId = req.user?._id;
 
       const clientStats = await Group.aggregate([
-        { $match: { trainer: userId } },
-        {
-          $lookup: {
-            from: "users",
-            localField: "clients",
-            foreignField: "_id",
-            as: "clientData",
-          },
-        },
         {
           $lookup: {
             from: "courses",
@@ -70,18 +61,26 @@ trainerStatisticsRouter.get(
           },
         },
         {
-          $unwind: "$courseData",
+          $match: {
+            "courseData.user": userId,
+          },
         },
         {
-          $unwind: "$clientData",
+          $lookup: {
+            from: "users",
+            localField: "clients",
+            foreignField: "_id",
+            as: "clientData",
+          },
         },
+        { $unwind: "$clientData" },
+        { $unwind: "$courseData" },
         {
           $group: {
             _id: "$clientData._id",
             name: { $first: "$clientData.firstName" },
             lastName: { $first: "$clientData.lastName" },
             phoneNumber: { $first: "$clientData.phoneNumber" },
-            email: { $first: "$clientData.email" },
             groups: { $addToSet: "$title" },
             courses: { $addToSet: "$courseData.title" },
           },
