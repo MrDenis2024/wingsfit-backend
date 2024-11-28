@@ -1,16 +1,19 @@
 import express from "express";
 import TrainerReview from "../models/TrainerReview";
-import auth, {RequestWithUser} from "../middleware/auth";
+import auth, { RequestWithUser } from "../middleware/auth";
 import Course from "../models/Course";
 import Lesson from "../models/Lesson";
-import {Types} from "mongoose";
+import { Types } from "mongoose";
 
 export const trainerReviewRouter = express.Router();
 
 trainerReviewRouter.get("/:id", async (req, res) => {
   const trainerId = req.params.id;
 
-  const oneTrainer = await TrainerReview.find({ trainerId }).populate("clientId" , "firstName");
+  const oneTrainer = await TrainerReview.find({ trainerId }).populate(
+    "clientId",
+    "firstName",
+  );
 
   if (!oneTrainer) {
     return res
@@ -27,12 +30,7 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
 
   const isEmpty = (value: string) => !value || value.trim() === "";
 
-  if (
-    isEmpty(trainerId) ||
-    !rating ||
-    rating < 1 ||
-    rating > 5
-  ) {
+  if (isEmpty(trainerId) || !rating || rating < 1 || rating > 5) {
     return res
       .status(400)
       .send({ error: "Make sure that all fields are filled in correctly." });

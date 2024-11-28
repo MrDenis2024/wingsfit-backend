@@ -1,4 +1,4 @@
-import mongoose, {Types} from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { ReviewTypes } from "../types/reviewTypes";
 import User from "./User";
 

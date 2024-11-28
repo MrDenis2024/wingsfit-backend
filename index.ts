@@ -11,6 +11,7 @@ import { trainerReviewRouter } from "./routers/TrainerReview";
 import { courseTypesRouter } from "./routers/courseTypes";
 import adminsRouter from "./routers/admins";
 import groupsRouter from "./routers/groups";
+import trainerStatisticsRouter from "./routers/trainerStatistics";
 
 const app = express();
 const port = 8000;
@@ -27,6 +28,7 @@ app.use("/courseTypes", courseTypesRouter);
 app.use("/review", trainerReviewRouter);
 app.use("/admins", adminsRouter);
 app.use("/groups", groupsRouter);
+app.use("/trainerStatistics", trainerStatisticsRouter);
 
 const run = async () => {
   await mongoose.connect(config.database);
