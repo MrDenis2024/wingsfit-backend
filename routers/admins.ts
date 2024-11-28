@@ -111,6 +111,9 @@ adminsRouter.patch(
   permit("superAdmin"),
   async (req, res, next) => {
     try {
+      if (!mongoose.isValidObjectId(req.params.id))
+        return res.status(400).send({ error: "Invalid ID" });
+
       if (!req.body.newPassword) {
         return res.status(400).send({ error: "New password is required" });
       }
@@ -140,6 +143,9 @@ adminsRouter.delete(
   permit("superAdmin"),
   async (req, res, next) => {
     try {
+      if (!mongoose.isValidObjectId(req.params.id))
+        return res.status(400).send({ error: "Invalid ID" });
+
       const admin = await User.findById(req.params.id);
       if (admin === null || admin.role !== "admin") {
         return res.status(404).send({ error: "Admin not found" });

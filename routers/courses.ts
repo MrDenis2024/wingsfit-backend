@@ -3,6 +3,7 @@ import auth, { RequestWithUser } from "../middleware/auth";
 import Course from "../models/Course";
 import { imagesUpload } from "../multer";
 import User from "../models/User";
+import mongoose from "mongoose";
 
 const coursesRouter = express.Router();
 
@@ -10,7 +11,9 @@ coursesRouter.get("/", async (req, res) => {
   const { trainerId } = req.query;
 
   if (!trainerId) {
-    const allCourses = await Course.find();
+    const allCourses = await Course.find()
+      .populate("user", "firstName lastName")
+      .populate("courseType", "name");
     return res.status(200).send(allCourses);
   }
 
@@ -22,14 +25,23 @@ coursesRouter.get("/", async (req, res) => {
       .send({ error: "The user is not a trainer or not found" });
   }
 
-  const oneTrainer = await Course.find({ user: trainerId });
+  const oneTrainer = await Course.find({ user: trainerId })
+    .populate("user", "firstName lastName")
+    .populate("courseType", "name");
   return res.status(200).send(oneTrainer);
 });
 
 coursesRouter.get("/:id", async (req, res, next) => {
   try {
     const id = req.params.id;
-    const course = await Course.findById(id);
+
+    if (!mongoose.isValidObjectId(id))
+      return res.status(400).send({ error: "Invalid ID" });
+
+    const course = await Course.findById(id)
+      .populate("user", "firstName lastName")
+      .populate("courseType", "name");
+
     if (!course) {
       return res.status(404).send({ error: "Course not found" });
     }

@@ -3,17 +3,23 @@ import Client from "../models/Client";
 import auth, { RequestWithUser } from "../middleware/auth";
 import User from "../models/User";
 import mongoose from "mongoose";
+import permit from "../middleware/permit";
 
 const clientsRouter = express.Router();
 
-clientsRouter.get("/", async (_req, res, next) => {
-  try {
-    const clients = await Client.find();
-    return res.send(clients);
-  } catch (error) {
-    return next(error);
-  }
-});
+clientsRouter.get(
+  "/",
+  auth,
+  permit("admin", "superAdmin"),
+  async (_req, res, next) => {
+    try {
+      const clients = await Client.find();
+      return res.send(clients);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 clientsRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
   try {
@@ -21,7 +27,7 @@ clientsRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
 
     if (!user) return res.status(401).send({ error: "User not found" });
     if (!mongoose.isValidObjectId(req.params.id))
-      return res.status(400).send({ error: "Invalid client ID" });
+      return res.status(400).send({ error: "Invalid ID" });
 
     const client = await Client.findOne({
       user: req.params.id,
@@ -106,7 +112,7 @@ clientsRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
     const client = await Client.create(clientMutation);
     await client.populate(
       "user",
-      "_id email firstName lastName role phoneNumber gender timeZone dateOfBirth notification avatar",
+      "email firstName lastName role phoneNumber gender timeZone dateOfBirth notification avatar",
     );
 
     return res.status(200).send(client);
@@ -175,7 +181,7 @@ clientsRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
 
     await client.populate(
       "user",
-      "_id email firstName lastName role gender timeZone dateOfBirth phoneNumber notification avatar",
+      "email firstName lastName role gender timeZone dateOfBirth phoneNumber notification avatar",
     );
 
     return res.status(200).send(client);
