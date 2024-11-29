@@ -5,13 +5,14 @@ import { OAuth2Client } from "google-auth-library";
 import mongoose from "mongoose";
 import auth, { RequestWithUser } from "../middleware/auth";
 import { imagesUpload } from "../multer";
+import permit from "../middleware/permit";
 
 const usersRouter = express.Router();
 const googleClient = new OAuth2Client(config.google.clientId);
 
-usersRouter.get("/", async (_req, res, next) => {
+usersRouter.get("/", auth, permit("admin", "superAdmin"), async (_req, res, next) => {
   try {
-    const users = await User.find();
+    const users = await User.find().select("-token");
     return res.status(200).send(users);
   } catch (error) {
     return next(error);

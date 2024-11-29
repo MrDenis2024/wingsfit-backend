@@ -2,23 +2,41 @@ import express from "express";
 import Lesson from "../models/Lesson";
 import auth, { RequestWithUser } from "../middleware/auth";
 import mongoose from "mongoose";
+import permit from "../middleware/permit";
 
 const lessonsRouter = express.Router();
 
-lessonsRouter.get("/", async (req, res) => {
-  const allLessons = await Lesson.find();
-  return res.status(200).send(allLessons);
+lessonsRouter.get("/", auth, async (req, res, next) => {
+  try {
+    const allLessons = await Lesson.find().populate({
+      path: "course",
+      populate: [
+        { path: "user", select: "firstName lastName" },
+        { path: "courseType", select: "name" },
+      ],
+    });
+
+    return res.status(200).send(allLessons);
+  } catch (error) {
+    return next(error);
+  }
 });
 
-lessonsRouter.get("/:id", async (req, res, next) => {
+lessonsRouter.get("/:id", auth, async (req, res, next) => {
   try {
     const id = req.params.id;
 
     if (!mongoose.isValidObjectId(id)) {
-      return res.status(401).send({ error: "Id wrong" });
+      return res.status(400).send({ error: "Invalid ID" });
     }
 
-    const oneLesson = await Lesson.findById(id);
+    const oneLesson = await Lesson.findById(id).populate({
+      path: "course",
+      populate: [
+        { path: "user", select: "firstName lastName" },
+        { path: "courseType", select: "name" },
+      ],
+    });
 
     if (oneLesson === null) {
       return res.status(404).send({ error: "Lesson not found" });
@@ -30,17 +48,11 @@ lessonsRouter.get("/:id", async (req, res, next) => {
   }
 });
 
-lessonsRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
+lessonsRouter.post("/", auth, permit("trainer"), async (req: RequestWithUser, res, next) => {
   try {
     const user = req.user;
 
     if (!user) return res.status(401).send({ error: "User not found" });
-
-    if (user.role !== "trainer") {
-      return res.status(400).send({
-        error: "Bad Request! Lesson create only for users with role trainer!",
-      });
-    }
 
     if (req.body.title.trim() === "" || req.body.quantityClients <= 0) {
       return res
@@ -48,7 +60,7 @@ lessonsRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
         .send({ error: "Please enter a title or quantity clients" });
     }
 
-    const lessonMutation = {
+    const lessonMutation = new Lesson ({
       course: req.body.course,
       title: req.body.title,
       quantityClients: req.body.quantityClients,
@@ -56,10 +68,10 @@ lessonsRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
       groupLevel: req.body.groupLevel ? req.body.groupLevel : null,
       ageLimit: req.body.ageLimit ? req.body.ageLimit : null,
       description: req.body.description ? req.body.description : null,
-    };
+    });
 
-    const lesson = await Lesson.create(lessonMutation);
-    return res.status(200).send(lesson);
+    await lessonMutation.save();
+    return res.status(200).send(lessonMutation);
   } catch (error) {
     next(error);
   }

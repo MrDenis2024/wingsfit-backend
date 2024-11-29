@@ -10,6 +10,9 @@ export const groupsRouter = express.Router();
 
 groupsRouter.get("/:id", async (req, res, next) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id))
+      return res.status(400).send({ error: "Invalid ID" });
+
     const groups = await Group.find({ course: req.params.id }).populate(
       "clients",
       "firstName lastName",
@@ -47,6 +50,13 @@ groupsRouter.post("/", auth, permit("trainer"), async (req, res, next) => {
 
 groupsRouter.patch("/:id", auth, permit("trainer"), async (req, res, next) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id))
+      return res.status(400).send({ error: "Invalid ID" });
+
+    if (!req.body.clientId) {
+      return res.status(400).send({ error: "Client ID is required" });
+    }
+
     const client = await User.findById(req.body.clientId);
     if (!client) {
       return res.status(400).send({ error: "Client does not exist" });
@@ -63,6 +73,10 @@ groupsRouter.patch("/:id", auth, permit("trainer"), async (req, res, next) => {
 
     if (group.clients.includes(client._id)) {
       return res.status(400).send({ error: "Client is already in the group" });
+    }
+
+    if (group.clients.length >= group.clientsLimit) {
+      return res.status(400).send({ error: "Client limit reached" });
     }
 
     group.clients.push(client._id);

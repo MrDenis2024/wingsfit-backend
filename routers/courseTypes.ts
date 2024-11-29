@@ -7,11 +7,8 @@ import { CourseTypeFields } from "../types/courseTypes";
 
 export const courseTypesRouter = express.Router();
 
-courseTypesRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
+courseTypesRouter.get("/", async (req, res, next) => {
   try {
-    const user = req.user;
-    if (!user) return res.status(401).send({ error: "User not found" });
-
     const allCourseTypes = await CourseType.find();
     return res.send(allCourseTypes);
   } catch (error) {
@@ -44,7 +41,7 @@ courseTypesRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
 courseTypesRouter.put(
   "/:id",
   auth,
-  permit("admin"),
+  permit("admin", "superAdmin"),
   async (req: RequestWithUser, res, next) => {
     try {
       if (!mongoose.isValidObjectId(req.params.id)) {
