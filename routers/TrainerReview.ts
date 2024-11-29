@@ -28,7 +28,7 @@ trainerReviewRouter.get("/:id", async (req, res, next) => {
 
     return res.status(200).send(oneTrainer);
   }catch (e) {
-    next(e)
+    return next(e)
   }
 });
 
@@ -102,7 +102,7 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
     }
     return res.status(200).send(reviews);
   } catch (e) {
-    next(e);
+    return next(e);
   }
 });
 
@@ -137,7 +137,7 @@ trainerReviewRouter.delete(
       await TrainerReview.findByIdAndDelete(reviewId);
       return res.status(200).send({ message: "Review deleted successfully." });
     } catch (e) {
-      next(e);
+      return next(e);
     }
   },
 );
