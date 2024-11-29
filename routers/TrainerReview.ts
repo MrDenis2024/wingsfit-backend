@@ -14,21 +14,21 @@ trainerReviewRouter.get("/:id", async (req, res, next) => {
   if (!mongoose.isValidObjectId(trainerId)) {
     return res.status(400).send({ error: "Invalid ID" });
   }
-  try{
+  try {
     const oneTrainer = await TrainerReview.find({ trainerId }).populate(
-        "clientId",
-        "firstName",
+      "clientId",
+      "firstName",
     );
 
     if (!oneTrainer) {
       return res
-          .status(404)
-          .send({ error: "The trainer has not been found or has no reviews" });
+        .status(404)
+        .send({ error: "The trainer has not been found or has no reviews" });
     }
 
     return res.status(200).send(oneTrainer);
-  }catch (e) {
-    return next(e)
+  } catch (e) {
+    return next(e);
   }
 });
 
@@ -89,15 +89,15 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
 
     if (reviews.length > 0) {
       const averageRating =
-          reviews.reduce((sum, review) => sum + review.rating, 0) /
-          reviews.length;
+        reviews.reduce((sum, review) => sum + review.rating, 0) /
+        reviews.length;
 
       const roundedRating = Math.min(Math.round(averageRating / 0.5) * 0.5, 5);
 
       await Trainer.findOneAndUpdate(
-          { user: trainerId },
-          { rating: roundedRating },
-          { new: true }
+        { user: trainerId },
+        { rating: roundedRating },
+        { new: true },
       );
     }
     return res.status(200).send(reviews);
@@ -127,7 +127,8 @@ trainerReviewRouter.delete(
 
       if (
         String(review.clientId) !== String(clientId) &&
-        req.user?.role !== "admin" && req.user?.role !== "superAdmin"
+        req.user?.role !== "admin" &&
+        req.user?.role !== "superAdmin"
       ) {
         return res
           .status(403)

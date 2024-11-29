@@ -1,11 +1,11 @@
 import express from "express";
 import Trainer from "../models/Trainer";
-import auth, {RequestWithUser} from "../middleware/auth";
+import auth, { RequestWithUser } from "../middleware/auth";
 import User from "../models/User";
-import mongoose, {Types} from "mongoose";
+import mongoose, { Types } from "mongoose";
 import Client from "../models/Client";
 import permit from "../middleware/permit";
-import {imagesUpload} from "../multer";
+import { imagesUpload } from "../multer";
 
 const trainersRouter = express.Router();
 
@@ -14,7 +14,9 @@ trainersRouter.get("/", async (req: RequestWithUser, res, next) => {
     const clientId = req.query.clientId as string;
 
     if (!clientId) {
-      const allTrainers = await Trainer.find().sort({ rating: -1 }).populate("courseTypes", "name description");
+      const allTrainers = await Trainer.find()
+        .sort({ rating: -1 })
+        .populate("courseTypes", "name description");
       return res.status(200).send(allTrainers);
     }
 
@@ -27,15 +29,23 @@ trainersRouter.get("/", async (req: RequestWithUser, res, next) => {
     const preferredWorkoutTypes = findClient.preferredWorkoutType;
 
     if (!preferredWorkoutTypes || !preferredWorkoutTypes.length) {
-      return res.status(404).send({ error: "Client has no preferred workout types" });
+      return res
+        .status(404)
+        .send({ error: "Client has no preferred workout types" });
     }
 
     const matchingTrainers = await Trainer.find({
       courseTypes: { $in: preferredWorkoutTypes },
-    }).sort({ rating: -1 }).populate("user", "firstName lastName phoneNumber email");
+    })
+      .sort({ rating: -1 })
+      .populate("user", "firstName lastName phoneNumber email");
 
     if (!matchingTrainers.length) {
-      return res.status(404).send({ error: "No trainers found matching the preferred workout types" });
+      return res
+        .status(404)
+        .send({
+          error: "No trainers found matching the preferred workout types",
+        });
     }
 
     return res.status(200).send(matchingTrainers);
