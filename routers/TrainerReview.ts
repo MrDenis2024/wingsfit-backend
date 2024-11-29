@@ -4,8 +4,13 @@ import auth, { RequestWithUser } from "../middleware/auth";
 import Course from "../models/Course";
 import Lesson from "../models/Lesson";
 import mongoose, { Types } from "mongoose";
+import Trainer from "../models/Trainer";
 
 export const trainerReviewRouter = express.Router();
+
+const roundToNearest = (value: number, step: number) => {
+  return Math.round(value / step) * step;
+};
 
 trainerReviewRouter.get("/:id", async (req, res, next) => {
   const trainerId = req.params.id;
@@ -84,7 +89,22 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
 
     await newReview.save();
 
-    return res.status(200).send(newReview);
+    const reviews = await TrainerReview.find({ trainerId });
+
+    if (reviews.length > 0) {
+      const averageRating =
+          reviews.reduce((sum, review) => sum + review.rating, 0) /
+          reviews.length;
+
+      const roundedRating = Math.min(roundToNearest(averageRating, 0.5), 5);
+
+      await Trainer.findOneAndUpdate(
+          { user: trainerId },
+          { rating: roundedRating },
+          { new: true }
+      );
+    }
+    return res.status(200).send(reviews);
   } catch (e) {
     next(e);
   }
