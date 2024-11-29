@@ -3,25 +3,33 @@ import TrainerReview from "../models/TrainerReview";
 import auth, { RequestWithUser } from "../middleware/auth";
 import Course from "../models/Course";
 import Lesson from "../models/Lesson";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
+import Trainer from "../models/Trainer";
 
 export const trainerReviewRouter = express.Router();
 
-trainerReviewRouter.get("/:id", async (req, res) => {
+trainerReviewRouter.get("/:id", async (req, res, next) => {
   const trainerId = req.params.id;
 
-  const oneTrainer = await TrainerReview.find({ trainerId }).populate(
-    "clientId",
-    "firstName",
-  );
-
-  if (!oneTrainer) {
-    return res
-      .status(404)
-      .send({ error: "The trainer has not been found or has no reviews" });
+  if (!mongoose.isValidObjectId(trainerId)) {
+    return res.status(400).send({ error: "Invalid ID" });
   }
+  try {
+    const oneTrainer = await TrainerReview.find({ trainerId }).populate(
+      "clientId",
+      "firstName",
+    );
 
-  return res.status(200).send(oneTrainer);
+    if (!oneTrainer) {
+      return res
+        .status(404)
+        .send({ error: "The trainer has not been found or has no reviews" });
+    }
+
+    return res.status(200).send(oneTrainer);
+  } catch (e) {
+    return next(e);
+  }
 });
 
 trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
@@ -77,9 +85,24 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
 
     await newReview.save();
 
-    return res.status(200).send(newReview);
+    const reviews = await TrainerReview.find({ trainerId });
+
+    if (reviews.length > 0) {
+      const averageRating =
+        reviews.reduce((sum, review) => sum + review.rating, 0) /
+        reviews.length;
+
+      const roundedRating = Math.min(Math.round(averageRating / 0.5) * 0.5, 5);
+
+      await Trainer.findOneAndUpdate(
+        { user: trainerId },
+        { rating: roundedRating },
+        { new: true },
+      );
+    }
+    return res.status(200).send(reviews);
   } catch (e) {
-    next(e);
+    return next(e);
   }
 });
 
@@ -88,6 +111,11 @@ trainerReviewRouter.delete(
   auth,
   async (req: RequestWithUser, res, next) => {
     const reviewId = req.params.id;
+
+    if (!mongoose.isValidObjectId(reviewId)) {
+      return res.status(400).send({ error: "Invalid ID" });
+    }
+
     const clientId = req.user?._id;
 
     try {
@@ -99,7 +127,8 @@ trainerReviewRouter.delete(
 
       if (
         String(review.clientId) !== String(clientId) &&
-        req.user?.role !== "admin"
+        req.user?.role !== "admin" &&
+        req.user?.role !== "superAdmin"
       ) {
         return res
           .status(403)
@@ -109,7 +138,7 @@ trainerReviewRouter.delete(
       await TrainerReview.findByIdAndDelete(reviewId);
       return res.status(200).send({ message: "Review deleted successfully." });
     } catch (e) {
-      next(e);
+      return next(e);
     }
   },
 );
