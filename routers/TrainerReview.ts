@@ -8,10 +8,6 @@ import Trainer from "../models/Trainer";
 
 export const trainerReviewRouter = express.Router();
 
-const roundToNearest = (value: number, step: number) => {
-  return Math.round(value / step) * step;
-};
-
 trainerReviewRouter.get("/:id", async (req, res, next) => {
   const trainerId = req.params.id;
 
@@ -96,7 +92,7 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
           reviews.reduce((sum, review) => sum + review.rating, 0) /
           reviews.length;
 
-      const roundedRating = Math.min(roundToNearest(averageRating, 0.5), 5);
+      const roundedRating = Math.min(Math.round(averageRating / 0.5) * 0.5, 5);
 
       await Trainer.findOneAndUpdate(
           { user: trainerId },
