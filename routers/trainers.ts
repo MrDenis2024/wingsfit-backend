@@ -1,58 +1,44 @@
 import express from "express";
 import Trainer from "../models/Trainer";
-import auth, { RequestWithUser } from "../middleware/auth";
+import auth, {RequestWithUser} from "../middleware/auth";
 import User from "../models/User";
-import mongoose, { Types } from "mongoose";
+import mongoose, {Types} from "mongoose";
 import Client from "../models/Client";
-import TrainerReview from "../models/TrainerReview";
 import permit from "../middleware/permit";
-import { imagesUpload } from "../multer";
+import {imagesUpload} from "../multer";
 
 const trainersRouter = express.Router();
 
-trainersRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
+trainersRouter.get("/", async (req: RequestWithUser, res, next) => {
   try {
-    const clientId = req.user?._id;
+    const clientId = req.query.clientId as string;
 
-    if (req.user?.role === "trainer") {
-      const allTrainers = await Trainer.find();
+    if (!clientId) {
+      const allTrainers = await Trainer.find().sort({ rating: -1 }).populate("courseTypes", "name description");
       return res.status(200).send(allTrainers);
     }
 
     const findClient = await Client.findOne({ user: clientId });
 
     if (!findClient) {
-      return res.status(404).send({ message: "Client not found" });
+      return res.status(404).send({ error: "Client not found" });
     }
 
-    const preferredWorkoutType = findClient.preferredWorkoutType;
+    const preferredWorkoutTypes = findClient.preferredWorkoutType;
 
-    const trainers = await Trainer.find({
-      courseTypes: { $in: [preferredWorkoutType] },
-    });
-
-    for (let trainer of trainers) {
-      const reviews = await TrainerReview.find({ trainerId: trainer.user });
-
-      if (reviews.length > 0) {
-        const totalRating = reviews.reduce(
-          (sum, review) => sum + review.rating,
-          0,
-        );
-        let averageRating = totalRating / reviews.length;
-
-        averageRating = parseFloat(averageRating.toFixed(1));
-
-        trainer.rating = averageRating;
-        await trainer.save();
-      } else {
-        trainer.rating = 0;
-      }
+    if (!preferredWorkoutTypes || !preferredWorkoutTypes.length) {
+      return res.status(404).send({ error: "Client has no preferred workout types" });
     }
 
-    const sortedTrainers = trainers.sort((a, b) => b.rating - a.rating);
+    const matchingTrainers = await Trainer.find({
+      courseTypes: { $in: preferredWorkoutTypes },
+    }).sort({ rating: -1 }).populate("user", "firstName lastName phoneNumber email");
 
-    return res.status(200).send(sortedTrainers);
+    if (!matchingTrainers.length) {
+      return res.status(404).send({ error: "No trainers found matching the preferred workout types" });
+    }
+
+    return res.status(200).send(matchingTrainers);
   } catch (error) {
     return next(error);
   }
@@ -290,6 +276,10 @@ trainersRouter.delete(
   permit("trainer", "admin", "superAdmin"),
   async (req: RequestWithUser, res, next) => {
     try {
+      if (!mongoose.isValidObjectId(req.params.id)) {
+        return res.status(400).send({ error: "Invalid ID" });
+      }
+
       const user = req.user;
 
       if (!user) {

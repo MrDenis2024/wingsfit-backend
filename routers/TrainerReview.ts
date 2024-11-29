@@ -3,25 +3,32 @@ import TrainerReview from "../models/TrainerReview";
 import auth, { RequestWithUser } from "../middleware/auth";
 import Course from "../models/Course";
 import Lesson from "../models/Lesson";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 export const trainerReviewRouter = express.Router();
 
-trainerReviewRouter.get("/:id", async (req, res) => {
+trainerReviewRouter.get("/:id", async (req, res, next) => {
   const trainerId = req.params.id;
 
-  const oneTrainer = await TrainerReview.find({ trainerId }).populate(
-    "clientId",
-    "firstName",
-  );
-
-  if (!oneTrainer) {
-    return res
-      .status(404)
-      .send({ error: "The trainer has not been found or has no reviews" });
+  if (!mongoose.isValidObjectId(trainerId)) {
+    return res.status(400).send({ error: "Invalid ID" });
   }
+  try{
+    const oneTrainer = await TrainerReview.find({ trainerId }).populate(
+        "clientId",
+        "firstName",
+    );
 
-  return res.status(200).send(oneTrainer);
+    if (!oneTrainer) {
+      return res
+          .status(404)
+          .send({ error: "The trainer has not been found or has no reviews" });
+    }
+
+    return res.status(200).send(oneTrainer);
+  }catch (e) {
+    next(e)
+  }
 });
 
 trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
@@ -88,6 +95,11 @@ trainerReviewRouter.delete(
   auth,
   async (req: RequestWithUser, res, next) => {
     const reviewId = req.params.id;
+
+    if (!mongoose.isValidObjectId(reviewId)) {
+      return res.status(400).send({ error: "Invalid ID" });
+    }
+
     const clientId = req.user?._id;
 
     try {
@@ -99,7 +111,7 @@ trainerReviewRouter.delete(
 
       if (
         String(review.clientId) !== String(clientId) &&
-        req.user?.role !== "admin"
+        req.user?.role !== "admin" && req.user?.role !== "superAdmin"
       ) {
         return res
           .status(403)
