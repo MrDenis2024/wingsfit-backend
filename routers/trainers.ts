@@ -12,15 +12,14 @@ const trainersRouter = express.Router();
 trainersRouter.get("/", async (req: RequestWithUser, res, next) => {
   try {
     const clientId = req.query.clientId as string;
+    const findClient = await Client.findOne({ user: clientId });
 
-    if (!clientId) {
+    if (!findClient) {
       const allTrainers = await Trainer.find()
         .sort({ rating: -1 })
-        .populate("courseTypes", "name description");
+        .populate("user", "firstName lastName avatar");
       return res.status(200).send(allTrainers);
     }
-
-    const findClient = await Client.findOne({ user: clientId });
 
     if (!findClient) {
       return res.status(404).send({ error: "Client not found" });
@@ -38,14 +37,12 @@ trainersRouter.get("/", async (req: RequestWithUser, res, next) => {
       courseTypes: { $in: preferredWorkoutTypes },
     })
       .sort({ rating: -1 })
-      .populate("user", "firstName lastName phoneNumber email");
+      .populate("user", "firstName lastName avatar");
 
     if (!matchingTrainers.length) {
-      return res
-        .status(404)
-        .send({
-          error: "No trainers found matching the preferred workout types",
-        });
+      return res.status(404).send({
+        error: "No trainers found matching the preferred workout types",
+      });
     }
 
     return res.status(200).send(matchingTrainers);
