@@ -34,7 +34,7 @@ clientsRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
     });
 
     if (!client) {
-      return res.status(400).send({ error: "Client not found" });
+      return res.status(404).send({ error: "Client not found" });
     }
 
     if (user._id.equals(client.user)) {
