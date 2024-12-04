@@ -10,14 +10,19 @@ import permit from "../middleware/permit";
 const usersRouter = express.Router();
 const googleClient = new OAuth2Client(config.google.clientId);
 
-usersRouter.get("/", auth, permit("admin", "superAdmin"), async (_req, res, next) => {
-  try {
-    const users = await User.find().select("-token");
-    return res.status(200).send(users);
-  } catch (error) {
-    return next(error);
-  }
-});
+usersRouter.get(
+  "/",
+  auth,
+  permit("admin", "superAdmin"),
+  async (_req, res, next) => {
+    try {
+      const users = await User.find().select("-token");
+      return res.status(200).send(users);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 usersRouter.post("/", async (req, res, next) => {
   try {
