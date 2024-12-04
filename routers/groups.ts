@@ -5,24 +5,21 @@ import permit from "../middleware/permit";
 import Course from "../models/Course";
 import User from "../models/User";
 import mongoose from "mongoose";
-import Trainer from "../models/Trainer";
 
 export const groupsRouter = express.Router();
 
-groupsRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
+groupsRouter.get("/", auth, permit("trainer"), async (req: RequestWithUser, res, next) => {
   try {
-    const trainerId = req.query.trainer;
+    const user = req.user;
 
-    const trainer = await Trainer.findOne({user: trainerId});
-
-    if (!trainer) {
-      return res.status(400).send({ error: "Trainer not found" });
+    if (!user) {
+      return res.status(401).send({ error: "Trainer not found" });
     }
 
     const groups = await Group.find()
       .populate({
         path: 'course',
-        match: { user: trainer.user },
+        match: { user },
         select: 'title',
       }).exec();
 
@@ -85,8 +82,11 @@ groupsRouter.post("/", auth, permit("trainer"), async (req: RequestWithUser, res
   }
 });
 
-groupsRouter.patch("/:id", auth, permit("trainer"), async (req, res, next) => {
+groupsRouter.patch("/:id", auth, permit("trainer"), async (req: RequestWithUser, res, next) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(400).send({ error: "User not found" });
+
     if (!mongoose.isValidObjectId(req.params.id))
       return res.status(400).send({ error: "Invalid group ID" });
 
@@ -106,6 +106,14 @@ groupsRouter.patch("/:id", auth, permit("trainer"), async (req, res, next) => {
     const group = await Group.findById(req.params.id);
     if (!group) {
       return res.status(400).send({ error: "Group does not exist" });
+    }
+
+    const existingCourse = await Course.findOne({
+      _id: group.course,
+      user,
+    });
+    if (!existingCourse) {
+      return res.status(400).send({ error: "Course does not exist" });
     }
 
     if (group.clients.includes(client._id)) {
