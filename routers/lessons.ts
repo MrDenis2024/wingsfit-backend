@@ -48,33 +48,38 @@ lessonsRouter.get("/:id", auth, async (req, res, next) => {
   }
 });
 
-lessonsRouter.post("/", auth, permit("trainer"), async (req: RequestWithUser, res, next) => {
-  try {
-    const user = req.user;
+lessonsRouter.post(
+  "/",
+  auth,
+  permit("trainer"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const user = req.user;
 
-    if (!user) return res.status(401).send({ error: "User not found" });
+      if (!user) return res.status(401).send({ error: "User not found" });
 
-    if (req.body.title.trim() === "" || req.body.quantityClients <= 0) {
-      return res
-        .status(400)
-        .send({ error: "Please enter a title or quantity clients" });
+      if (req.body.title.trim() === "" || req.body.quantityClients <= 0) {
+        return res
+          .status(400)
+          .send({ error: "Please enter a title or quantity clients" });
+      }
+
+      const lessonMutation = new Lesson({
+        course: req.body.course,
+        title: req.body.title,
+        quantityClients: req.body.quantityClients,
+        timeZone: req.body.timeZone ? req.body.timeZone : null,
+        groupLevel: req.body.groupLevel ? req.body.groupLevel : null,
+        ageLimit: req.body.ageLimit ? req.body.ageLimit : null,
+        description: req.body.description ? req.body.description : null,
+      });
+
+      await lessonMutation.save();
+      return res.status(200).send(lessonMutation);
+    } catch (error) {
+      next(error);
     }
-
-    const lessonMutation = new Lesson ({
-      course: req.body.course,
-      title: req.body.title,
-      quantityClients: req.body.quantityClients,
-      timeZone: req.body.timeZone ? req.body.timeZone : null,
-      groupLevel: req.body.groupLevel ? req.body.groupLevel : null,
-      ageLimit: req.body.ageLimit ? req.body.ageLimit : null,
-      description: req.body.description ? req.body.description : null,
-    });
-
-    await lessonMutation.save();
-    return res.status(200).send(lessonMutation);
-  } catch (error) {
-    next(error);
-  }
-});
+  },
+);
 
 export default lessonsRouter;

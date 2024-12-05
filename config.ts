@@ -1,9 +1,12 @@
 import path from "path";
 import { CorsOptions } from "cors";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const rootPath = __dirname;
 
-const corsWhitelist = ["http://localhost:5173"];
+const corsWhitelist = process.env.CORS_WHITELIST?.split(",") || [];
 
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
@@ -19,7 +22,7 @@ const config = {
   rootPath,
   publicPath: path.join(rootPath, "public"),
   corsOptions,
-  database: "mongodb://localhost/wingsfit",
+  database: process.env.DATABASE_URL,
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,

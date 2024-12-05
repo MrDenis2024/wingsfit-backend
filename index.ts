@@ -36,6 +36,10 @@ app.use("/trainerStatistics", trainerStatisticsRouter);
 app.use("/groupChats", createGroupChatRouter());
 
 const run = async () => {
+  if (!config.database) {
+    throw new Error("DATABASE_URL is not defined in the environment variables.");
+  }
+
   await mongoose.connect(config.database);
 
   app.listen(port, () => {
