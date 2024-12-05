@@ -23,7 +23,7 @@ const GroupSchema = new Schema({
     required: true,
   },
   startTime: {
-    type: [String],
+    type: String,
     required: true,
   },
   trainingLevel: {

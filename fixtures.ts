@@ -204,7 +204,7 @@ const run = async () => {
     course: course1._id,
     clients: [clientUser._id, clientUser2._id],
     clientsLimit: 10,
-    startTime: ["19:00"],
+    startTime: "19:00",
     trainingLevel: "junior",
   });
 
@@ -213,7 +213,7 @@ const run = async () => {
     course: course2._id,
     clients: [clientUser2._id, clientUser2._id],
     clientsLimit: 10,
-    startTime: ["18:00"],
+    startTime: "18:00",
     trainingLevel: "junior",
   });
 
