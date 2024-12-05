@@ -8,6 +8,8 @@ import Lesson from "./models/Lesson";
 import CourseType from "./models/CourseType";
 import TrainerReview from "./models/TrainerReview";
 import Group from "./models/Group";
+import GroupChat from "./models/GroupChat";
+import GroupChatMessage from "./models/GroupChatMessages";
 
 const run = async () => {
   await mongoose.connect(config.database);
@@ -21,6 +23,8 @@ const run = async () => {
     await db.dropCollection("trainerreviews");
     await db.dropCollection("coursetypes");
     await db.dropCollection("groups");
+    await db.dropCollection("groupchats");
+    await db.dropCollection("groupchatmessages");
   } catch (err) {
     console.log("skipping drop");
   }
@@ -199,7 +203,7 @@ const run = async () => {
     image: "fixtures/cardio.jpg",
   });
 
-  await Group.create({
+  const group1 = await Group.create({
     title: "Evening Yoga Group",
     course: course1._id,
     clients: [clientUser._id, clientUser2._id],
@@ -208,7 +212,7 @@ const run = async () => {
     trainingLevel: "junior",
   });
 
-  await Group.create({
+  const group2 = await Group.create({
     title: "Cardio Training",
     course: course2._id,
     clients: [clientUser2._id, clientUser2._id],
@@ -270,6 +274,51 @@ const run = async () => {
     comment: "Great workout!",
     createdAt: new Date().toISOString(),
   });
+
+  const groupChat1 = await GroupChat.create({
+    group: group1._id,
+    title: "Morning Yoga group"
+  });
+  const groupChat2 = await GroupChat.create({
+    group: group2._id,
+    title: "Evening Pilates group"
+  });
+
+  const message1 = await GroupChatMessage.create({
+    groupChat: groupChat1._id,
+    author: trainerUser._id,
+    message: "Good morning, everyone! Ready for yoga?",
+    createdAt: new Date().toISOString(),
+    isRead: [
+      {
+        user: clientUser._id,
+        read: true,
+      },
+      {
+        user: trainerUser._id,
+        read: true,
+      },
+    ],
+  });
+
+  const message2 = await GroupChatMessage.create({
+    groupChat: groupChat1._id,
+    author: clientUser._id,
+    message: "Yes",
+    createdAt: new Date().toISOString(),
+    isRead: [
+      {
+        user: trainerUser._id,
+        read: false,
+      },
+      {
+        user: clientUser._id,
+        read: true,
+      },
+    ],
+  });
+
+
 
   await db.close();
 };

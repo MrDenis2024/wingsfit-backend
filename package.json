@@ -18,6 +18,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
+    "express-ws": "^5.0.2",
     "google-auth-library": "^9.14.2",
     "mongoose": "^8.7.3",
     "multer": "^1.4.5-lts.1"
@@ -26,6 +27,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/express-ws": "^3.0.5",
     "@types/multer": "^1.4.12",
     "@types/node": "^22.8.1",
     "nodemon": "^3.1.7",
