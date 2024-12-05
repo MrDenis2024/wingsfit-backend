@@ -64,7 +64,6 @@ const createGroupChatRouter = () => {
                 payload: {userName, userId},
               })
             );
-            console.log("User logged in:", userName);
             break;
 
           case "JOIN_GROUP":
@@ -86,12 +85,12 @@ const createGroupChatRouter = () => {
 
               const unreadMessages = await GroupChatMessage.find({
                 groupChat: groupChatId,
-                "isRead.user": { $ne: userId },
-                author: { $ne: userId },
+                "isRead.user": {$ne: userId},
+                author: {$ne: userId},
               });
 
               for (const message of unreadMessages) {
-                message.isRead.push({ user: userId, read: true });
+                message.isRead.push({user: userId, read: true});
                 await message.save();
               }
 
@@ -106,8 +105,6 @@ const createGroupChatRouter = () => {
                   payload: {groupChatId, groupName: groupChat.title, latestMessages},
                 })
               );
-
-              console.log(`${userName} joined group: ${groupChat.title}`);
 
             } else {
               ws.send(
@@ -156,7 +153,6 @@ const createGroupChatRouter = () => {
                 payload: populatedMessage,
               });
 
-              console.log(`Message sent to group ${targetGroupChatId}:`, chatMessage);
             } else {
               ws.send(
                 JSON.stringify({
@@ -171,12 +167,12 @@ const createGroupChatRouter = () => {
               typeof decodedMessage.payload === "object" &&
               "messageId" in decodedMessage.payload
             ) {
-              const { messageId } = decodedMessage.payload;
+              const {messageId} = decodedMessage.payload;
 
               const message = await GroupChatMessage.findById(messageId);
               if (!message) {
                 ws.send(
-                  JSON.stringify({ type: "ERROR", payload: "Message not found" })
+                  JSON.stringify({type: "ERROR", payload: "Message not found"})
                 );
                 return;
               }
@@ -188,16 +184,14 @@ const createGroupChatRouter = () => {
               if (existingReadEntry) {
                 existingReadEntry.read = true;
               } else {
-                message.isRead.push({ user: userId, read: true });
+                message.isRead.push({user: userId, read: true});
               }
 
               await message.save();
 
               ws.send(
-                JSON.stringify({ type: "MARK_READ_SUCCESS", payload: messageId })
+                JSON.stringify({type: "MARK_READ_SUCCESS", payload: messageId})
               );
-
-              console.log(`User ${userName} marked message ${messageId} as read.`);
             } else {
               ws.send(
                 JSON.stringify({
@@ -207,10 +201,7 @@ const createGroupChatRouter = () => {
               );
             }
             break;
-
-
           default:
-            console.log("This type of message is not supported");
             ws.send(JSON.stringify({type: "ERROR", payload: "Unsupported message type",}));
         }
       } catch (error) {
@@ -218,13 +209,11 @@ const createGroupChatRouter = () => {
       }
     });
     ws.on("close", () => {
-      console.log("client disconnected");
       const user = connectedClients[userId];
       const currentConnectionIndex = user.clients.indexOf(ws);
       user.clients.splice(currentConnectionIndex, 1);
       if (user.clients.length === 0) {
         delete connectedClients[userId];
-        console.log("Removed user from connected clients:", userName);
       }
     })
   });
