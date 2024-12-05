@@ -12,7 +12,9 @@ import GroupChat from "./models/GroupChat";
 import GroupChatMessage from "./models/GroupChatMessages";
 
 const run = async () => {
-  await mongoose.connect(config.database);
+  if(config.database){
+    await mongoose.connect(config.database);
+  }
   const db = mongoose.connection;
   try {
     await db.dropCollection("trainers");
