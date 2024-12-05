@@ -17,13 +17,13 @@ trainerStatisticsRouter.get(
       const courses = await Course.find({ user: userId });
 
       const coursesWithGroups = await Promise.all(
-          courses.map(async (course) => {
-            const groups = await Group.find({ course: course._id }).populate(
-                "clients",
-                "firstName lastName phoneNumber",
-            );
-            return { course, groups };
-          }),
+        courses.map(async (course) => {
+          const groups = await Group.find({ course: course._id }).populate(
+            "clients",
+            "firstName lastName phoneNumber",
+          );
+          return { course, groups };
+        }),
       );
 
       const response = coursesWithGroups.map(({ course, groups }) => ({
@@ -47,7 +47,7 @@ trainerStatisticsRouter.get(
     } catch (error) {
       return next(error);
     }
-  }
+  },
 );
 
 trainerStatisticsRouter.get(
