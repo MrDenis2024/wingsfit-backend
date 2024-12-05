@@ -64,7 +64,7 @@ trainersRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
     });
 
     if (!trainer) {
-      return res.status(400).send({ error: "Trainer not found" });
+      return res.status(404).send({ error: "Trainer not found" });
     }
 
     if (user._id.equals(trainer.user)) {

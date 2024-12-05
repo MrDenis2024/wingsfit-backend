@@ -14,36 +14,15 @@ trainerStatisticsRouter.get(
     try {
       const userId = req.user?._id;
 
-      const courses = await Course.find({ user: userId });
+      const courses = await Course.find({ user: userId }, "_id");
 
-      const coursesWithGroups = await Promise.all(
-        courses.map(async (course) => {
-          const groups = await Group.find({ course: course._id }).populate(
-            "clients",
-            "firstName lastName phoneNumber",
-          );
-          return { course, groups };
-        }),
-      );
+      const courseIds = courses.map((course) => course._id);
 
-      const response = coursesWithGroups.map(({ course, groups }) => ({
-        course: {
-          _id: course._id,
-          title: course.title,
-          schedule: course.schedule,
-          scheduleLength: course.scheduleLength,
-          maxClients: course.maxClients,
-        },
-        groups: groups.map((group) => ({
-          _id: group._id,
-          title: group.title,
-          clientsLimit: group.clientsLimit,
-          clients: group.clients,
-          trainingLevel: group.trainingLevel,
-        })),
-      }));
+      const groups = await Group.find({ course: { $in: courseIds } })
+        .populate("clients", "firstName lastName")
+        .populate("course", "title schedule scheduleLength");
 
-      return res.status(200).send(response);
+      return res.status(200).send(groups);
     } catch (error) {
       return next(error);
     }
