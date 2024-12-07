@@ -23,6 +23,13 @@ usersRouter.get(
     }
   },
 );
+usersRouter.get('/reload',auth,async (req: RequestWithUser, res,next) => {
+  try{
+    return res.status(200).send(req.user);
+  }catch(error){
+    return next(error);
+  }
+})
 
 usersRouter.post("/", async (req, res, next) => {
   try {
