@@ -9,13 +9,15 @@ const lessonsRouter = express.Router();
 
 lessonsRouter.get("/", auth, async (req, res, next) => {
   try {
-    const allLessons = await Lesson.find().populate({
-      path: "course",
-      populate: [
-        { path: "user", select: "firstName lastName" },
-        { path: "courseType", select: "name" },
-      ],
-    });
+    const allLessons = await Lesson.find().populate([
+      {
+        path: "course",
+        populate: [
+          { path: "user", select: "firstName lastName" },
+          { path: "courseType", select: "name" },
+        ],
+      },
+    ]).populate('presentUser' , 'firstName lastName');
 
     return res.status(200).send(allLessons);
   } catch (error) {
@@ -37,7 +39,7 @@ lessonsRouter.get("/:id", auth, async (req, res, next) => {
         { path: "user", select: "firstName lastName" },
         { path: "courseType", select: "name" },
       ],
-    });
+    }).populate('presentUser' , 'firstName lastName');
 
     if (oneLesson === null) {
       return res.status(404).send({ error: "Lesson not found" });
