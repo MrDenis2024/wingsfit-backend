@@ -1,5 +1,5 @@
 import express from "express";
-import expressWs from 'express-ws';
+import expressWs from "express-ws";
 import cors from "cors";
 import config from "./config";
 import * as mongoose from "mongoose";
@@ -13,7 +13,7 @@ import { courseTypesRouter } from "./routers/courseTypes";
 import adminsRouter from "./routers/admins";
 import groupsRouter from "./routers/groups";
 import trainerStatisticsRouter from "./routers/trainerStatistics";
- import createGroupChatRouter from "./routers/groupChats";
+import createGroupChatRouter from "./routers/groupChats";
 
 const app = express();
 const port = 8000;
@@ -37,7 +37,9 @@ app.use("/groupChats", createGroupChatRouter());
 
 const run = async () => {
   if (!config.database) {
-    throw new Error("DATABASE_URL is not defined in the environment variables.");
+    throw new Error(
+      "DATABASE_URL is not defined in the environment variables.",
+    );
   }
 
   await mongoose.connect(config.database);
