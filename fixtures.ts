@@ -12,7 +12,7 @@ import GroupChat from "./models/GroupChat";
 import GroupChatMessage from "./models/GroupChatMessages";
 
 const run = async () => {
-  if(config.database){
+  if (config.database) {
     await mongoose.connect(config.database);
   }
   const db = mongoose.connection;
@@ -281,11 +281,11 @@ const run = async () => {
 
   const groupChat1 = await GroupChat.create({
     group: group1._id,
-    title: "Morning Yoga group"
+    title: "Morning Yoga group",
   });
   const groupChat2 = await GroupChat.create({
     group: group2._id,
-    title: "Evening Pilates group"
+    title: "Evening Pilates group",
   });
 
   const message1 = await GroupChatMessage.create({
@@ -321,8 +321,6 @@ const run = async () => {
       },
     ],
   });
-
-
 
   await db.close();
 };
