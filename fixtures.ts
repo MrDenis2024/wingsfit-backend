@@ -80,7 +80,8 @@ const run = async () => {
     dateOfBirth: new Date("2000-08-10"),
     phoneNumber: "0222120542",
     notification: true,
-    lastActivity: new Date("2024-11-10"),
+    lastActivity: new Date("2024-12-05"),
+    createdAt: new Date("2024-12-02"),
   });
   clientUser.getToken();
   await clientUser.save();
@@ -116,7 +117,8 @@ const run = async () => {
     dateOfBirth: new Date("1995-02-20"),
     phoneNumber: "0222129999",
     notification: true,
-    lastActivity: new Date("2024-11-11"),
+    lastActivity: new Date("2024-12-10"),
+    createdAt: new Date("2024-12-09"),
   });
   clientUser2.getToken();
   await clientUser2.save();
