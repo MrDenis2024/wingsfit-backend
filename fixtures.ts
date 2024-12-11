@@ -27,6 +27,7 @@ const run = async () => {
     await db.dropCollection("groups");
     await db.dropCollection("groupchats");
     await db.dropCollection("groupchatmessages");
+    await db.dropCollection("courserequests");
   } catch (err) {
     console.log("skipping drop");
   }
