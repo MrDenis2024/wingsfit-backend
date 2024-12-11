@@ -116,12 +116,10 @@ adminsRouter.get(
           break;
 
         default:
-          return res
-            .status(400)
-            .send({
-              error:
-                "Invalid view parameter. Use 'day', 'week','month', or  year.",
-            });
+          return res.status(400).send({
+            error:
+              "Invalid view parameter. Use 'day', 'week','month', or  year.",
+          });
       }
 
       const count = await User.countDocuments({
