@@ -1,20 +1,17 @@
 import express from "express";
 import {ConnectedClientsToPrivateChat} from "../types/privateChatTypes";
 import PrivateChat from "../models/PrivateChat";
-import {PrivateIncomingMessage} from "../types/privateMessagesTypes";
 import User from "../models/User";
 import PrivateMessage from "../models/PrivateMessage";
-import mongoose from "mongoose";
+import {PrivateChatIncomingMessage} from "../types/privateMessagesTypes";
 
 const createPrivateChatRouter = () => {
   const privateChatsRouter = express.Router();
   const connectedClients: ConnectedClientsToPrivateChat = {};
 
-  const sendToPrivateClients = (privateChatId: string, message: unknown) => {
-    const chatClients = Object.values(connectedClients)
-      .filter((client) =>
-        client.privateChats.includes(privateChatId)
-      )
+  const sendToPrivateClients = (message: unknown) => {
+    const chatClients = Object
+      .values(connectedClients)
       .flatMap((client) => client.clients);
 
     chatClients.forEach((client) => {
@@ -48,12 +45,96 @@ const createPrivateChatRouter = () => {
         });
       }
 
-      const chatHistory = await PrivateMessage.find({"privateChat": chat._id})
-        .populate("author", "firstName")
-        .sort({createdAt: 1})
-        .limit(20);
 
-      console.log(`chatHistory ${JSON.stringify(chatHistory)}`);
+      ws.on("message", async (message) => {
+        try {
+          const decodedMessage = JSON.parse(
+            message.toString(),
+          ) as PrivateChatIncomingMessage;
+
+          console.log(`decodedMessage: ${JSON.stringify(decodedMessage)}`);
+
+          switch (decodedMessage.type) {
+            case "LOGIN":
+              const userName = sender.firstName;
+
+              if (!connectedClients[senderId]) {
+                connectedClients[senderId] = {
+                  userName,
+                  clients: [ws],
+                };
+              } else {
+                connectedClients[senderId].clients.push(ws);
+              }
+
+              ws.send(
+                JSON.stringify({
+                  type: "LOGIN_SUCCESS",
+                  payload: {userName, senderId},
+                }),
+              );
+
+              const latestMessages = await PrivateMessage.find({"privateChat": chat._id})
+                .populate("author", "firstName")
+                .sort({createdAt: 1})
+                .limit(20);
+
+              console.log(`latestMessages ${JSON.stringify(latestMessages)}`);
+
+              ws.send(
+                JSON.stringify({
+                  type: "SEND_MESSAGE",
+                  payload: {
+                    latestMessages,
+                  },
+                }),
+              );
+
+              break;
+
+            case "SEND_MESSAGE":
+              const chatMessage = decodedMessage.payload;
+              console.log(`chatMessage: ${JSON.stringify(chatMessage)}`);
+
+              const newMessage = await PrivateMessage.create({
+                privateChat: chat._id,
+                author: senderId,
+                message: chatMessage,
+                createdAt: new Date(),
+                isRead: [],
+              });
+
+              const populatedMessage = await newMessage.populate(
+                "author",
+                "firstName",
+              );
+
+              sendToPrivateClients({
+                type: "NEW_MESSAGE",
+                payload: populatedMessage,
+              });
+              break;
+
+            default:
+              ws.send(
+                JSON.stringify({
+                  type: "ERROR",
+                  payload: "Unsupported message type",
+                }),
+              );
+          }
+        } catch (error) {
+          ws.send(JSON.stringify({type: "ERROR", payload: "Invalid message"}));
+        }
+      });
+      ws.on("close", () => {
+        const user = connectedClients[senderId];
+        const currentConnectionIndex = user.clients.indexOf(ws);
+        user.clients.splice(currentConnectionIndex, 1);
+        if (user.clients.length === 0) {
+          delete connectedClients[senderId];
+        }
+      });
     }
   );
 
