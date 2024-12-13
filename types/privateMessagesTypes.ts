@@ -16,15 +16,8 @@ export type PrivateChatIncomingMessage =
   };
 }
   | {
-  type: "JOIN_PRIVATE_CHAT";
-  payload: {
-    privateChatId: string;
-  };
-}
-  | {
   type: "SEND_MESSAGE";
   payload: {
-    privateChatId: string;
     message: string;
   };
 } | {
