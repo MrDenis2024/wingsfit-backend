@@ -10,6 +10,8 @@ import TrainerReview from "./models/TrainerReview";
 import Group from "./models/Group";
 import GroupChat from "./models/GroupChat";
 import GroupChatMessage from "./models/GroupChatMessages";
+import PrivateChat from "./models/PrivateChat";
+import PrivateMessage from "./models/PrivateMessage";
 
 const run = async () => {
   if (config.database) {
@@ -27,6 +29,8 @@ const run = async () => {
     await db.dropCollection("groups");
     await db.dropCollection("groupchats");
     await db.dropCollection("groupchatmessages");
+    await db.dropCollection("privatechats");
+    await db.dropCollection("privatemessages");
   } catch (err) {
     console.log("skipping drop");
   }
@@ -57,7 +61,7 @@ const run = async () => {
     firstName: "Николай",
     lastName: "Александров",
     avatar: "fixtures/trainer.jpg",
-    timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
+    timeZone: {value: "America/Juneau", label: "(GMT-8:00) Alaska"},
     gender: "male",
     phoneNumber: "0552022212",
     dateOfBirth: new Date("1990-08-10"),
@@ -75,7 +79,7 @@ const run = async () => {
     firstName: "Мария",
     lastName: "Федотова",
     avatar: "fixtures/client.jpg",
-    timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
+    timeZone: {value: "America/Juneau", label: "(GMT-8:00) Alaska"},
     gender: "female",
     dateOfBirth: new Date("2000-08-10"),
     phoneNumber: "0222120542",
@@ -93,7 +97,7 @@ const run = async () => {
     firstName: "Андрей",
     lastName: "Смирнов",
     avatar: "fixtures/trainer2.jpg",
-    timeZone: { value: "Europe/Moscow", label: "(GMT+3:00) Moscow" },
+    timeZone: {value: "Europe/Moscow", label: "(GMT+3:00) Moscow"},
     gender: "male",
     phoneNumber: "0552033312",
     dateOfBirth: new Date("1985-05-15"),
@@ -111,7 +115,7 @@ const run = async () => {
     firstName: "Илона",
     lastName: "Маскова",
     avatar: "fixtures/client2.jpg",
-    timeZone: { value: "Europe/Moscow", label: "(GMT+3:00) Moscow" },
+    timeZone: {value: "Europe/Moscow", label: "(GMT+3:00) Moscow"},
     gender: "female",
     dateOfBirth: new Date("1995-02-20"),
     phoneNumber: "0222129999",
@@ -307,6 +311,52 @@ const run = async () => {
     groupChat: groupChat1._id,
     author: clientUser._id,
     message: "Yes",
+    createdAt: new Date().toISOString(),
+    isRead: [
+      {
+        user: trainerUser._id,
+        read: false,
+      },
+      {
+        user: clientUser._id,
+        read: true,
+      },
+    ],
+  });
+
+  const privateChat1 = await PrivateChat.create({
+    firstPerson: trainerUser._id,
+    secondPerson: clientUser._id,
+    availableTo: [clientUser._id, trainerUser._id],
+  });
+
+  const privateChat2 = await PrivateChat.create({
+    firstPerson: trainerUser2._id,
+    secondPerson: clientUser2._id,
+    availableTo: [clientUser2._id, trainerUser2._id],
+  });
+
+  await PrivateMessage.create({
+    privateChat: privateChat1._id,
+    author: clientUser._id,
+    message: "Good morning!",
+    createdAt: new Date().toISOString(),
+    isRead: [
+      {
+        user: trainerUser._id,
+        read: false,
+      },
+      {
+        user: clientUser._id,
+        read: true,
+      },
+    ],
+  });
+
+  await PrivateMessage.create({
+    privateChat: privateChat1._id,
+    author: trainerUser._id,
+    message: "Hello!",
     createdAt: new Date().toISOString(),
     isRead: [
       {
