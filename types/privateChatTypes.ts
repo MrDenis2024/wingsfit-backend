@@ -12,6 +12,5 @@ export interface ConnectedClientsToPrivateChat {
   [userId: string]: {
     userName: string;
     clients: WebSocket[];
-    privateChats: string[];
   };
 }
