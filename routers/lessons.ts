@@ -3,11 +3,10 @@ import Lesson from "../models/Lesson";
 import auth, { RequestWithUser } from "../middleware/auth";
 import mongoose from "mongoose";
 import permit from "../middleware/permit";
-import User from "../models/User";
 
 const lessonsRouter = express.Router();
 
-lessonsRouter.get("/", auth, async (req, res, next) => {
+lessonsRouter.get("/", auth, async (_req, res, next) => {
   try {
     const allLessons = await Lesson.find()
       .populate([
@@ -43,7 +42,8 @@ lessonsRouter.get("/:id", auth, async (req, res, next) => {
           { path: "courseType", select: "name" },
         ],
       })
-      .populate("presentUser", "firstName lastName");
+      .populate("presentUser", "firstName lastName")
+      .populate("participants", "firstName lastName");
 
     if (oneLesson === null) {
       return res.status(404).send({ error: "Lesson not found" });
@@ -95,11 +95,12 @@ lessonsRouter.patch(
   permit("trainer"),
   async (req: RequestWithUser, res, next) => {
     const { id } = req.params;
-    const userId = req.body.userId;
+    const userIds = req.body.userId;
 
-    const findUser = await User.findById(userId);
-
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId) || !findUser) {
+    if (
+      !Array.isArray(userIds) ||
+      userIds.some((id) => !mongoose.Types.ObjectId.isValid(id))
+    ) {
       return res
         .status(400)
         .send({ error: "Provide a valid array of user IDs" });
@@ -111,24 +112,30 @@ lessonsRouter.patch(
         return res.status(404).send({ error: "Lesson not found" });
       }
 
-      if (!findLesson.participants.includes(userId)) {
+      const notParticipants = userIds.filter(
+        (userId) => !findLesson.participants.includes(userId),
+      );
+      if (notParticipants.length) {
         return res
           .status(400)
-          .send({ error: "User is not a participant of this lesson" });
+          .send({ error: "Some users are not participants" });
       }
 
-      if (findLesson.presentUser.includes(userId)) {
+      const alreadyPresent = userIds.filter((userId) =>
+        findLesson.presentUser.includes(userId),
+      );
+      if (alreadyPresent.length) {
         return res
           .status(400)
-          .send({ error: "User is already marked as present" });
+          .send({ error: "Some users are already marked as present" });
       }
 
       await Lesson.updateOne(
         { _id: new mongoose.Types.ObjectId(id) },
-        { $addToSet: { presentUser: userId } },
+        { $addToSet: { presentUser: { $each: userIds } } },
       );
 
-      return res.status(200).send({ message: "User marked as present" });
+      return res.status(200).send({ message: "Users marked as present" });
     } catch (e) {
       next(e);
     }
