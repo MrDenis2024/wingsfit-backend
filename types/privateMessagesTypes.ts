@@ -28,6 +28,7 @@ export type PrivateChatIncomingMessage =
 } | {
   type: "NEW_MESSAGE";
   payload: {
+    privateChat: string;
     author: string;
     message: string;
     createdAt: Date;
