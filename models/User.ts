@@ -73,7 +73,10 @@ const UserSchema = new Schema<
     },
     firstName: String,
     lastName: String,
-    phoneNumber: String,
+    phoneNumber: {
+      type: String,
+      match: [/^\+?[1-9]\d{1,14}$/, "Некорректный формат номера телефона"],
+    },
     gender: {
       type: String,
       enum: ["male", "female", "other"],
