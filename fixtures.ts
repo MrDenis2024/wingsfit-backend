@@ -10,6 +10,8 @@ import TrainerReview from "./models/TrainerReview";
 import Group from "./models/Group";
 import GroupChat from "./models/GroupChat";
 import GroupChatMessage from "./models/GroupChatMessages";
+import PrivateChat from "./models/PrivateChat";
+import PrivateMessage from "./models/PrivateMessage";
 
 const run = async () => {
   if (config.database) {
@@ -28,6 +30,8 @@ const run = async () => {
     await db.dropCollection("groupchats");
     await db.dropCollection("groupchatmessages");
     await db.dropCollection("courserequests");
+    await db.dropCollection("privatechats");
+    await db.dropCollection("privatemessages");
   } catch (err) {
     console.log("skipping drop");
   }
@@ -284,12 +288,13 @@ const run = async () => {
     group: group1._id,
     title: "Morning Yoga group",
   });
+
   const groupChat2 = await GroupChat.create({
     group: group2._id,
     title: "Evening Pilates group",
   });
 
-  const message1 = await GroupChatMessage.create({
+  await GroupChatMessage.create({
     groupChat: groupChat1._id,
     author: trainerUser._id,
     message: "Good morning, everyone! Ready for yoga?",
@@ -306,7 +311,7 @@ const run = async () => {
     ],
   });
 
-  const message2 = await GroupChatMessage.create({
+  await GroupChatMessage.create({
     groupChat: groupChat1._id,
     author: clientUser._id,
     message: "Yes",
@@ -316,6 +321,38 @@ const run = async () => {
         user: trainerUser._id,
         read: false,
       },
+      {
+        user: clientUser._id,
+        read: true,
+      },
+    ],
+  });
+
+  const privateChat1 = await PrivateChat.create({
+    firstPerson: trainerUser._id,
+    secondPerson: clientUser._id,
+    availableTo: [clientUser._id, trainerUser._id],
+  });
+
+  await PrivateMessage.create({
+    privateChat: privateChat1._id,
+    author: clientUser._id,
+    message: "Good morning!",
+    createdAt: new Date().toISOString(),
+    isRead: [
+      {
+        user: trainerUser._id,
+        read: false,
+      },
+    ],
+  });
+
+  await PrivateMessage.create({
+    privateChat: privateChat1._id,
+    author: trainerUser._id,
+    message: "Hello!",
+    createdAt: new Date().toISOString(),
+    isRead: [
       {
         user: clientUser._id,
         read: true,

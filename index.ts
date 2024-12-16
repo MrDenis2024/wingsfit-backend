@@ -15,6 +15,7 @@ import groupsRouter from "./routers/groups";
 import trainerStatisticsRouter from "./routers/trainerStatistics";
 import createGroupChatRouter from "./routers/groupChats";
 import coursesRequestRouter from "./routers/coursesRequest";
+import createPrivateChatRouter from "./routers/privateChats";
 
 const app = express();
 const port = 8000;
@@ -36,6 +37,7 @@ app.use("/groups", groupsRouter);
 app.use("/trainerStatistics", trainerStatisticsRouter);
 app.use("/coursesRequest", coursesRequestRouter);
 app.use("/groupChats", createGroupChatRouter());
+app.use("/privateChats", createPrivateChatRouter());
 
 const run = async () => {
   if (!config.database) {
