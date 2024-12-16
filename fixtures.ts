@@ -285,12 +285,13 @@ const run = async () => {
     group: group1._id,
     title: "Morning Yoga group",
   });
+
   const groupChat2 = await GroupChat.create({
     group: group2._id,
     title: "Evening Pilates group",
   });
 
-  const message1 = await GroupChatMessage.create({
+  await GroupChatMessage.create({
     groupChat: groupChat1._id,
     author: trainerUser._id,
     message: "Good morning, everyone! Ready for yoga?",
@@ -307,7 +308,7 @@ const run = async () => {
     ],
   });
 
-  const message2 = await GroupChatMessage.create({
+  await GroupChatMessage.create({
     groupChat: groupChat1._id,
     author: clientUser._id,
     message: "Yes",
@@ -330,12 +331,6 @@ const run = async () => {
     availableTo: [clientUser._id, trainerUser._id],
   });
 
-  const privateChat2 = await PrivateChat.create({
-    firstPerson: trainerUser2._id,
-    secondPerson: clientUser2._id,
-    availableTo: [clientUser2._id, trainerUser2._id],
-  });
-
   await PrivateMessage.create({
     privateChat: privateChat1._id,
     author: clientUser._id,
@@ -346,10 +341,6 @@ const run = async () => {
         user: trainerUser._id,
         read: false,
       },
-      {
-        user: clientUser._id,
-        read: true,
-      },
     ],
   });
 
@@ -359,10 +350,6 @@ const run = async () => {
     message: "Hello!",
     createdAt: new Date().toISOString(),
     isRead: [
-      {
-        user: trainerUser._id,
-        read: false,
-      },
       {
         user: clientUser._id,
         read: true,
