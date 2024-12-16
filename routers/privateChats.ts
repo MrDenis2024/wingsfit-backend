@@ -19,9 +19,8 @@ const createPrivateChatRouter = () => {
     });
   };
 
-  privateChatsRouter.ws("/:idSender/:idReceiver", async (ws, req, res) => {
+  privateChatsRouter.ws("/:idSender/:idReceiver", async (ws, req) => {
       const senderId = req.params.idSender;
-
       const receiverId = req.params.idReceiver;
 
       const sender = await User.findById(senderId);
@@ -35,7 +34,6 @@ const createPrivateChatRouter = () => {
       }
 
       let chat = await PrivateChat.findOne({availableTo: {$all: [senderId, receiverId]}});
-      console.log(`Chat: ${JSON.stringify(chat)}`);
 
       if (!chat) {
         chat = await PrivateChat.create({
@@ -45,18 +43,24 @@ const createPrivateChatRouter = () => {
         });
       }
 
-
       ws.on("message", async (message) => {
         try {
           const decodedMessage = JSON.parse(
             message.toString(),
           ) as PrivateChatIncomingMessage;
 
-          console.log(`decodedMessage: ${JSON.stringify(decodedMessage)}`);
-
           switch (decodedMessage.type) {
             case "LOGIN":
               const userName = sender.firstName;
+
+              const token = decodedMessage.payload;
+              const user = await User.findOne({token});
+              if (!user) {
+                ws.send(
+                  JSON.stringify({type: "ERROR", payload: "Invalid Token"}),
+                );
+                return ws.close();
+              }
 
               if (!connectedClients[senderId]) {
                 connectedClients[senderId] = {
@@ -74,16 +78,40 @@ const createPrivateChatRouter = () => {
                 }),
               );
 
+              await PrivateMessage.updateMany(
+                {
+                  privateChat: chat._id,
+                  "isRead.user": {$ne: receiver._id},
+                  author: {$ne: receiver._id},
+                },
+                {
+                  $addToSet: {
+                    isRead: {
+                      user: receiver._id,
+                      read: true,
+                    },
+                  },
+                },
+              );
+
+              const updatedReadMessages = await PrivateMessage.find({
+                privateChat: chat._id,
+                "isRead.user": receiver._id,
+              }).populate("author", "firstName lastName");
+
+              sendToPrivateClients({
+                type: "MESSAGES_READ",
+                payload: updatedReadMessages,
+              });
+
               const latestMessages = await PrivateMessage.find({"privateChat": chat._id})
-                .populate("author", "firstName")
+                .populate("author", "firstName lastName")
                 .sort({createdAt: 1})
                 .limit(20);
 
-              console.log(`latestMessages ${JSON.stringify(latestMessages)}`);
-
               ws.send(
                 JSON.stringify({
-                  type: "SEND_MESSAGE",
+                  type: "GET_LAST",
                   payload: {
                     latestMessages,
                   },
@@ -94,7 +122,6 @@ const createPrivateChatRouter = () => {
 
             case "SEND_MESSAGE":
               const chatMessage = decodedMessage.payload;
-              console.log(`chatMessage: ${JSON.stringify(chatMessage)}`);
 
               const newMessage = await PrivateMessage.create({
                 privateChat: chat._id,
@@ -106,7 +133,7 @@ const createPrivateChatRouter = () => {
 
               const populatedMessage = await newMessage.populate(
                 "author",
-                "firstName",
+                "firstName lastName",
               );
 
               sendToPrivateClients({
