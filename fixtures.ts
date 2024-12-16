@@ -29,6 +29,7 @@ const run = async () => {
     await db.dropCollection("groups");
     await db.dropCollection("groupchats");
     await db.dropCollection("groupchatmessages");
+    await db.dropCollection("courserequests");
     await db.dropCollection("privatechats");
     await db.dropCollection("privatemessages");
   } catch (err) {
@@ -61,7 +62,7 @@ const run = async () => {
     firstName: "Николай",
     lastName: "Александров",
     avatar: "fixtures/trainer.jpg",
-    timeZone: {value: "America/Juneau", label: "(GMT-8:00) Alaska"},
+    timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
     gender: "male",
     phoneNumber: "0552022212",
     dateOfBirth: new Date("1990-08-10"),
@@ -79,12 +80,13 @@ const run = async () => {
     firstName: "Мария",
     lastName: "Федотова",
     avatar: "fixtures/client.jpg",
-    timeZone: {value: "America/Juneau", label: "(GMT-8:00) Alaska"},
+    timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
     gender: "female",
     dateOfBirth: new Date("2000-08-10"),
     phoneNumber: "0222120542",
     notification: true,
-    lastActivity: new Date("2024-11-10"),
+    lastActivity: new Date("2024-12-05"),
+    createdAt: new Date("2024-12-02"),
   });
   clientUser.getToken();
   await clientUser.save();
@@ -97,7 +99,7 @@ const run = async () => {
     firstName: "Андрей",
     lastName: "Смирнов",
     avatar: "fixtures/trainer2.jpg",
-    timeZone: {value: "Europe/Moscow", label: "(GMT+3:00) Moscow"},
+    timeZone: { value: "Europe/Moscow", label: "(GMT+3:00) Moscow" },
     gender: "male",
     phoneNumber: "0552033312",
     dateOfBirth: new Date("1985-05-15"),
@@ -115,12 +117,13 @@ const run = async () => {
     firstName: "Илона",
     lastName: "Маскова",
     avatar: "fixtures/client2.jpg",
-    timeZone: {value: "Europe/Moscow", label: "(GMT+3:00) Moscow"},
+    timeZone: { value: "Europe/Moscow", label: "(GMT+3:00) Moscow" },
     gender: "female",
     dateOfBirth: new Date("1995-02-20"),
     phoneNumber: "0222129999",
     notification: true,
-    lastActivity: new Date("2024-11-11"),
+    lastActivity: new Date("2024-12-10"),
+    createdAt: new Date("2024-12-09"),
   });
   clientUser2.getToken();
   await clientUser2.save();

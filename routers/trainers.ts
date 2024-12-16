@@ -119,6 +119,7 @@ trainersRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
         dateOfBirth: req.body.dateOfBirth
           ? new Date(req.body.dateOfBirth)
           : null,
+        createdAt: new Date(),
         updatedAt: new Date(),
         lastActivity: new Date(),
       },
@@ -201,7 +202,6 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
         dateOfBirth: req.body.dateOfBirth
           ? new Date(req.body.dateOfBirth)
           : null,
-        createdAt: new Date(),
         updatedAt: new Date(),
         lastActivity: new Date(),
       },

@@ -17,3 +17,11 @@ export interface CourseTypeFields {
   name: string;
   description: string;
 }
+
+export interface ICourseRequest {
+  course: Types.ObjectId | string;
+  client: Types.ObjectId | string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

@@ -53,6 +53,95 @@ adminsRouter.get(
   },
 );
 
+adminsRouter.get(
+  "/statistics/registrations",
+  auth,
+  permit("superAdmin", "admin"),
+  async (req, res, next) => {
+    try {
+      const { currentDate, view } = req.query;
+
+      const targetDate = currentDate
+        ? new Date(currentDate as string)
+        : new Date();
+
+      if (isNaN(targetDate.getTime())) {
+        return res.status(400).send({ error: "Invalid date format" });
+      }
+
+      let startPeriod: Date;
+      let endPeriod: Date;
+
+      switch (view) {
+        case "day":
+          startPeriod = new Date(targetDate);
+          startPeriod.setHours(0, 0, 0, 0);
+
+          endPeriod = new Date(startPeriod);
+          endPeriod.setHours(23, 59, 59, 999);
+          break;
+
+        case "week":
+          startPeriod = new Date(targetDate);
+          const dayOfWeek = startPeriod.getDay();
+          const daysUntilMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+          startPeriod.setDate(startPeriod.getDate() + daysUntilMonday);
+          startPeriod.setHours(0, 0, 0, 1);
+
+          endPeriod = new Date(startPeriod);
+          endPeriod.setDate(startPeriod.getDate() + 6);
+          endPeriod.setHours(23, 59, 59, 999);
+          break;
+
+        case "month":
+          startPeriod = new Date(targetDate);
+          startPeriod.setDate(1);
+          startPeriod.setHours(0, 0, 0, 0);
+
+          endPeriod = new Date(startPeriod);
+          endPeriod.setMonth(startPeriod.getMonth() + 1);
+          endPeriod.setDate(0);
+          endPeriod.setHours(23, 59, 59, 999);
+          break;
+
+        case "year":
+          startPeriod = new Date(targetDate);
+          startPeriod.setMonth(0, 1);
+          startPeriod.setHours(0, 0, 0, 0);
+
+          endPeriod = new Date(startPeriod);
+          endPeriod.setFullYear(startPeriod.getFullYear() + 1);
+          endPeriod.setMonth(0, 0);
+          endPeriod.setHours(23, 59, 59, 999);
+          break;
+
+        default:
+          return res.status(400).send({
+            error:
+              "Invalid view parameter. Use 'day', 'week','month', or  year.",
+          });
+      }
+
+      const count = await User.countDocuments({
+        role: "client",
+        createdAt: { $gte: startPeriod, $lte: endPeriod },
+      });
+
+      return res.send({
+        data: {
+          count,
+          date: targetDate.toISOString().split("T")[0],
+          view,
+          startDate: startPeriod.toISOString(),
+          endDate: endPeriod.toISOString(),
+        },
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
 adminsRouter.post("/", auth, permit("superAdmin"), async (req, res, next) => {
   try {
     if (!req.body.userName || !req.body.password) {
