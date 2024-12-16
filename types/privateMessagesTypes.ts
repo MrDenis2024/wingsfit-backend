@@ -14,6 +14,11 @@ export type PrivateChatIncomingMessage =
   payload: {
     token: string;
   };
+}| {
+  type: "GET_LAST";
+  payload: {
+    message: string;
+  };
 }
   | {
   type: "SEND_MESSAGE";
@@ -21,6 +26,15 @@ export type PrivateChatIncomingMessage =
     message: string;
   };
 } | {
+  type: "NEW_MESSAGE";
+  payload: {
+    author: string;
+    message: string;
+    createdAt: Date;
+    isRead: Array<{ user: string; read: boolean }>;
+  };
+}
+| {
   type: "MARK_READ";
   payload: { messageId: string; privateChatId: string };
 };
