@@ -3,7 +3,7 @@ require('dotenv').config();
 module.exports = {
     apps : [{
         name   : "backend",
-        script : "/home/wingsfit-admin/current/backend/index.ts",
+        script : "/var/www/backend/index.ts",
         instances: 1,
         env: {
             DATABASE_URL: "mongodb://localhost/wingsfit",
