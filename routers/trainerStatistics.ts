@@ -5,7 +5,7 @@ import Course from "../models/Course";
 import permit from "../middleware/permit";
 import CourseRequest from "../models/CourseRequest";
 import CoursesRequest from "./coursesRequest";
-import {ICourseRequest} from "../types/courseTypes";
+import { ICourseRequest } from "../types/courseTypes";
 
 export const trainerStatisticsRouter = express.Router();
 
@@ -196,7 +196,9 @@ trainerStatisticsRouter.get(
       const courses = await Course.find({ user: req.user?._id });
       const courseIds = courses.map((course) => course._id);
 
-      const [cancellations, unsubscriptions] = await Promise.all<ICourseRequest[]>([
+      const [cancellations, unsubscriptions] = await Promise.all<
+        ICourseRequest[]
+      >([
         CourseRequest.aggregate([
           {
             $match: {

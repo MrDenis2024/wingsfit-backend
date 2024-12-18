@@ -289,7 +289,7 @@ const run = async () => {
     title: "Morning Yoga group",
   });
 
-  const groupChat2 = await GroupChat.create({
+  await GroupChat.create({
     group: group2._id,
     title: "Evening Pilates group",
   });
@@ -332,6 +332,12 @@ const run = async () => {
     firstPerson: trainerUser._id,
     secondPerson: clientUser._id,
     availableTo: [clientUser._id, trainerUser._id],
+  });
+
+  await PrivateChat.create({
+    firstPerson: trainerUser2._id,
+    secondPerson: clientUser._id,
+    availableTo: [clientUser._id, trainerUser2._id],
   });
 
   await PrivateMessage.create({
