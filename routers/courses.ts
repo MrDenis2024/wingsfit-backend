@@ -13,7 +13,7 @@ coursesRouter.get("/", async (req, res) => {
 
   if (!trainerId) {
     const allCourses = await Course.find()
-      .populate("user", "firstName lastName avatar")
+      .populate("user", "firstName lastName")
       .populate("courseType", "name");
     return res.status(200).send(allCourses);
   }
