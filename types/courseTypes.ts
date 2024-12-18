@@ -13,6 +13,14 @@ export interface CourseTypes {
   image: string | null;
 }
 
+export interface UpdatedCourse {
+  title: string;
+  schedule: string;
+  scheduleLength: string;
+  price: number;
+  maxClients: number;
+}
+
 export interface CourseTypeFields {
   name: string;
   description: string;
