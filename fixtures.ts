@@ -62,7 +62,7 @@ const run = async () => {
     firstName: "Николай",
     lastName: "Александров",
     avatar: "fixtures/trainer.jpg",
-    timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
+    timeZone: {value: "America/Juneau", label: "(GMT-8:00) Alaska"},
     gender: "male",
     phoneNumber: "996552022212",
     dateOfBirth: new Date("1990-08-10"),
@@ -80,7 +80,7 @@ const run = async () => {
     firstName: "Мария",
     lastName: "Федотова",
     avatar: "fixtures/client.jpg",
-    timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
+    timeZone: {value: "America/Juneau", label: "(GMT-8:00) Alaska"},
     gender: "female",
     dateOfBirth: new Date("2000-08-10"),
     phoneNumber: "996222120542",
@@ -99,7 +99,7 @@ const run = async () => {
     firstName: "Андрей",
     lastName: "Смирнов",
     avatar: "fixtures/trainer2.jpg",
-    timeZone: { value: "Europe/Moscow", label: "(GMT+3:00) Moscow" },
+    timeZone: {value: "Europe/Moscow", label: "(GMT+3:00) Moscow"},
     gender: "male",
     phoneNumber: "996552033312",
     dateOfBirth: new Date("1985-05-15"),
@@ -117,7 +117,7 @@ const run = async () => {
     firstName: "Илона",
     lastName: "Маскова",
     avatar: "fixtures/client2.jpg",
-    timeZone: { value: "Europe/Moscow", label: "(GMT+3:00) Moscow" },
+    timeZone: {value: "Europe/Moscow", label: "(GMT+3:00) Moscow"},
     gender: "female",
     dateOfBirth: new Date("1995-02-20"),
     phoneNumber: "996222129999",
@@ -289,7 +289,7 @@ const run = async () => {
     title: "Morning Yoga group",
   });
 
-  const groupChat2 = await GroupChat.create({
+  await GroupChat.create({
     group: group2._id,
     title: "Evening Pilates group",
   });
@@ -332,6 +332,12 @@ const run = async () => {
     firstPerson: trainerUser._id,
     secondPerson: clientUser._id,
     availableTo: [clientUser._id, trainerUser._id],
+  });
+
+  await PrivateChat.create({
+    firstPerson: trainerUser2._id,
+    secondPerson: clientUser._id,
+    availableTo: [clientUser._id, trainerUser2._id],
   });
 
   await PrivateMessage.create({
