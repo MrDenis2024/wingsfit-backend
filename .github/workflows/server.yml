@@ -37,4 +37,5 @@ jobs:
           key: ${{ secrets.SERVER_FILED_KEY }}
           script: |
             cd /var/www/backend/
+            npm run seed
             pm2 reload ecosystem.config.js --env production
