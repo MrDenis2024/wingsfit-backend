@@ -4,6 +4,8 @@ import Course from "../models/Course";
 import { imagesUpload } from "../multer";
 import User from "../models/User";
 import mongoose from "mongoose";
+import Trainer from "../models/Trainer";
+import { UpdatedCourse } from "../types/courseTypes";
 
 const coursesRouter = express.Router();
 
