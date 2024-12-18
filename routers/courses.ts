@@ -4,7 +4,6 @@ import Course from "../models/Course";
 import { imagesUpload } from "../multer";
 import User from "../models/User";
 import mongoose from "mongoose";
-import { UpdatedCourse } from "../types/courseTypes";
 
 const coursesRouter = express.Router();
 
@@ -36,17 +35,33 @@ coursesRouter.get("/:id", async (req, res, next) => {
   try {
     const id = req.params.id;
 
-    if (!mongoose.isValidObjectId(id))
+    if (!mongoose.isValidObjectId(id)) {
       return res.status(400).send({ error: "Invalid ID" });
+    }
 
     const course = await Course.findById(id)
-      .populate("user", "firstName lastName")
-      .populate("courseType", "name");
+      .populate("user", "firstName lastName avatar")
+      .populate("courseType", "name")
+      .lean();
 
     if (!course) {
       return res.status(404).send({ error: "Course not found" });
     }
-    return res.status(200).send(course);
+
+    const user = course.user;
+    let description: string | null = null;
+
+    if (user && typeof user === "object" && "_id" in user) {
+      const trainer = await Trainer.findOne({ user: user._id }).lean();
+      if (trainer) {
+        description = trainer.description;
+      }
+    }
+
+    return res.status(200).send({
+      ...course,
+      user: user && typeof user === "object" ? { ...user, description } : user,
+    });
   } catch (error) {
     return next(error);
   }
