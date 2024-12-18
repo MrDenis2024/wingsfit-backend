@@ -5,6 +5,9 @@ import permit from "../middleware/permit";
 import Course from "../models/Course";
 import User from "../models/User";
 import mongoose from "mongoose";
+import Client from "../models/Client";
+import courseType from "../models/CourseType";
+import {populate} from "dotenv";
 
 export const groupsRouter = express.Router();
 
@@ -36,6 +39,43 @@ groupsRouter.get(
     }
   },
 );
+
+groupsRouter.get("/matching", auth, async (req: RequestWithUser, res, next) => {
+  try {
+    const user = req.user;
+
+    const client = await Client.findOne({user});
+
+    if (!client) {
+      return res.status(404).send({ error: "Client not found" });
+    }
+
+    const courses = await Course.find( client.preferredWorkoutType.length !== 0 ?{
+      courseType: { $in: client.preferredWorkoutType },
+    } : {});
+
+    const groups = await Group.find({
+      course: {$in: courses},
+      trainingLevel: client.trainingLevel
+    }).populate({
+      path: 'course',
+      populate: [
+        {
+          path: 'courseType',
+          select: 'name',
+        },
+        {
+          path: 'user',
+          select: 'firstName lastName',
+        },
+      ],
+    }).limit(10);
+
+    return res.send(groups);
+  } catch (error) {
+    return next(error);
+  }
+});
 
 groupsRouter.get("/:id", async (req, res, next) => {
   try {
