@@ -170,22 +170,6 @@ const run = async () => {
     availableDays: "Tue, Thu, Sat",
   });
 
-  await Client.create({
-    user: clientUser._id,
-    subscribes: [courseType1, courseType2],
-    preferredWorkoutType: [courseType1._id, courseType2._id],
-    trainingLevel: "junior",
-    physicalData: "Healthy",
-  });
-
-  await Client.create({
-    user: clientUser2._id,
-    subscribes: [courseType1, courseType2],
-    preferredWorkoutType: [courseType1._id, courseType2._id],
-    trainingLevel: "junior",
-    physicalData: "Moderate",
-  });
-
   const course1 = await Course.create({
     user: trainerUser._id,
     courseType: courseType1._id,
@@ -228,6 +212,22 @@ const run = async () => {
     clientsLimit: 10,
     startTime: "18:00",
     trainingLevel: "junior",
+  });
+
+  await Client.create({
+    user: clientUser._id,
+    subscribes: [course1._id, course2._id],
+    preferredWorkoutType: [courseType1._id, courseType2._id],
+    trainingLevel: "junior",
+    physicalData: "Healthy",
+  });
+
+  await Client.create({
+    user: clientUser2._id,
+    subscribes: [course1._id, course2._id],
+    preferredWorkoutType: [courseType1._id, courseType2._id],
+    trainingLevel: "junior",
+    physicalData: "Moderate",
   });
 
   await Lesson.create({
