@@ -25,10 +25,7 @@ jobs:
           touch .env
           echo GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} >> .env
           echo DATABASE_URL=${{ secrets.DATABASE_URL }}  >> .env  
-          echo CORS_WHITELIST=${{ secrets.CORS_WHITELIST }} >> .env
-
-      - name: Rewriting database data
-        run: npm run seed
+          echo CORS_WHITELIST=${{ secrets.HOST }} >> .env
 
       - name: Upload code and node_modules to server
         uses: appleboy/scp-action@v0.1.7
@@ -48,3 +45,6 @@ jobs:
           script: |
             cd /var/www/backend/
             pm2 reload ecosystem.config.js --env production
+
+      - name: Rewriting database data
+        run: npm run seed
