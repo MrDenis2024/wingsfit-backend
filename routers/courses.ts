@@ -3,9 +3,10 @@ import auth, { RequestWithUser } from "../middleware/auth";
 import Course from "../models/Course";
 import { imagesUpload } from "../multer";
 import User from "../models/User";
-import mongoose from "mongoose";
+import mongoose, {FilterQuery} from "mongoose";
 import Trainer from "../models/Trainer";
 import { UpdatedCourse } from "../types/courseTypes";
+import permit from "../middleware/permit";
 
 const coursesRouter = express.Router();
 
@@ -27,10 +28,38 @@ coursesRouter.get("/", async (req, res) => {
       .send({ error: "The user is not a trainer or not found" });
   }
 
-  const oneTrainer = await Course.find({ user: trainerId })
+  const courses = await Course.find({ user: trainerId })
     .populate("user", "firstName lastName")
     .populate("courseType", "name");
-  return res.status(200).send(oneTrainer);
+  return res.status(200).send(courses);
+});
+
+coursesRouter.get('/search', auth, async (req, res, next) => {
+  try {
+    const { courseTypes, format, trainers, schedule } = req.body;
+
+    const filter: FilterQuery<typeof Course> = {};
+
+    if (courseTypes && (courseTypes as string[]).length > 0) filter.courseType = { $in: courseTypes };
+
+    if (format && (format as string[]).length > 0) {
+      filter.format = { $in: format };
+    }
+
+    if (trainers && (trainers as string[]).length > 0) {
+      filter.user = { $in: trainers };
+    }
+
+    if (schedule && (schedule as string[]).length > 0) {
+      filter.schedule = { $in: schedule };
+    }
+
+    const courses = await Course.find(filter);
+
+    return res.send(courses);
+  } catch (error) {
+    return next(error);
+  }
 });
 
 coursesRouter.get("/:id", async (req, res, next) => {
@@ -72,6 +101,7 @@ coursesRouter.get("/:id", async (req, res, next) => {
 coursesRouter.post(
   "/",
   auth,
+  permit("trainer"),
   imagesUpload.single("image"),
   async (req: RequestWithUser, res, next) => {
     try {
@@ -96,9 +126,7 @@ coursesRouter.post(
         description: req.body.description,
         format: req.body.format,
         schedule: req.body.schedule,
-        scheduleLength: req.body.scheduleLength,
         price: req.body.price,
-        maxClients: req.body.maxClients,
         image: req.file ? req.file.filename : null,
       };
       const newCourse = await Course.create(courseMutation);
@@ -109,12 +137,14 @@ coursesRouter.post(
   },
 );
 
-coursesRouter.patch("/:id", async (req, res, next) => {
+coursesRouter.put("/:id", auth, permit("trainer"), async (req: RequestWithUser, res, next) => {
   try {
     const id = req.params.id;
+    const user = req.user;
 
-    if (!mongoose.isValidObjectId(id))
-      return res.status(400).send({ error: "Invalid ID" });
+    if (!user) return res.status(401).send({ error: "User not found" });
+
+    if (!mongoose.isValidObjectId(id)) return res.status(400).send({ error: "Invalid ID" });
 
     const course = await Course.findById(id);
 
@@ -123,12 +153,12 @@ coursesRouter.patch("/:id", async (req, res, next) => {
     }
     const updatedFields: UpdatedCourse = {
       title: req.body.title,
-      maxClients: req.body.maxClients,
       price: req.body.price,
       schedule: req.body.schedule,
-      scheduleLength: req.body.scheduleLength,
     };
-    const updatedCourse = await Course.findByIdAndUpdate(id, updatedFields, {
+    const updatedCourse = await Course.findOneAndUpdate({
+      _id: id, user
+    }, updatedFields, {
       new: true,
     });
 

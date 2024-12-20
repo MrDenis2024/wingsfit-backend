@@ -182,10 +182,8 @@ const run = async () => {
     title: "Yoga for Beginners",
     description: "A beginner's guide to yoga.",
     format: "group",
-    schedule: "Mon & Wed 7 PM",
-    scheduleLength: "1 month",
+    schedule: ["Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"],
     price: 100,
-    maxClients: 10,
     image: "fixtures/yoga.jpg",
   });
 
@@ -195,10 +193,8 @@ const run = async () => {
     title: "Intensive Cardio",
     description: "High-intensity cardio training for all levels.",
     format: "group",
-    schedule: "Tue & Thu 6 PM",
-    scheduleLength: "2 weeks",
+    schedule: [ "Понедельник", "Вторник", "Пятница", "Суббота", "Воскресенье"],
     price: 150,
-    maxClients: 10,
     image: "fixtures/cardio.jpg",
   });
 
@@ -206,7 +202,8 @@ const run = async () => {
     title: "Evening Yoga Group",
     course: course1._id,
     clients: [clientUser._id, clientUser2._id],
-    clientsLimit: 10,
+    maxClients: 10,
+    scheduleLength: "1 час",
     startTime: "19:00",
     trainingLevel: "junior",
   });
@@ -215,7 +212,8 @@ const run = async () => {
     title: "Cardio Training",
     course: course2._id,
     clients: [clientUser2._id, clientUser2._id],
-    clientsLimit: 10,
+    maxClients: 10,
+    scheduleLength: "2 часа",
     startTime: "18:00",
     trainingLevel: "junior",
   });
@@ -273,7 +271,6 @@ const run = async () => {
     comment: "Good job!",
     createdAt: new Date().toISOString(),
   });
-  await trainerUser;
 
   await TrainerReview.create({
     clientId: clientUser2._id,
