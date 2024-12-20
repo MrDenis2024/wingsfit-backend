@@ -56,11 +56,15 @@ trainersRouter.get("/search", auth, async (req: RequestWithUser, res, next) => {
     const { courseTypes, availableDays, rating } = req.body;
     const filter: Record<string, any> = {};
 
-    if (courseTypes && (courseTypes as string[]).length > 0) filter.courseTypes = { $in: courseTypes };
+    if (courseTypes && (courseTypes as string[]).length > 0)
+      filter.courseTypes = { $in: courseTypes };
 
-    if (availableDays && (availableDays as string).length > 0) filter.availableDays = { $in: availableDays };
+    if (availableDays && (availableDays as string).length > 0)
+      filter.availableDays = { $in: availableDays };
 
-    const trainers = await Trainer.find(filter).sort(rating ? { rating: -1 } : {}).populate("user", "firstName lastName avatar");
+    const trainers = await Trainer.find(filter)
+      .sort(rating ? { rating: -1 } : {})
+      .populate("user", "firstName lastName avatar");
 
     return res.send(trainers);
   } catch (e) {

@@ -1,6 +1,10 @@
 import mongoose, { Types } from "mongoose";
 import User from "./User";
-import { TrainerMethods, TrainerModel, TrainerTypes } from "../types/trainerTypes";
+import {
+  TrainerMethods,
+  TrainerModel,
+  TrainerTypes,
+} from "../types/trainerTypes";
 import CourseType from "./CourseType";
 import TrainerReview from "./TrainerReview";
 
@@ -48,7 +52,15 @@ const TrainerSchema = new Schema<TrainerTypes, TrainerModel, TrainerMethods>({
   description: String,
   availableDays: {
     type: [String],
-    enum: ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
+    enum: [
+      "Понедельник",
+      "Вторник",
+      "Среда",
+      "Четверг",
+      "Пятница",
+      "Суббота",
+      "Воскресенье",
+    ],
   },
 });
 
@@ -59,10 +71,14 @@ TrainerSchema.methods.getRating = async function () {
     this.rating = 0;
   }
 
-  const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+  const averageRating =
+    reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
 
   this.rating = Math.min(Math.round(averageRating / 0.5) * 0.5, 5);
 };
 
-const Trainer = mongoose.model<TrainerTypes, TrainerModel>("Trainer", TrainerSchema);
+const Trainer = mongoose.model<TrainerTypes, TrainerModel>(
+  "Trainer",
+  TrainerSchema,
+);
 export default Trainer;

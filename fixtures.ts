@@ -152,7 +152,7 @@ const run = async () => {
       },
     ],
     description: "Professional trainer with 5 years of experience.",
-    availableDays: ["Понедельник", "Среда", "Четверг", "Пятница", "Суббота",],
+    availableDays: ["Понедельник", "Среда", "Четверг", "Пятница", "Суббота"],
   });
 
   await Trainer.create({
@@ -167,7 +167,13 @@ const run = async () => {
       },
     ],
     description: "Experienced cardio trainer.",
-    availableDays: ["Понедельник", "Среда", "Четверг", "Суббота", "Воскресенье"],
+    availableDays: [
+      "Понедельник",
+      "Среда",
+      "Четверг",
+      "Суббота",
+      "Воскресенье",
+    ],
   });
 
   const course1 = await Course.create({
@@ -267,7 +273,7 @@ const run = async () => {
     comment: "Good job!",
     createdAt: new Date().toISOString(),
   });
-  await trainerUser
+  await trainerUser;
 
   await TrainerReview.create({
     clientId: clientUser2._id,
