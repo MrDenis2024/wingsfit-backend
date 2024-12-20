@@ -3,7 +3,7 @@ import auth, { RequestWithUser } from "../middleware/auth";
 import Course from "../models/Course";
 import { imagesUpload } from "../multer";
 import User from "../models/User";
-import mongoose, {FilterQuery} from "mongoose";
+import mongoose, { FilterQuery } from "mongoose";
 import Trainer from "../models/Trainer";
 import { UpdatedCourse } from "../types/courseTypes";
 import permit from "../middleware/permit";
@@ -34,13 +34,14 @@ coursesRouter.get("/", async (req, res) => {
   return res.status(200).send(courses);
 });
 
-coursesRouter.get('/search', auth, async (req, res, next) => {
+coursesRouter.get("/search", auth, async (req, res, next) => {
   try {
     const { courseTypes, format, trainers, schedule } = req.body;
 
     const filter: FilterQuery<typeof Course> = {};
 
-    if (courseTypes && (courseTypes as string[]).length > 0) filter.courseType = { $in: courseTypes };
+    if (courseTypes && (courseTypes as string[]).length > 0)
+      filter.courseType = { $in: courseTypes };
 
     if (format && (format as string[]).length > 0) {
       filter.format = { $in: format };
@@ -137,35 +138,46 @@ coursesRouter.post(
   },
 );
 
-coursesRouter.put("/:id", auth, permit("trainer"), async (req: RequestWithUser, res, next) => {
-  try {
-    const id = req.params.id;
-    const user = req.user;
+coursesRouter.put(
+  "/:id",
+  auth,
+  permit("trainer"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const id = req.params.id;
+      const user = req.user;
 
-    if (!user) return res.status(401).send({ error: "User not found" });
+      if (!user) return res.status(401).send({ error: "User not found" });
 
-    if (!mongoose.isValidObjectId(id)) return res.status(400).send({ error: "Invalid ID" });
+      if (!mongoose.isValidObjectId(id))
+        return res.status(400).send({ error: "Invalid ID" });
 
-    const course = await Course.findById(id);
+      const course = await Course.findById(id);
 
-    if (!course) {
-      return res.status(404).send({ error: "Course not found" });
+      if (!course) {
+        return res.status(404).send({ error: "Course not found" });
+      }
+      const updatedFields: UpdatedCourse = {
+        title: req.body.title,
+        price: req.body.price,
+        schedule: req.body.schedule,
+      };
+      const updatedCourse = await Course.findOneAndUpdate(
+        {
+          _id: id,
+          user,
+        },
+        updatedFields,
+        {
+          new: true,
+        },
+      );
+
+      return res.status(200).send(updatedCourse);
+    } catch (error) {
+      return next(error);
     }
-    const updatedFields: UpdatedCourse = {
-      title: req.body.title,
-      price: req.body.price,
-      schedule: req.body.schedule,
-    };
-    const updatedCourse = await Course.findOneAndUpdate({
-      _id: id, user
-    }, updatedFields, {
-      new: true,
-    });
-
-    return res.status(200).send(updatedCourse);
-  } catch (error) {
-    return next(error);
-  }
-});
+  },
+);
 
 export default coursesRouter;

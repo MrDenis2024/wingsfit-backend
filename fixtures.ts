@@ -193,7 +193,7 @@ const run = async () => {
     title: "Intensive Cardio",
     description: "High-intensity cardio training for all levels.",
     format: "group",
-    schedule: [ "Понедельник", "Вторник", "Пятница", "Суббота", "Воскресенье"],
+    schedule: ["Понедельник", "Вторник", "Пятница", "Суббота", "Воскресенье"],
     price: 150,
     image: "fixtures/cardio.jpg",
   });
