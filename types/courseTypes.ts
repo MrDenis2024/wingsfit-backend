@@ -6,19 +6,15 @@ export interface CourseTypes {
   courseType: Types.ObjectId | string;
   description: string;
   format: string;
-  schedule: string;
-  scheduleLength: string;
+  schedule: string[];
   price: number;
-  maxClients: number;
   image: string | null;
 }
 
 export interface UpdatedCourse {
   title: string;
   schedule: string;
-  scheduleLength: string;
   price: number;
-  maxClients: number;
 }
 
 export interface CourseTypeFields {

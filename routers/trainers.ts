@@ -2,10 +2,11 @@ import express from "express";
 import Trainer from "../models/Trainer";
 import auth, { RequestWithUser } from "../middleware/auth";
 import User from "../models/User";
-import mongoose, { Types } from "mongoose";
+import mongoose, { FilterQuery, Types } from "mongoose";
 import Client from "../models/Client";
 import permit from "../middleware/permit";
 import { imagesUpload } from "../multer";
+import { TrainerModel } from "../types/trainerTypes";
 
 const trainersRouter = express.Router();
 
@@ -54,7 +55,7 @@ trainersRouter.get("/", async (req: RequestWithUser, res, next) => {
 trainersRouter.get("/search", auth, async (req: RequestWithUser, res, next) => {
   try {
     const { courseTypes, availableDays, rating } = req.body;
-    const filter: Record<string, any> = {};
+    const filter: FilterQuery<TrainerModel> = {};
 
     if (courseTypes && (courseTypes as string[]).length > 0)
       filter.courseTypes = { $in: courseTypes };
@@ -67,8 +68,8 @@ trainersRouter.get("/search", auth, async (req: RequestWithUser, res, next) => {
       .populate("user", "firstName lastName avatar");
 
     return res.send(trainers);
-  } catch (e) {
-    return next(e);
+  } catch (error) {
+    return next(error);
   }
 });
 

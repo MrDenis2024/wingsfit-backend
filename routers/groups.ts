@@ -6,8 +6,6 @@ import Course from "../models/Course";
 import User from "../models/User";
 import mongoose from "mongoose";
 import Client from "../models/Client";
-import courseType from "../models/CourseType";
-import { populate } from "dotenv";
 
 export const groupsRouter = express.Router();
 
@@ -119,8 +117,9 @@ groupsRouter.post(
 
       if (
         !req.body.title ||
-        req.body.clientsLimit < 1 ||
+        req.body.maxClients < 1 ||
         !req.body.startTime ||
+        !req.body.scheduleLength ||
         !req.body.trainingLevel
       ) {
         return res.status(400).send({ error: "Fill required fields!" });
@@ -129,8 +128,9 @@ groupsRouter.post(
       const newGroup = await Group.create({
         title: req.body.title,
         course: existingCourse._id,
-        clientsLimit: existingCourse.maxClients,
+        maxClients: req.body.maxClients,
         startTime: req.body.startTime,
+        scheduleLength: req.body.scheduleLength,
         trainingLevel: req.body.trainingLevel,
       });
 
@@ -181,7 +181,7 @@ groupsRouter.patch(
           .status(400)
           .send({ error: "Client is already in the group" });
 
-      if (group.clients.length >= group.clientsLimit)
+      if (group.clients.length >= group.maxClients)
         return res.status(400).send({ error: "Client limit reached" });
 
       group.clients.push(client._id);

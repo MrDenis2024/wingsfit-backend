@@ -18,10 +18,6 @@ const GroupSchema = new Schema({
       ref: "User",
     },
   ],
-  clientsLimit: {
-    type: Number,
-    required: true,
-  },
   startTime: {
     type: String,
     required: true,
@@ -29,6 +25,14 @@ const GroupSchema = new Schema({
   trainingLevel: {
     type: String,
     enum: ["junior", "middle", "advanced"],
+    required: true,
+  },
+  scheduleLength: {
+    type: String,
+    required: true,
+  },
+  maxClients: {
+    type: Number,
     required: true,
   },
 });
