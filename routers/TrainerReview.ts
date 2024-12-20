@@ -76,6 +76,10 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
       });
     }
 
+    const trainer = await Trainer.findOne({ user: trainerId });
+
+    if (!trainer) return res.status(404).send({ error: "Trainer not found!" });
+
     const newReview = new TrainerReview({
       clientId,
       trainerId,
@@ -84,23 +88,9 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
     });
 
     await newReview.save();
+    await trainer.getRating();
 
-    const reviews = await TrainerReview.find({ trainerId });
-
-    if (reviews.length > 0) {
-      const averageRating =
-        reviews.reduce((sum, review) => sum + review.rating, 0) /
-        reviews.length;
-
-      const roundedRating = Math.min(Math.round(averageRating / 0.5) * 0.5, 5);
-
-      await Trainer.findOneAndUpdate(
-        { user: trainerId },
-        { rating: roundedRating },
-        { new: true },
-      );
-    }
-    return res.status(200).send(reviews);
+    return res.status(200).send(newReview);
   } catch (e) {
     return next(e);
   }

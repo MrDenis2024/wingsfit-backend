@@ -53,26 +53,14 @@ trainersRouter.get("/", async (req: RequestWithUser, res, next) => {
 
 trainersRouter.get("/search", auth, async (req: RequestWithUser, res, next) => {
   try {
-    console.log(req.user)
-    const { rating, courseTypes, availableDays } = req.query;
+    const { courseTypes, availableDays, rating } = req.body;
     const filter: Record<string, any> = {};
 
-    if (rating) {
-      const parsedRating = Number(rating);
-      if (!isNaN(parsedRating)) filter.raiting = { $gte: parsedRating }; // Фильтрация: >= переданного рейтинга
-    }
+    if (courseTypes && (courseTypes as string[]).length > 0) filter.courseTypes = { $in: courseTypes };
 
-    if (courseTypes && (courseTypes as string[]).length > 0) {
-      const courseTypesArray = Array.isArray(courseTypes) ? courseTypes : [courseTypes];
-      filter.courseTypes = { $in: courseTypesArray };
-    }
+    if (availableDays && (availableDays as string).length > 0) filter.availableDays = { $in: availableDays };
 
-    if (availableDays && (availableDays as string).length > 0) {
-      const availableDaysArray = Array.isArray(availableDays) ? availableDays : [availableDays];
-      filter.availableDays = { $in: availableDaysArray };
-    }
-
-    const trainers = await Trainer.find(filter);
+    const trainers = await Trainer.find(filter).sort(rating ? { rating: -1 } : {}).populate("user", "firstName lastName avatar");
 
     return res.send(trainers);
   } catch (e) {
