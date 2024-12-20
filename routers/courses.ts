@@ -55,9 +55,11 @@ coursesRouter.get("/search", auth, async (req, res, next) => {
       filter.schedule = { $in: schedule };
     }
 
-    const courses = await Course.find(filter);
+    const courses = await Course.find(filter)
+      .populate("user", "firstName lastName")
+      .populate("courseType", "name");
 
-    return res.send(courses);
+    return res.status(200).send(courses);
   } catch (error) {
     return next(error);
   }
