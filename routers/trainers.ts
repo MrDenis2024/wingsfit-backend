@@ -67,7 +67,7 @@ trainersRouter.get("/search", auth, async (req: RequestWithUser, res, next) => {
       .sort(rating ? { rating: -1 } : {})
       .populate("user", "firstName lastName avatar");
 
-    return res.send(trainers);
+    return res.status(200).send(trainers);
   } catch (error) {
     return next(error);
   }
