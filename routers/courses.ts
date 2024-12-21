@@ -116,11 +116,11 @@ coursesRouter.post(
         });
       }
 
-      const courseType = req.body.courseType;
-
-      if (!courseType) {
-        return res.status(401).send({ error: "courseType not provided" });
-      }
+      // const courseType = req.body.courseType;
+      //
+      // if (!courseType) {
+      //   return res.status(400).send({ error: "courseType not provided" });
+      // }
 
       const courseMutation = {
         user: user._id,
@@ -135,6 +135,9 @@ coursesRouter.post(
       const newCourse = await Course.create(courseMutation);
       return res.status(200).send(newCourse);
     } catch (error) {
+      if (error instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send(error);
+      }
       return next(error);
     }
   },
@@ -159,24 +162,27 @@ coursesRouter.put(
       if (!course) {
         return res.status(404).send({ error: "Course not found" });
       }
+
       const updatedFields: UpdatedCourse = {
         title: req.body.title,
-        price: req.body.price,
+        courseType: req.body.courseType,
+        description: req.body.description,
+        format: req.body.format,
         schedule: req.body.schedule,
+        price: req.body.price,
       };
+
       const updatedCourse = await Course.findOneAndUpdate(
-        {
-          _id: id,
-          user,
-        },
-        updatedFields,
-        {
-          new: true,
-        },
+          { _id: id },
+          updatedFields,
+          { new: true, runValidators: true }
       );
 
       return res.status(200).send(updatedCourse);
     } catch (error) {
+      if (error instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send(error);
+      }
       return next(error);
     }
   },

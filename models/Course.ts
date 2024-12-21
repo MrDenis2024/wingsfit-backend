@@ -36,14 +36,15 @@ const CourseSchema = new Schema<CourseTypes>({
   },
   description: {
     type: String,
+    required: true,
   },
   format: {
     type: String,
     default: "group",
     enum: ["single", "group"],
   },
-  schedule: {
-    type: [String],
+  schedule: [{
+    type: String,
     enum: [
       "Понедельник",
       "Вторник",
@@ -54,9 +55,10 @@ const CourseSchema = new Schema<CourseTypes>({
       "Воскресенье",
     ],
     required: true,
-  },
+  }],
   price: {
     type: Number,
+    required: true,
   },
   image: {
     type: String,
