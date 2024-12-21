@@ -25,8 +25,11 @@ groupsRouter.get(
         .populate({
           path: "course",
           match: { user },
-          select: "title",
-        })
+          select: "title schedule",
+        }).populate(
+              "clients",
+              "firstName lastName",
+          )
         .exec();
 
       const filteredGroups = groups.filter((group) => group.course);
@@ -119,7 +122,7 @@ groupsRouter.post(
         !req.body.title ||
         req.body.maxClients < 1 ||
         !req.body.startTime ||
-        !req.body.scheduleLength ||
+        req.body.scheduleLength < 0.5 ||
         !req.body.trainingLevel
       ) {
         return res.status(400).send({ error: "Fill required fields!" });
