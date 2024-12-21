@@ -12,14 +12,13 @@ export interface CourseTypes {
 }
 
 export interface UpdatedCourse {
-  title: string,
-  courseType: Types.ObjectId | string,
-  description:string,
-  format: string,
-  schedule: string[],
-  price: number,
+  title: string;
+  courseType: Types.ObjectId | string;
+  description: string;
+  format: string;
+  schedule: string[];
+  price: number;
 }
-
 
 export interface CourseTypeFields {
   name: string;

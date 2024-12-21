@@ -43,19 +43,21 @@ const CourseSchema = new Schema<CourseTypes>({
     default: "group",
     enum: ["single", "group"],
   },
-  schedule: [{
-    type: String,
-    enum: [
-      "Понедельник",
-      "Вторник",
-      "Среда",
-      "Четверг",
-      "Пятница",
-      "Суббота",
-      "Воскресенье",
-    ],
-    required: true,
-  }],
+  schedule: [
+    {
+      type: String,
+      enum: [
+        "Понедельник",
+        "Вторник",
+        "Среда",
+        "Четверг",
+        "Пятница",
+        "Суббота",
+        "Воскресенье",
+      ],
+      required: true,
+    },
+  ],
   price: {
     type: Number,
     required: true,

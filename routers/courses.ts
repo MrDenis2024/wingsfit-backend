@@ -173,9 +173,9 @@ coursesRouter.put(
       };
 
       const updatedCourse = await Course.findOneAndUpdate(
-          { _id: id },
-          updatedFields,
-          { new: true, runValidators: true }
+        { _id: id },
+        updatedFields,
+        { new: true, runValidators: true },
       );
 
       return res.status(200).send(updatedCourse);
