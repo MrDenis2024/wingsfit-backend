@@ -13,7 +13,10 @@ export interface CourseTypes {
 
 export interface UpdatedCourse {
   title: string;
-  schedule: string;
+  courseType: Types.ObjectId | string;
+  description: string;
+  format: string;
+  schedule: string[];
   price: number;
 }
 
