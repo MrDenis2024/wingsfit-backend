@@ -28,11 +28,14 @@ const GroupSchema = new Schema({
     required: true,
   },
   scheduleLength: {
-    type: String,
+    type: Number,
+    min: 1,
+    max: 5,
     required: true,
   },
   maxClients: {
     type: Number,
+    min: 1,
     required: true,
   },
 });

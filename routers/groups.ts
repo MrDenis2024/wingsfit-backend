@@ -25,8 +25,9 @@ groupsRouter.get(
         .populate({
           path: "course",
           match: { user },
-          select: "title",
+          select: "title schedule",
         })
+        .populate("clients", "firstName lastName")
         .exec();
 
       const filteredGroups = groups.filter((group) => group.course);
@@ -117,9 +118,9 @@ groupsRouter.post(
 
       if (
         !req.body.title ||
-        req.body.maxClients < 1 ||
+        parseFloat(req.body.maxClients) < 1 ||
         !req.body.startTime ||
-        !req.body.scheduleLength ||
+        parseFloat(req.body.scheduleLength) < 1 ||
         !req.body.trainingLevel
       ) {
         return res.status(400).send({ error: "Fill required fields!" });
@@ -128,9 +129,9 @@ groupsRouter.post(
       const newGroup = await Group.create({
         title: req.body.title,
         course: existingCourse._id,
-        maxClients: req.body.maxClients,
+        maxClients: parseFloat(req.body.maxClients),
         startTime: req.body.startTime,
-        scheduleLength: req.body.scheduleLength,
+        scheduleLength: parseFloat(req.body.scheduleLength),
         trainingLevel: req.body.trainingLevel,
       });
 
