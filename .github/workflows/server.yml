@@ -47,4 +47,6 @@ jobs:
             pm2 reload ecosystem.config.js --env production
 
       - name: Rewriting database data
-        run: npm run seed
+        run: |
+          cd /var/www/backend/  
+          npm run seed

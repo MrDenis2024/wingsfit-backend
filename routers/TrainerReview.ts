@@ -63,7 +63,7 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
 
     let isParticipant = false;
     for (const lesson of lessons) {
-      if (lesson.participants.includes(clientId)) {
+      if (lesson.arePresent.includes(clientId)) {
         isParticipant = true;
         break;
       }

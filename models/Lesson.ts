@@ -4,40 +4,25 @@ import { LessonsTypes } from "../types/lessonsTypes";
 const Schema = mongoose.Schema;
 
 const LessonSchema = new Schema<LessonsTypes>({
-  course: {
+  group: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Course",
+    ref: "Group",
     required: true,
   },
-  title: {
-    type: String,
+  createdAt: {
+    type: Date,
+    default: Date.now(),
     required: true,
   },
-  timeZone: {
-    type: String,
-    required: true,
-  },
-  groupLevel: {
-    type: Number,
-    required: true,
-  },
-  quantityClients: {
-    type: Number,
-    required: true,
-  },
-  ageLimit: {
-    type: Number,
-  },
-  description: {
-    type: String,
-  },
-  participants: {
+  notPresent: {
     type: [mongoose.Schema.Types.ObjectId],
     ref: "User",
+    required: true,
   },
-  presentUser: {
+  arePresent: {
     type: [mongoose.Schema.Types.ObjectId],
     ref: "User",
+    default: [],
   },
 });
 

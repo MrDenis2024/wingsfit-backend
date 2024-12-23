@@ -1,13 +1,9 @@
 import { Types } from "mongoose";
+import { CourseTypes } from "./courseTypes";
 
 export interface LessonsTypes {
-  course: Types.ObjectId | string;
-  title: string;
-  timeZone: string;
-  groupLevel: number;
-  quantityClients: number;
-  ageLimit: number;
-  description: string;
-  participants: Types.ObjectId[];
-  presentUser: Types.ObjectId[];
+  group: Types.ObjectId | CourseTypes;
+  createdAt: Date;
+  notPresent: Types.ObjectId[];
+  arePresent: Types.ObjectId[];
 }
