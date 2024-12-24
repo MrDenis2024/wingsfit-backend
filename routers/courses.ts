@@ -10,6 +10,11 @@ import permit from "../middleware/permit";
 
 const coursesRouter = express.Router();
 
+const sortScheduleDays = (days: string[]): string[] => {
+  const dayOrder = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
+  return days.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+};
+
 coursesRouter.get("/", async (req, res) => {
   const { trainerId } = req.query;
 
@@ -122,13 +127,15 @@ coursesRouter.post(
       //   return res.status(400).send({ error: "courseType not provided" });
       // }
 
+      const sortedSchedule = sortScheduleDays(req.body.schedule);
+
       const courseMutation = {
         user: user._id,
         title: req.body.title,
         courseType: req.body.courseType,
         description: req.body.description,
         format: req.body.format,
-        schedule: req.body.schedule,
+        schedule: sortedSchedule,
         price: req.body.price,
         image: req.file ? req.file.filename : null,
       };
@@ -163,12 +170,14 @@ coursesRouter.put(
         return res.status(404).send({ error: "Course not found" });
       }
 
+      const sortedSchedule = req.body.schedule;
+
       const updatedFields: UpdatedCourse = {
         title: req.body.title,
         courseType: req.body.courseType,
         description: req.body.description,
         format: req.body.format,
-        schedule: req.body.schedule,
+        schedule: sortedSchedule,
         price: req.body.price,
       };
 

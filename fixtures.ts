@@ -182,7 +182,7 @@ const run = async () => {
     title: "Yoga for Beginners",
     description: "A beginner's guide to yoga.",
     format: "group",
-    schedule: ["Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"],
+    schedule: ["ср", "чт", "пт", "сб", "вс"],
     price: 100,
     image: "fixtures/yoga.jpg",
   });
@@ -193,7 +193,7 @@ const run = async () => {
     title: "Intensive Cardio",
     description: "High-intensity cardio training for all levels.",
     format: "group",
-    schedule: ["Понедельник", "Вторник", "Пятница", "Суббота", "Воскресенье"],
+    schedule: ["пн", "вт", "пт", "сб", "вс"],
     price: 150,
     image: "fixtures/cardio.jpg",
   });
