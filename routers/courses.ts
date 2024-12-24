@@ -41,22 +41,25 @@ coursesRouter.get("/", async (req, res) => {
 
 coursesRouter.get("/search", auth, async (req, res, next) => {
   try {
-    const { courseTypes, format, trainers, schedule } = req.body;
-
+    const courseTypes = ( req.query.courseTypes as string ).split(",");
+    const format = ( req.query.format as string ).split(",");
+    const trainers = ( req.query.trainers as string ).split(",");
+    const schedule = ( req.query.schedule as string ).split(",");
     const filter: FilterQuery<typeof Course> = {};
 
-    if (courseTypes && (courseTypes as string[]).length > 0)
+    if (courseTypes && courseTypes.every(id => mongoose.isValidObjectId(id))) {
       filter.courseType = { $in: courseTypes };
+    }
 
-    if (format && (format as string[]).length > 0) {
+    if (format && format.every(item => item.trim() !== "")) {
       filter.format = { $in: format };
     }
 
-    if (trainers && (trainers as string[]).length > 0) {
+    if (trainers && trainers.every(id => mongoose.isValidObjectId(id))) {
       filter.user = { $in: trainers };
     }
 
-    if (schedule && (schedule as string[]).length > 0) {
+    if (schedule && schedule.every(item => item.trim() !== "")) {
       filter.schedule = { $in: schedule };
     }
 

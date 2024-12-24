@@ -54,13 +54,16 @@ trainersRouter.get("/", async (req: RequestWithUser, res, next) => {
 
 trainersRouter.get("/search", auth, async (req: RequestWithUser, res, next) => {
   try {
-    const { courseTypes, availableDays, rating } = req.body;
+    const courseTypes = (req.query.courseTypes as string)?.split(",");
+    const availableDays = (req.query.availableDays as string)?.split(",");
+    const rating = req.query.rating;
+
     const filter: FilterQuery<TrainerModel> = {};
 
-    if (courseTypes && (courseTypes as string[]).length > 0)
+    if (courseTypes && courseTypes.every(id => mongoose.isValidObjectId(id)))
       filter.courseTypes = { $in: courseTypes };
 
-    if (availableDays && (availableDays as string).length > 0)
+    if (availableDays && availableDays.every(item => item.trim() !== ""))
       filter.availableDays = { $in: availableDays };
 
     const trainers = await Trainer.find(filter)
