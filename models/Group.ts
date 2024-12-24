@@ -36,6 +36,12 @@ const GroupSchema = new Schema({
     ref: "Course",
     required: true,
   },
+  clients: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
   startTime: {
     type: String,
     required: true,

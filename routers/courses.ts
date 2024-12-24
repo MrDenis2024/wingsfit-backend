@@ -7,6 +7,7 @@ import mongoose, { FilterQuery } from "mongoose";
 import Trainer from "../models/Trainer";
 import { UpdatedCourse } from "../types/courseTypes";
 import permit from "../middleware/permit";
+import Group from "../models/Group";
 
 const coursesRouter = express.Router();
 
@@ -187,5 +188,50 @@ coursesRouter.put(
     }
   },
 );
+
+coursesRouter.patch("/new/:id", auth, permit('client') , async (req: RequestWithUser, res, next) => {
+  try{
+    const courseId = req.params.id;
+    const { groupId } = req.body;
+    const userId = req.user?._id;
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).send({ error: "Курс не найден." });
+    }
+
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).send({ error: "Группа не найдена." });
+    }
+
+    if (!group.course.equals(course._id)) {
+      return res.status(400).send({ error: "Группа не привязана к данному курсу." });
+    }
+
+    const alreadyInWaitList = course.waitList.some((waitListItem) => String(waitListItem.user) === String(userId));
+    if (alreadyInWaitList) {
+      return res.status(400).send({ error: "Клиент уже находится в списке ожидания." });
+    }
+
+    if (!userId) {
+      return res.status(400).send({ error: "ID пользователя отсутствует." });
+    }
+
+    course.waitList.push({
+      user: userId,
+      createdAt: new Date(),
+      favoriteGroup: groupId,
+      status: "new",
+    });
+
+    await course.save();
+
+    return res.status(200).json({ message: "Клиент успешно добавлен в список ожидания." });
+
+  }catch(error){
+    return next(error);
+  }
+})
 
 export default coursesRouter;

@@ -14,7 +14,7 @@ const WaitListSchema = new Schema({
     validate: {
       validator: async (value: Types.ObjectId) => {
         const user = await User.findById(value);
-        return Boolean(user && user.role === "trainer");
+        return Boolean(user && user.role === "client");
       },
       message: "There can only be one role",
     },
@@ -71,7 +71,7 @@ const CourseSchema = new Schema<CourseTypes>({
     type: String,
     required: true,
   },
-  description: {
+    description: {
     type: String,
     required: true,
   },
