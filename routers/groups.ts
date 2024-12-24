@@ -6,6 +6,7 @@ import Course from "../models/Course";
 import User from "../models/User";
 import mongoose from "mongoose";
 import Client from "../models/Client";
+import Lesson from "../models/Lesson";
 
 export const groupsRouter = express.Router();
 
@@ -25,13 +26,12 @@ groupsRouter.get(
         .populate({
           path: "course",
           match: { user },
-          select: "title schedule",
+          select: "title schedule user",
         })
         .populate("clients", "firstName lastName")
         .exec();
 
       const filteredGroups = groups.filter((group) => group.course);
-
       return res.send(filteredGroups);
     } catch (error) {
       return next(error);
@@ -189,6 +189,48 @@ groupsRouter.patch(
       await group.save();
 
       return res.send(group);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+groupsRouter.delete(
+  "/:id",
+  auth,
+  permit("trainer", "admin", "superAdmin"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      if (!mongoose.isValidObjectId(req.params.id))
+        return res.status(400).send({ error: "Invalid group ID" });
+
+      const group = await Group.findById(req.params.id);
+
+      if (!group) {
+        return res.status(404).send({ error: "Группа не найдена" });
+      }
+
+      const course = await Course.findById(group.course);
+
+      if (!course) {
+        return res.status(404).send({ error: "Курс не найден" });
+      }
+
+      if (
+        req.user?.role === "admin" ||
+        req.user?.role === "superAdmin" ||
+        (req.user?.role === "trainer" && course.user.equals(req.user._id))
+      ) {
+        await Group.deleteOne({ _id: req.params.id });
+        await Lesson.deleteMany({ group: req.params.id });
+        return res.send({
+          message: "Группа и связанные данные успешно удалены",
+        });
+      }
+
+      return res
+        .status(403)
+        .send({ error: "Вы не можете удалить данную группу" });
     } catch (error) {
       return next(error);
     }
