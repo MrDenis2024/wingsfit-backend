@@ -235,25 +235,15 @@ const run = async () => {
   });
 
   await Lesson.create({
-    course: course1._id,
-    title: "Intro to Yoga",
-    timeZone: "UTC+0",
-    groupLevel: 1,
-    quantityClients: 1,
-    description: "First lesson in the yoga series.",
-    participants: [clientUser._id],
-    presentUser: [],
+    group: group1._id,
+    notPresent: [clientUser._id],
+    arePresent: [clientUser2._id],
   });
 
   await Lesson.create({
-    course: course2._id,
-    title: "Cardio Basics",
-    timeZone: "UTC+3",
-    groupLevel: 1,
-    quantityClients: 1,
-    description: "First cardio training session.",
-    participants: [clientUser2._id],
-    presentUser: [],
+    group: group2._id,
+    notPresent: [clientUser2._id],
+    arePresent: [clientUser._id],
   });
 
   await TrainerReview.create({

@@ -3,30 +3,57 @@ import Lesson from "../models/Lesson";
 import auth, { RequestWithUser } from "../middleware/auth";
 import mongoose from "mongoose";
 import permit from "../middleware/permit";
+import Course from "../models/Course";
+import Group from "../models/Group";
 
 const lessonsRouter = express.Router();
 
-lessonsRouter.get("/", auth, async (_req, res, next) => {
-  try {
-    const allLessons = await Lesson.find()
-      .populate([
-        {
-          path: "course",
-          populate: [
-            { path: "user", select: "firstName lastName" },
-            { path: "courseType", select: "name" },
-          ],
-        },
-      ])
-      .populate("presentUser", "firstName lastName");
+lessonsRouter.get(
+  "/",
+  auth,
+  permit("trainer"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const courses = await Course.find({ user: req.user?._id });
 
-    return res.status(200).send(allLessons);
-  } catch (error) {
-    return next(error);
-  }
-});
+      if (!courses) {
+        return res
+          .status(404)
+          .send({ error: "No courses found for this trainer" });
+      }
 
-lessonsRouter.get("/:id", auth, async (req, res, next) => {
+      const groups = await Group.find({
+        course: { $in: courses.map((course) => course._id) },
+      });
+
+      if (!groups) {
+        return res
+          .status(404)
+          .send({ error: "No groups found for this trainer" });
+      }
+
+      const lessons = await Lesson.find({
+        group: { $in: groups.map((group) => group._id) },
+      })
+        .populate({
+          path: "group",
+          select: "title course",
+          populate: {
+            path: "course",
+            select: "title",
+          },
+        })
+        .populate("notPresent", "firstName lastName")
+        .populate("arePresent", "firstName lastName");
+
+      return res.status(200).send(lessons);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+lessonsRouter.get("/:id", auth, permit("trainer"), async (req, res, next) => {
   try {
     const id = req.params.id;
 
@@ -34,22 +61,25 @@ lessonsRouter.get("/:id", auth, async (req, res, next) => {
       return res.status(400).send({ error: "Invalid ID" });
     }
 
-    const oneLesson = await Lesson.findById(id)
-      .populate({
-        path: "course",
-        populate: [
-          { path: "user", select: "firstName lastName" },
-          { path: "courseType", select: "name" },
-        ],
-      })
-      .populate("presentUser", "firstName lastName")
-      .populate("participants", "firstName lastName");
+    const group = await Group.findById(id);
 
-    if (oneLesson === null) {
-      return res.status(404).send({ error: "Lesson not found" });
+    if (!group) {
+      return res.status(404).send("Group not found");
     }
 
-    return res.status(200).send(oneLesson);
+    const lessons = await Lesson.find({ group: group._id })
+      .populate({
+        path: "group",
+        select: "title course",
+        populate: {
+          path: "course",
+          select: "title",
+        },
+      })
+      .populate("notPresent", "firstName lastName")
+      .populate("arePresent", "firstName lastName");
+
+    return res.status(200).send(lessons);
   } catch (e) {
     next(e);
   }
@@ -61,28 +91,66 @@ lessonsRouter.post(
   permit("trainer"),
   async (req: RequestWithUser, res, next) => {
     try {
-      const user = req.user;
+      const group = await Group.findById(req.body.groupId);
 
-      if (!user) return res.status(401).send({ error: "User not found" });
-
-      if (req.body.title.trim() === "" || req.body.quantityClients <= 0) {
-        return res
-          .status(400)
-          .send({ error: "Please enter a title or quantity clients" });
+      if (!group) {
+        return res.status(400).send({ error: "Группа не найдена" });
       }
 
-      const lessonMutation = new Lesson({
-        course: req.body.course,
-        title: req.body.title,
-        quantityClients: req.body.quantityClients,
-        timeZone: req.body.timeZone ? req.body.timeZone : null,
-        groupLevel: req.body.groupLevel ? req.body.groupLevel : null,
-        ageLimit: req.body.ageLimit ? req.body.ageLimit : null,
-        description: req.body.description ? req.body.description : null,
+      const course = await Course.findById(group.course);
+
+      if (!course) {
+        return res.status(400).send({ error: "Крус не найден" });
+      }
+
+      if (course.user.toString() !== req.user?._id.toString()) {
+        return res.status(400).send({ error: "Группа не принадлежит тренеру" });
+      }
+
+      if (group.clients.length === 0) {
+        return res.status(400).send({ error: "В группе нет подписчиков" });
+      }
+
+      const currentDate = new Date();
+      const groupStartTime = new Date(
+        currentDate.toDateString() + " " + group.startTime,
+      );
+
+      const timeDifference = Math.abs(
+        currentDate.getTime() - groupStartTime.getTime(),
+      );
+      const oneHour = 60 * 60 * 1000;
+
+      if (
+        currentDate.toDateString() !== groupStartTime.toDateString() ||
+        timeDifference > oneHour
+      ) {
+        return res
+          .status(403)
+          .send({ error: "Временные ограничения нарушены" });
+      }
+
+      const existingLesson = await Lesson.findOne({
+        group: req.body.groupId,
+        createdAt: {
+          $gte: new Date(currentDate.setHours(0, 0, 0, 0)),
+          $lte: new Date(currentDate.setHours(23, 59, 59, 999)),
+        },
       });
 
-      await lessonMutation.save();
-      return res.status(200).send(lessonMutation);
+      if (existingLesson) {
+        return res
+          .status(403)
+          .send({ error: "Занятие уже создано для этого дня" });
+      }
+
+      const lesson = new Lesson({
+        group: req.body.groupId,
+        notPresent: group.clients.map((client) => client._id),
+      });
+
+      await lesson.save();
+      res.status(200).send(lesson);
     } catch (error) {
       next(error);
     }
@@ -90,52 +158,54 @@ lessonsRouter.post(
 );
 
 lessonsRouter.patch(
-  "/:id/attendance",
+  "/:id",
   auth,
-  permit("trainer"),
+  permit("client"),
   async (req: RequestWithUser, res, next) => {
-    const { id } = req.params;
-    const userIds = req.body.userId;
-
-    if (
-      !Array.isArray(userIds) ||
-      userIds.some((id) => !mongoose.Types.ObjectId.isValid(id))
-    ) {
-      return res
-        .status(400)
-        .send({ error: "Provide a valid array of user IDs" });
-    }
-
     try {
-      const findLesson = await Lesson.findById(id);
-      if (!findLesson) {
-        return res.status(404).send({ error: "Lesson not found" });
+      const { id } = req.params;
+      const userId = req.user?._id;
+      const lesson = await Lesson.findById(id);
+
+      if (!userId) {
+        return res.status(400).send({ error: "Пользователь не найден" });
       }
 
-      const notParticipants = userIds.filter(
-        (userId) => !findLesson.participants.includes(userId),
-      );
-      if (notParticipants.length) {
+      if (!lesson) {
+        return res.status(400).send({ error: "Занятие не найдено" });
+      }
+
+      if (!lesson.notPresent.includes(userId)) {
         return res
           .status(400)
-          .send({ error: "Some users are not participants" });
+          .send({ error: "Пользователь не найден в списке" });
       }
 
-      const alreadyPresent = userIds.filter((userId) =>
-        findLesson.presentUser.includes(userId),
-      );
-      if (alreadyPresent.length) {
-        return res
-          .status(400)
-          .send({ error: "Some users are already marked as present" });
+      const group = await Group.findById(lesson.group);
+      if (!group) {
+        return res.status(404).send({ error: "Группа не найдена" });
       }
 
-      await Lesson.updateOne(
-        { _id: new mongoose.Types.ObjectId(id) },
-        { $addToSet: { presentUser: { $each: userIds } } },
+      const currentDate = new Date();
+      const groupStartTime = new Date(
+        currentDate.toDateString() + " " + group.startTime,
       );
+      const hours = Math.floor(group.scheduleLength);
+      const minutes = (group.scheduleLength % 1) * 60;
+      const groupLengthInMs = hours * 60 * 60 * 1000 + minutes * 60 * 1000;
 
-      return res.status(200).send({ message: "Users marked as present" });
+      if (currentDate.getTime() > groupStartTime.getTime() + groupLengthInMs) {
+        return res.status(403).send({ error: "Время занятия уже прошло" });
+      }
+
+      lesson.notPresent = lesson.notPresent.filter(
+        (clientId) => clientId.toString() !== userId.toString(),
+      );
+      lesson.arePresent.push(userId);
+
+      await lesson.save();
+
+      return res.send(lesson);
     } catch (e) {
       next(e);
     }
