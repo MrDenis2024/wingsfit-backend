@@ -2,8 +2,45 @@ import mongoose, { Types } from "mongoose";
 import User from "./User";
 import { CourseTypes } from "../types/courseTypes";
 import CourseType from "./CourseType";
+import Group from "./Group";
 
 const Schema = mongoose.Schema;
+
+const WaitListSchema = new Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    validate: {
+      validator: async (value: Types.ObjectId) => {
+        const user = await User.findById(value);
+        return Boolean(user && user.role === "trainer");
+      },
+      message: "There can only be one role",
+    },
+  },
+  createdAt: {
+    required: true,
+    type: Date,
+  },
+  favoriteGroup:{
+    type: Schema.Types.ObjectId,
+    ref: "Group",
+    required: true,
+    validate: {
+      validator: async (value: Types.ObjectId) => {
+        const group = await Group.findById(value);
+        return Boolean(group);
+      },
+      message: "Group does not exist",
+    },
+  },
+  status:{
+    required:true,
+    type: String,
+    enum:['new','migrate'],
+  }
+})
 
 const CourseSchema = new Schema<CourseTypes>({
   user: {
@@ -65,6 +102,7 @@ const CourseSchema = new Schema<CourseTypes>({
   image: {
     type: String,
   },
+  waitList: [WaitListSchema],
 });
 
 const Course = mongoose.model("Course", CourseSchema);
