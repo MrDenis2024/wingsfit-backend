@@ -152,7 +152,7 @@ const run = async () => {
       },
     ],
     description: "Professional trainer with 5 years of experience.",
-    availableDays: ["Понедельник", "Среда", "Четверг", "Пятница", "Суббота"],
+    availableDays: ["пн", "ср", "чт", "пт", "сб"],
   });
 
   await Trainer.create({
@@ -168,11 +168,11 @@ const run = async () => {
     ],
     description: "Experienced cardio trainer.",
     availableDays: [
-      "Понедельник",
-      "Среда",
-      "Четверг",
-      "Суббота",
-      "Воскресенье",
+      "пн",
+      "ср",
+      "чт",
+      "сб",
+      "вс",
     ],
   });
 
