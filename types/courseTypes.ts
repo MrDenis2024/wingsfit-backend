@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 
 export interface CourseTypes {
-  user: Types.ObjectId | string;
+  user: Types.ObjectId;
   title: string;
   courseType: Types.ObjectId | string;
   description: string;
