@@ -7,6 +7,8 @@ import mongoose, { FilterQuery } from "mongoose";
 import Trainer from "../models/Trainer";
 import { UpdatedCourse } from "../types/courseTypes";
 import permit from "../middleware/permit";
+import Group from "../models/Group";
+import Lesson from "../models/Lesson";
 
 const coursesRouter = express.Router();
 
@@ -124,12 +126,6 @@ coursesRouter.post(
         });
       }
 
-      // const courseType = req.body.courseType;
-      //
-      // if (!courseType) {
-      //   return res.status(400).send({ error: "courseType not provided" });
-      // }
-
       const sortedSchedule = sortScheduleDays(req.body.schedule);
 
       const courseMutation = {
@@ -195,6 +191,43 @@ coursesRouter.put(
       if (error instanceof mongoose.Error.ValidationError) {
         return res.status(400).send(error);
       }
+      return next(error);
+    }
+  },
+);
+
+coursesRouter.delete(
+  "/:id",
+  auth,
+  permit("admin", "superAdmin", "trainer"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      if (!mongoose.isValidObjectId(req.params.id))
+        return res.status(400).send({ error: "Invalid course ID" });
+
+      const course = await Course.findById(req.params.id);
+
+      if (!course) {
+        return res.status(404).send({ error: "Курс не найден" });
+      }
+
+      if (
+        req.user?.role === "admin" ||
+        req.user?.role === "superAdmin" ||
+        (req.user?.role === "trainer" && course.user.equals(req.user._id))
+      ) {
+        await Course.deleteOne({ _id: req.params.id });
+        const groups = await Group.find({ course: req.params.id });
+        const groupIds = groups.map((group) => group._id);
+        await Group.deleteMany({ course: req.params.id });
+        await Lesson.deleteMany({ group: { $in: groupIds } });
+        return res.send({ message: "Курс и связанные данные успешно удалены" });
+      }
+
+      return res
+        .status(403)
+        .send({ error: "Вы не можете удалить данную группу" });
+    } catch (error) {
       return next(error);
     }
   },
