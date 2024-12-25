@@ -13,9 +13,8 @@ import { courseTypesRouter } from "./routers/courseTypes";
 import adminsRouter from "./routers/admins";
 import groupsRouter from "./routers/groups";
 import trainerStatisticsRouter from "./routers/trainerStatistics";
-import createGroupChatRouter from "./routers/groupChats";
+import createChatRouter from "./routers/wsChat";
 import coursesRequestRouter from "./routers/coursesRequest";
-import createPrivateChatRouter from "./routers/privateChats";
 import chatsRouter from "./routers/chats";
 
 const app = express();
@@ -37,8 +36,7 @@ app.use("/admins", adminsRouter);
 app.use("/groups", groupsRouter);
 app.use("/trainerStatistics", trainerStatisticsRouter);
 app.use("/coursesRequest", coursesRequestRouter);
-app.use("/groupChats", createGroupChatRouter());
-app.use("/privateChats", createPrivateChatRouter());
+app.use("/chat", createChatRouter());
 app.use("/chats", chatsRouter);
 
 const run = async () => {
