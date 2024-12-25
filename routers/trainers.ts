@@ -7,6 +7,7 @@ import Client from "../models/Client";
 import permit from "../middleware/permit";
 import { imagesUpload } from "../multer";
 import { TrainerModel } from "../types/trainerTypes";
+import {sortScheduleDays} from "../utils/helperFunctions";
 
 const trainersRouter = express.Router();
 
@@ -54,13 +55,16 @@ trainersRouter.get("/", async (req: RequestWithUser, res, next) => {
 
 trainersRouter.get("/search", auth, async (req: RequestWithUser, res, next) => {
   try {
-    const { courseTypes, availableDays, rating } = req.body;
+    const courseTypes = (req.query.courseTypes as string)?.split(",");
+    const availableDays = (req.query.availableDays as string)?.split(",");
+    const rating = req.query.rating;
+
     const filter: FilterQuery<TrainerModel> = {};
 
-    if (courseTypes && (courseTypes as string[]).length > 0)
+    if (courseTypes && courseTypes.every(id => mongoose.isValidObjectId(id)))
       filter.courseTypes = { $in: courseTypes };
 
-    if (availableDays && (availableDays as string).length > 0)
+    if (availableDays && availableDays.every(item => item.trim() !== ""))
       filter.availableDays = { $in: availableDays };
 
     const trainers = await Trainer.find(filter)
@@ -154,13 +158,15 @@ trainersRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
       await User.findOneAndUpdate({ _id: user }, { notification: false });
     }
 
+    const sortedAvailableDays = sortScheduleDays(req.body.availableDays);
+
     const trainerMutation = {
       user,
       courseTypes: req.body.courseTypes,
       specialization: req.body.specialization,
       experience: req.body.experience,
       description: req.body.description,
-      availableDays: req.body.availableDays,
+      availableDays: sortedAvailableDays,
     };
 
     const trainer = await Trainer.create(trainerMutation);
@@ -197,6 +203,8 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
         .send({ error: "The required fields must be filled in!" });
     }
 
+    const sortedAvailableDays = sortScheduleDays(req.body.availableDays);
+
     const trainer = await Trainer.findOneAndUpdate(
       { user },
       {
@@ -204,7 +212,7 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
         specialization: req.body.specialization,
         experience: req.body.experience,
         description: req.body.description,
-        availableDays: req.body.availableDays,
+        availableDays: sortedAvailableDays,
       },
       { new: true },
     );
