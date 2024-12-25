@@ -9,13 +9,9 @@ import { UpdatedCourse } from "../types/courseTypes";
 import permit from "../middleware/permit";
 import Group from "../models/Group";
 import Lesson from "../models/Lesson";
+import { sortScheduleDays } from "../utils/helperFunctions";
 
 const coursesRouter = express.Router();
-
-const sortScheduleDays = (days: string[]): string[] => {
-  const dayOrder = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
-  return days.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
-};
 
 coursesRouter.get("/", async (req, res) => {
   const { trainerId } = req.query;
@@ -169,7 +165,7 @@ coursesRouter.put(
         return res.status(404).send({ error: "Course not found" });
       }
 
-      const sortedSchedule = req.body.schedule;
+      const sortedSchedule = sortScheduleDays(req.body.schedule);
 
       const updatedFields: UpdatedCourse = {
         title: req.body.title,

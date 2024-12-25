@@ -7,6 +7,7 @@ import Client from "../models/Client";
 import permit from "../middleware/permit";
 import { imagesUpload } from "../multer";
 import { TrainerModel } from "../types/trainerTypes";
+import {sortScheduleDays} from "../utils/helperFunctions";
 
 const trainersRouter = express.Router();
 
@@ -157,13 +158,15 @@ trainersRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
       await User.findOneAndUpdate({ _id: user }, { notification: false });
     }
 
+    const sortedAvailableDays = sortScheduleDays(req.body.availableDays);
+
     const trainerMutation = {
       user,
       courseTypes: req.body.courseTypes,
       specialization: req.body.specialization,
       experience: req.body.experience,
       description: req.body.description,
-      availableDays: req.body.availableDays,
+      availableDays: sortedAvailableDays,
     };
 
     const trainer = await Trainer.create(trainerMutation);
@@ -200,6 +203,8 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
         .send({ error: "The required fields must be filled in!" });
     }
 
+    const sortedAvailableDays = sortScheduleDays(req.body.availableDays);
+
     const trainer = await Trainer.findOneAndUpdate(
       { user },
       {
@@ -207,7 +212,7 @@ trainersRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
         specialization: req.body.specialization,
         experience: req.body.experience,
         description: req.body.description,
-        availableDays: req.body.availableDays,
+        availableDays: sortedAvailableDays,
       },
       { new: true },
     );
