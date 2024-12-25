@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 
 export interface WaitList {
+  _id?: Types.ObjectId;
   user: Types.ObjectId | string;
   createdAt: Date;
   favoriteGroup: Types.ObjectId | string;

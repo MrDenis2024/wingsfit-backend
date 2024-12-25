@@ -102,7 +102,10 @@ const CourseSchema = new Schema<CourseTypes>({
   image: {
     type: String,
   },
-  waitList: [WaitListSchema],
+  waitList: {
+    type: [WaitListSchema],
+    _id: true
+  },
 });
 
 const Course = mongoose.model("Course", CourseSchema);
