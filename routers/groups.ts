@@ -4,7 +4,7 @@ import auth, {RequestWithUser} from "../middleware/auth";
 import permit from "../middleware/permit";
 import Course from "../models/Course";
 import User from "../models/User";
-import mongoose from "mongoose";
+import mongoose, {Types} from "mongoose";
 import Client from "../models/Client";
 
 export const groupsRouter = express.Router();
@@ -242,5 +242,60 @@ groupsRouter.patch("/update_subscribe/:id", auth , permit("trainer"), async (req
     next(error)
   }
 })
+
+groupsRouter.patch('/remove/:id', auth, permit('trainer', 'client'), async (req: RequestWithUser, res, next) => {
+  try {
+    const groupId = req.params.id;
+    const userId = req.user?._id;
+    const { clientId } = req.body;
+
+    const group = await Group.findById(groupId)
+    if (!group) {
+      return res.status(404).send({ error: 'Группа не найдена' });
+    }
+
+    const course = await Course.findById(group.course);
+    if (!course) {
+      return res.status(404).send({ error: 'Курс не найден' });
+    }
+
+    if (req.user?.role === 'trainer') {
+
+      if (!(course.user as Types.ObjectId).equals(userId)) {
+        return res.status(403).send({ error: 'Тренер не связан с этой группой' });
+      }
+
+      const subscriptionIndex = group.subscribeUsers.findIndex(sub => sub.clients.equals(clientId));
+
+      if (subscriptionIndex === -1) {
+        return res.status(404).send({ error: 'Клиент не найден в группе' });
+      }
+
+      group.subscribeUsers.splice(subscriptionIndex, 1);
+      await group.save();
+
+      return res.send({ message: 'Клиент успешно удален из группы' });
+    }
+
+    if (req.user?.role === 'client') {
+      const clientId = req.user?._id;
+      const subscriptionIndex = group.subscribeUsers.findIndex(sub => sub.clients.equals(clientId));
+
+      if (subscriptionIndex === -1) {
+        return res.status(403).send({ error: 'Клиент не состоит в этой группе' });
+      }
+
+      group.subscribeUsers.splice(subscriptionIndex, 1);
+
+      await group.save();
+      return res.send({ message: 'Вы успешно удалены из группы' });
+    }
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ error: 'Ошибка при удалении клиента' });
+  }
+});
+
 
 export default groupsRouter;
