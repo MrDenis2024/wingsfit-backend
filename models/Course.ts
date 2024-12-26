@@ -21,7 +21,7 @@ const WaitListSchema = new Schema({
   },
   createdAt: {
     required: true,
-    type: Date,
+    type: Date.now(),
   },
   favoriteGroup:{
     type: Schema.Types.ObjectId,

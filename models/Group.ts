@@ -4,7 +4,7 @@ import User from "./User";
 const Schema = mongoose.Schema;
 
 const SubscribeSchema = new Schema({
-  clients: {
+  client: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
@@ -18,7 +18,7 @@ const SubscribeSchema = new Schema({
   },
   addedAt:{
     type: Date,
-    default: new Date(),
+    default: Date.now(),
   },
   subscribeEnd:{
     required:true,
@@ -36,12 +36,7 @@ const GroupSchema = new Schema({
     ref: "Course",
     required: true,
   },
-  clients: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-  ],
+  clients: [SubscribeSchema],
   startTime: {
     type: String,
     required: true,
@@ -62,7 +57,7 @@ const GroupSchema = new Schema({
     min: 1,
     required: true,
   },
-  subscribeUsers:[SubscribeSchema]
+  //subscribeUsers:[SubscribeSchema]
 });
 
 const Group = mongoose.model("Group", GroupSchema);

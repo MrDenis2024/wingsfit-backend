@@ -204,21 +204,6 @@ coursesRouter.patch("/new/:id", auth, permit('client') , async (req: RequestWith
     if (!group) {
       return res.status(404).send({ error: "Группа не найдена." });
     }
-
-    // const oldGroup = await Group.findOne({
-    //   course: courseId,
-    //   subscribeUsers: {
-    //     $elemMatch: {
-    //       clients: userId,
-    //     },
-    //   },
-    // });
-    // if (oldGroup) {
-    //   return res.status(400).send({
-    //     error: "Действующая подписка пользователя найдена.",
-    //   });
-    // }
-
     if (!group.course.equals(course._id)) {
       return res.status(400).send({ error: "Группа не привязана к данному курсу." });
     }
@@ -323,9 +308,9 @@ coursesRouter.patch("/approve/:id" , auth, permit('trainer') , async (req , res 
     }
 
     if (waitListItem.status === "new") {
-      group.subscribeUsers.push({
+      group.clients.push({
         clients: waitListItem.user,
-        addedAt: new Date(),
+        addedAt: Date.now(),
         subscribeEnd: subscribeEnd,
       });
       await group.save();
@@ -344,13 +329,13 @@ coursesRouter.patch("/approve/:id" , auth, permit('trainer') , async (req , res 
         });
       }
 
-      oldGroup.subscribeUsers.pull({ clients: waitListItem.user });
+      oldGroup.clients.pull({ clients: waitListItem.user });
 
       await oldGroup.save();
 
-      group.subscribeUsers.push({
+      group.clients.push({
         clients: waitListItem.user,
-        addedAt: new Date(),
+        addedAt: Date.now(),
         subscribeEnd: subscribeEnd,
       });
     } else {
