@@ -205,6 +205,20 @@ coursesRouter.patch("/new/:id", auth, permit('client') , async (req: RequestWith
       return res.status(404).send({ error: "Группа не найдена." });
     }
 
+    // const oldGroup = await Group.findOne({
+    //   course: courseId,
+    //   subscribeUsers: {
+    //     $elemMatch: {
+    //       clients: userId,
+    //     },
+    //   },
+    // });
+    // if (oldGroup) {
+    //   return res.status(400).send({
+    //     error: "Действующая подписка пользователя найдена.",
+    //   });
+    // }
+
     if (!group.course.equals(course._id)) {
       return res.status(400).send({ error: "Группа не привязана к данному курсу." });
     }
@@ -227,7 +241,7 @@ coursesRouter.patch("/new/:id", auth, permit('client') , async (req: RequestWith
 
     await course.save();
 
-    return res.status(200).json({ message: "Клиент успешно добавлен в список ожидания." });
+    return res.status(200).send({ message: "Клиент успешно добавлен в список ожидания." });
 
   }catch(error){
     return next(error);
@@ -272,7 +286,7 @@ coursesRouter.patch("/migrate/:id", auth, permit('client') , async (req: Request
 
     await course.save();
 
-    return res.status(200).json({ message: "Клиент успешно добавлен в список мигрирования." });
+    return res.status(200).send({ message: "Клиент успешно добавлен в список мигрирования." });
 
   }catch(error){
     return next(error);
@@ -354,7 +368,7 @@ coursesRouter.patch("/approve/:id" , auth, permit('trainer') , async (req , res 
 
     return res
         .status(200)
-        .json({ message: "Клиент успешно перенаправлен в группу." });
+        .send({ message: "Клиент успешно перенаправлен в группу." });
 
   }catch(error){
     next(error);
@@ -385,7 +399,7 @@ coursesRouter.delete("/delete/:id", auth, permit('trainer'), async (req: Request
       return res.status(404).send({ error: "Запись не найдена или уже удалена." });
     }
 
-    return res.status(200).json({ message: "Запись успешно удалена из списка ожидания." });
+    return res.status(200).send({ message: "Запись успешно удалена из списка ожидания." });
   }catch (e) {
       return next(e)
   }
