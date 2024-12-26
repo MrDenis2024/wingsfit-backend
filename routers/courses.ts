@@ -317,8 +317,12 @@ coursesRouter.patch("/approve/:id" , auth, permit('trainer') , async (req , res 
       await group.save();
     } else if (waitListItem.status === "migrate") {
       const oldGroup = await Group.findOne({
-        clients: waitListItem.user,
         course: courseId,
+        subscribeUsers: {
+          $elemMatch: {
+            clients: waitListItem.user,
+          },
+        },
       });
       if (!oldGroup) {
         return res.status(404).send({

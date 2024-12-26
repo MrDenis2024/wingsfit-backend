@@ -1,6 +1,6 @@
 import express from "express";
 import Group from "../models/Group";
-import auth, { RequestWithUser } from "../middleware/auth";
+import auth, {RequestWithUser} from "../middleware/auth";
 import permit from "../middleware/permit";
 import Course from "../models/Course";
 import User from "../models/User";
@@ -194,5 +194,51 @@ groupsRouter.patch(
     }
   },
 );
+
+
+// groupsRouter.patch("/update_subscribe/:id", auth , permit("trainer"), async (req: RequestWithUser,res,next)=>{
+//   const groupId = req.params.id;
+//   const {clientId , subscribeDate} = req.body;
+//
+//   try{
+//     const group = await Group.findById(groupId).populate('course');
+//     if (!group) {
+//       return res.status(404).json({ error: 'Группа не найдена' });
+//     }
+//
+//     const trainerId = req.user?._id; // ID тренера
+//     if (group.course.user.toString() !== trainerId) {
+//       return res.status(403).json({ error: 'Тренер не связан с курсом группы' });
+//     }
+//
+//     if (!group.clients.includes(clientId)) {
+//       return res.status(400).json({ error: 'Клиент не принадлежит группе' });
+//     }
+//
+//     const newDate = new Date(newSubscribeEnd);
+//     if (isNaN(newDate.getTime())) {
+//       return res.status(400).json({ error: 'Неверный формат новой даты' });
+//     }
+//
+//     const currentDate = new Date();
+//     const client = await Client.findById(clientId);
+//     if (!client) {
+//       return res.status(404).json({ error: 'Клиент не найден' });
+//     }
+//
+//     if (newDate <= currentDate || newDate <= new Date(client.subscribeEnd)) {
+//       return res
+//           .status(400)
+//           .json({ error: 'Дата подписки должна быть больше текущей даты и текущей подписки' });
+//     }
+//
+//     client.subscribeEnd = newSubscribeEnd;
+//     await client.save();
+//
+//     return res.status(200).json({ message: 'Подписка успешно продлена', client });
+//   }catch(error){
+//     next(error)
+//   }
+// })
 
 export default groupsRouter;
