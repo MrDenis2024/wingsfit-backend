@@ -167,13 +167,7 @@ const run = async () => {
       },
     ],
     description: "Experienced cardio trainer.",
-    availableDays: [
-      "пн",
-      "ср",
-      "чт",
-      "сб",
-      "вс",
-    ],
+    availableDays: ["пн", "ср", "чт", "сб", "вс"],
   });
 
   const course1 = await Course.create({
@@ -185,7 +179,7 @@ const run = async () => {
     schedule: ["ср", "чт", "пт", "сб", "вс"],
     price: 100,
     image: "fixtures/yoga.jpg",
-    waitList:[],
+    waitList: [],
   });
 
   const course2 = await Course.create({
@@ -197,14 +191,18 @@ const run = async () => {
     schedule: ["пн", "вт", "пт", "сб", "вс"],
     price: 150,
     image: "fixtures/cardio.jpg",
-    waitList:[],
+    waitList: [],
   });
 
   const group1 = await Group.create({
     title: "Evening Yoga Group",
     course: course1._id,
     clients: [
-      { client: clientUser._id, subscribeEnd: new Date("2025-01-01"), addedAt: Date.now() },
+      {
+        client: clientUser._id,
+        subscribeEnd: new Date("2025-01-01"),
+        addedAt: Date.now(),
+      },
     ],
     maxClients: 10,
     scheduleLength: 1,
@@ -216,7 +214,11 @@ const run = async () => {
     title: "Cardio Training",
     course: course2._id,
     clients: [
-      { client: clientUser2._id, subscribeEnd: new Date("2025-01-01"), addedAt: Date.now() },
+      {
+        client: clientUser2._id,
+        subscribeEnd: new Date("2025-01-01"),
+        addedAt: Date.now(),
+      },
     ],
     maxClients: 10,
     scheduleLength: 2,

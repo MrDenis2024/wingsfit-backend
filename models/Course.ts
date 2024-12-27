@@ -23,7 +23,7 @@ const WaitListSchema = new Schema({
     type: Date,
     default: Date.now(),
   },
-  favoriteGroup:{
+  favoriteGroup: {
     type: Schema.Types.ObjectId,
     ref: "Group",
     required: true,
@@ -35,12 +35,12 @@ const WaitListSchema = new Schema({
       message: "Group does not exist",
     },
   },
-  status:{
-    required:true,
+  status: {
+    required: true,
     type: String,
-    enum:['new','migrate'],
-  }
-})
+    enum: ["new", "migrate"],
+  },
+});
 
 const CourseSchema = new Schema<CourseTypes>({
   user: {
@@ -71,7 +71,7 @@ const CourseSchema = new Schema<CourseTypes>({
     type: String,
     required: true,
   },
-    description: {
+  description: {
     type: String,
     required: true,
   },
@@ -96,7 +96,7 @@ const CourseSchema = new Schema<CourseTypes>({
   },
   waitList: {
     type: [WaitListSchema],
-    _id: true
+    _id: true,
   },
 });
 
