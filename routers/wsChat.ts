@@ -28,10 +28,10 @@ const createChatRouter = () => {
   };
 
   chatRouter.ws("/:chatId/:chatType", async (ws, req) => {
-    const { chatId, chatType } = req.params;
+    const {chatId, chatType} = req.params;
 
     if (!["group", "private"].includes(chatType)) {
-      ws.send(JSON.stringify({ type: "ERROR", payload: "Invalid chat type" }));
+      ws.send(JSON.stringify({type: "ERROR", payload: "Invalid chat type"}));
       return ws.close();
     }
 
@@ -47,10 +47,10 @@ const createChatRouter = () => {
         switch (decodedMessage.type) {
           case "LOGIN":
             const token = decodedMessage.payload;
-            const user = await User.findOne({ token });
+            const user = await User.findOne({token});
             if (!user) {
               ws.send(
-                JSON.stringify({ type: "ERROR", payload: "Invalid Token" })
+                JSON.stringify({type: "ERROR", payload: "Invalid Token"})
               );
               return ws.close();
             }
@@ -71,7 +71,7 @@ const createChatRouter = () => {
             ws.send(
               JSON.stringify({
                 type: "LOGIN_SUCCESS",
-                payload: { userName, userId },
+                payload: {userName, userId},
               })
             );
             break;
@@ -91,22 +91,24 @@ const createChatRouter = () => {
 
               connectedClients[userId].groups.push(chatId);
 
-              const unreadMessages = await GroupChatMessage.find({
-                groupChat: chatId,
-                "isRead.user": { $ne: userId },
-                author: { $ne: userId },
-              });
-
-              for (const message of unreadMessages) {
-                message.isRead.push({ user: userId, read: true });
-                await message.save();
-              }
+              await GroupChatMessage.updateMany(
+                {
+                  groupChat: chatId,
+                  "isRead.user": {$ne: userId},
+                  author: {$ne: userId},
+                },
+                {
+                  $addToSet: {
+                    isRead: {user: userId, read: true},
+                  },
+                }
+              );
 
               const latestMessages = await GroupChatMessage.find({
                 groupChat: chatId,
               })
                 .populate("author", "firstName lastName avatar")
-                .sort({ createdAt: 1 })
+                .sort({createdAt: 1})
                 .limit(20);
 
               ws.send(
@@ -121,7 +123,7 @@ const createChatRouter = () => {
                 })
               );
             } else if (chatType === "private") {
-              const privateChat = await PrivateChat.findById(chatId); // Use chatId here
+              const privateChat = await PrivateChat.findById(chatId);
               if (!privateChat) {
                 ws.send(
                   JSON.stringify({
@@ -132,24 +134,26 @@ const createChatRouter = () => {
                 return;
               }
 
-              connectedClients[userId].privateChats.push(chatId); // Add user to the private chat
+              connectedClients[userId].privateChats.push(chatId);
 
-              const unreadMessages = await PrivateMessage.find({
-                privateChat: chatId,
-                "isRead.user": { $ne: userId },
-                author: { $ne: userId },
-              });
-
-              for (const message of unreadMessages) {
-                message.isRead.push({ user: userId, read: true });
-                await message.save();
-              }
+              await PrivateMessage.updateMany(
+                {
+                  privateChat: chatId,
+                  "isRead.user": userId,
+                  "isRead.read": false,
+                },
+                {
+                  $set: {
+                    "isRead.read": true,
+                  },
+                }
+              );
 
               const latestMessages = await PrivateMessage.find({
                 privateChat: chatId,
               })
                 .populate("author", "firstName lastName avatar")
-                .sort({ createdAt: 1 })
+                .sort({createdAt: 1})
                 .limit(20);
 
               ws.send(
@@ -158,7 +162,7 @@ const createChatRouter = () => {
                   payload: {
                     chatId,
                     chatType: "private",
-                    latestMessages,
+                    latestMessages
                   },
                 })
               );
@@ -172,6 +176,7 @@ const createChatRouter = () => {
               (chatType === "private" &&
                 connectedClients[userId].privateChats.includes(chatId))
             ) {
+
               let newMessage: GroupChatMessages | PrivateMessagesTypes;
 
               if (chatType === "group") {
@@ -182,10 +187,27 @@ const createChatRouter = () => {
                 });
                 newMessage = await newMessage.populate("author", "firstName lastName avatar");
               } else {
+                const privateChat = await PrivateChat.findById(chatId);
+
+                if (!privateChat) {
+                  ws.send(
+                    JSON.stringify({
+                      type: "ERROR",
+                      payload: "Private Chat not found",
+                    })
+                  );
+                  return;
+                }
+
+                const receiverId = privateChat.availableTo.find(
+                  (participantId) => participantId.toString() !== userId
+                );
+
                 newMessage = await PrivateMessage.create({
                   privateChat: chatId,
                   author: userId,
                   message: decodedMessage.payload.message,
+                  isRead: {user: receiverId, read: false},
                 });
                 newMessage = await newMessage.populate("author", "firstName lastName avatar");
               }
@@ -212,7 +234,7 @@ const createChatRouter = () => {
             );
         }
       } catch (error) {
-        ws.send(JSON.stringify({ type: "ERROR", payload: "Invalid message" }));
+        ws.send(JSON.stringify({type: "ERROR", payload: "Invalid message"}));
       }
     });
     ws.on("close", () => {
