@@ -11,43 +11,47 @@ export interface ConnectedClients {
 
 export type IncomingMessage =
   | {
-  type: "LOGIN";
-  payload: string;
-} | {
-  type: "LOGIN_SUCCESS";
-  payload: { userName: string; userId: string };
-} | {
-  type: "CHAT_MESSAGES";
-  payload: {
-    chatId: string;
-    chatType: "group" | "private";
-    chatName?: string;
-    latestMessages: unknown[];
-  };
-}
+      type: "LOGIN";
+      payload: string;
+    }
   | {
-  type: "JOIN_CHAT";
-  payload: { chatId: string; chatType: "group" | "private" };
-}
+      type: "LOGIN_SUCCESS";
+      payload: { userName: string; userId: string };
+    }
   | {
-  type: "SEND_MESSAGE";
-  payload: {
-    chatId: string;
-    chatType: "group" | "private";
-    message: string;
-  };
-} | {
-  type: "NEW_MESSAGE";
-  payload: string;
-}
+      type: "CHAT_MESSAGES";
+      payload: {
+        chatId: string;
+        chatType: "group" | "private";
+        chatName?: string;
+        latestMessages: unknown[];
+      };
+    }
   | {
-  type: "MARK_READ";
-  payload: {
-    messageId: string;
-    chatId: string;
-    chatType: "group" | "private";
-  };
-} | {
-  type: "ERROR";
-  payload: string;
-};
+      type: "JOIN_CHAT";
+      payload: { chatId: string; chatType: "group" | "private" };
+    }
+  | {
+      type: "SEND_MESSAGE";
+      payload: {
+        chatId: string;
+        chatType: "group" | "private";
+        message: string;
+      };
+    }
+  | {
+      type: "NEW_MESSAGE";
+      payload: string;
+    }
+  | {
+      type: "MARK_READ";
+      payload: {
+        messageId: string;
+        chatId: string;
+        chatType: "group" | "private";
+      };
+    }
+  | {
+      type: "ERROR";
+      payload: string;
+    };
