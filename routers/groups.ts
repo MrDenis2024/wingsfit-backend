@@ -344,8 +344,49 @@ groupsRouter.delete(
   },
 );
 
+groupsRouter.put(
+    "/:id",
+    auth,
+    permit("trainer"),
+    async (req: RequestWithUser, res, next) => {
+      try {
+        const id = req.params.id;
+        const user = req.user;
 
+        if (!user) return res.status(401).send({ error: "User not found" });
 
+        if (!mongoose.isValidObjectId(id))
+          return res.status(400).send({ error: "Invalid group ID" });
 
+        const group = await Group.findById(id);
+
+        if (!group) {
+          return res.status(404).send({ error: "Group not found" });
+        }
+
+        const updatedGroups = {
+          title: req.body.title,
+          course: req.body.course,
+          maxClients: parseFloat(req.body.maxClients),
+          startTime: req.body.startTime,
+          scheduleLength: parseFloat(req.body.scheduleLength),
+          trainingLevel: req.body.trainingLevel,
+        };
+
+        const updatedGroup = await Group.findOneAndUpdate(
+            { _id: id },
+            updatedGroups,
+            { new: true, runValidators: true },
+        );
+
+        return res.status(200).send(updatedGroup);
+      } catch (error) {
+        if (error instanceof mongoose.Error.ValidationError) {
+          return res.status(400).send(error);
+        }
+        return next(error);
+      }
+    },
+);
 
 export default groupsRouter;
