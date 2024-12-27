@@ -8,6 +8,7 @@ import PrivateChat from "../models/PrivateChat";
 import { GroupChatMessages } from "../types/groupChatMessagesTypes";
 import { PrivateMessagesTypes } from "../types/privateMessagesTypes";
 
+
 const createChatRouter = () => {
   const chatRouter = express.Router();
 
@@ -30,6 +31,27 @@ const createChatRouter = () => {
       client.send(JSON.stringify(message));
     });
   };
+
+  const fetchMessages = async (chatId: string, chatType: string, page = 1, limit = 20) => {
+    const skip = (page - 1) * limit;
+    let messages;
+
+    if (chatType === "group") {
+      messages = await GroupChatMessage.find({ groupChat: chatId })
+        .populate("author", "firstName lastName avatar")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+    } else if (chatType === "private") {
+      messages = await PrivateMessage.find({ privateChat: chatId })
+        .populate("author", "firstName lastName avatar")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+    }
+    return messages;
+  };
+
 
   chatRouter.ws("/:chatId/:chatType", async (ws, req) => {
     const { chatId, chatType } = req.params;
@@ -108,12 +130,7 @@ const createChatRouter = () => {
                 },
               );
 
-              const latestMessages = await GroupChatMessage.find({
-                groupChat: chatId,
-              })
-                .populate("author", "firstName lastName avatar")
-                .sort({ createdAt: 1 })
-                .limit(20);
+              const latestMessages = await fetchMessages(chatId, chatType, 1, 20);
 
               ws.send(
                 JSON.stringify({
@@ -153,12 +170,7 @@ const createChatRouter = () => {
                 },
               );
 
-              const latestMessages = await PrivateMessage.find({
-                privateChat: chatId,
-              })
-                .populate("author", "firstName lastName avatar")
-                .sort({ createdAt: 1 })
-                .limit(20);
+              const latestMessages = await fetchMessages(chatId, chatType, 1, 20);
 
               ws.send(
                 JSON.stringify({
