@@ -18,7 +18,7 @@ chatsRouter.get(
 
       const userGroups = await Group.find({
         $or: [
-          { clients: user._id }, // Check if user is a client
+          { clients: user._id },
           {
             course: {
               $in: await Course.find({ user: user._id }).distinct("_id"),
