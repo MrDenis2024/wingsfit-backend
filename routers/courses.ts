@@ -39,25 +39,28 @@ coursesRouter.get("/", async (req, res) => {
 
 coursesRouter.get("/search", auth, async (req, res, next) => {
   try {
-    const courseTypes = ( req.query.courseTypes as string ).split(",");
-    const format = ( req.query.format as string ).split(",");
-    const trainers = ( req.query.trainers as string ).split(",");
-    const schedule = ( req.query.schedule as string ).split(",");
+    const courseTypes = (req.query.courseTypes as string).split(",");
+    const format = (req.query.format as string).split(",");
+    const trainers = (req.query.trainers as string).split(",");
+    const schedule = (req.query.schedule as string).split(",");
     const filter: FilterQuery<typeof Course> = {};
 
-    if (courseTypes && courseTypes.every(id => mongoose.isValidObjectId(id))) {
+    if (
+      courseTypes &&
+      courseTypes.every((id) => mongoose.isValidObjectId(id))
+    ) {
       filter.courseType = { $in: courseTypes };
     }
 
-    if (format && format.every(item => item.trim() !== "")) {
+    if (format && format.every((item) => item.trim() !== "")) {
       filter.format = { $in: format };
     }
 
-    if (trainers && trainers.every(id => mongoose.isValidObjectId(id))) {
+    if (trainers && trainers.every((id) => mongoose.isValidObjectId(id))) {
       filter.user = { $in: trainers };
     }
 
-    if (schedule && schedule.every(item => item.trim() !== "")) {
+    if (schedule && schedule.every((item) => item.trim() !== "")) {
       filter.schedule = { $in: schedule };
     }
 
@@ -192,195 +195,231 @@ coursesRouter.put(
   },
 );
 
-coursesRouter.patch("/new/:id", auth, permit('client') , async (req: RequestWithUser, res, next) => {
-  try{
-    const courseId = req.params.id;
-    const { groupId } = req.body;
-    const userId = req.user?._id;
+coursesRouter.patch(
+  "/new/:id",
+  auth,
+  permit("client"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const courseId = req.params.id;
+      const { groupId } = req.body;
+      const userId = req.user?._id;
 
-    const course = await Course.findById(courseId);
-    if (!course) {
-      return res.status(404).send({ error: "Курс не найден." });
-    }
-
-    const group = await Group.findById(groupId);
-    if (!group) {
-      return res.status(404).send({ error: "Группа не найдена." });
-    }
-    if (!group.course.equals(course._id)) {
-      return res.status(400).send({ error: "Группа не привязана к данному курсу." });
-    }
-
-    const alreadyInGroup = group.clients.some(
-        (client) => String(client.client) === String(userId)
-    );
-
-    if (alreadyInGroup) {
-      return res.status(400).send({ error: "Клиент уже находится в данной группе." });
-    }
-
-    const alreadyInWaitList = course.waitList.some((waitListItem) => String(waitListItem.user) === String(userId));
-    if (alreadyInWaitList) {
-      return res.status(400).send({ error: "Клиент уже находится в списке ожидания." });
-    }
-
-    if (!userId) {
-      return res.status(400).send({ error: "ID пользователя отсутствует." });
-    }
-
-    course.waitList.push({
-      user: userId,
-      createdAt: new Date(),
-      favoriteGroup: groupId,
-      status: "new",
-    });
-
-    await course.save();
-
-    return res.status(200).send({ message: "Клиент успешно добавлен в список ожидания." });
-
-  }catch(error){
-    return next(error);
-  }
-})
-
-coursesRouter.patch("/migrate/:id", auth, permit('client') , async (req: RequestWithUser, res, next) => {
-  try{
-    const courseId = req.params.id;
-    const { groupId } = req.body;
-    const userId = req.user?._id;
-
-    const course = await Course.findById(courseId);
-    if (!course) {
-      return res.status(404).send({ error: "Курс не найден." });
-    }
-
-    const group = await Group.findById(groupId);
-    if (!group) {
-      return res.status(404).send({ error: "Группа не найдена." });
-    }
-
-    if (!group.course.equals(course._id)) {
-      return res.status(400).send({ error: "Группа не привязана к данному курсу." });
-    }
-
-    const alreadyInGroup = group.clients.some(
-        (client) => String(client.client) === String(userId)
-    );
-
-    if (alreadyInGroup) {
-      return res.status(400).send({ error: "Клиент уже находится в данной группе." });
-    }
-
-    const alreadyInWaitList = course.waitList.some((waitListItem) => String(waitListItem.user) === String(userId));
-    if (alreadyInWaitList) {
-      return res.status(400).send({ error: "Клиент уже находится в списке ожидания." });
-    }
-
-    if (!userId) {
-      return res.status(400).send({ error: "ID пользователя отсутствует." });
-    }
-
-    course.waitList.push({
-      user: userId,
-      createdAt: new Date(),
-      favoriteGroup: groupId,
-      status: "migrate",
-    });
-
-    await course.save();
-
-    return res.status(200).send({ message: "Клиент успешно добавлен в список мигрирования." });
-
-  }catch(error){
-    return next(error);
-  }
-})
-
-coursesRouter.patch("/approve/:id" , auth, permit('trainer') , async (req , res ,next) =>{
-  const courseId = req.params.id;
-  const {waitListId , subscribeEndDate } = req.body;
-
-  try {
-    const subscribeEnd = new Date(subscribeEndDate);
-    if (isNaN(subscribeEnd.getTime())) {
-      return res.status(400).send({ error: "Некорректная дата для окончания подписки." });
-    }
-
-    const course = await Course.findById(courseId);
-    if (!course) {
-      return res.status(404).send({ error: "Курс не найден." });
-    }
-
-    const waitListItem = course.waitList.find(
-        (item) => String(item._id) === String(waitListId)
-    );
-    if (!waitListItem) {
-      return res.status(404).send({ error: "Запись в списке ожидания не найдена." });
-    }
-
-    const group = await Group.findById(waitListItem.favoriteGroup);
-    if (!group) {
-      return res
-          .status(404)
-          .send({ error: "Группа из записи списка ожидания не найдена." });
-    }
-
-    if (waitListItem.status === "new") {
-      group.clients.push({
-        client: waitListItem.user,
-        addedAt: new Date(Date.now()),
-        subscribeEnd: subscribeEnd,
-      });
-      await group.save();
-    } else if (waitListItem.status === "migrate") {
-      const oldGroup = await Group.findOne({
-        course: courseId,
-        clients: {
-          $elemMatch: {
-            client: waitListItem.user,
-          },
-        },
-      });
-      if (!oldGroup) {
-        return res.status(404).send({
-          error: "Действующая подписка пользователя не найдена.",
-        });
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).send({ error: "Курс не найден." });
       }
 
-      await Group.updateOne(
-          { _id: oldGroup._id },
-          { $pull: { clients: { client: waitListItem.user } } }
+      const group = await Group.findById(groupId);
+      if (!group) {
+        return res.status(404).send({ error: "Группа не найдена." });
+      }
+      if (!group.course.equals(course._id)) {
+        return res
+          .status(400)
+          .send({ error: "Группа не привязана к данному курсу." });
+      }
+
+      const alreadyInGroup = group.clients.some(
+        (client) => String(client.client) === String(userId),
       );
 
-      group.clients.push({
-        client: waitListItem.user,
-        addedAt: new Date(Date.now()),
-        subscribeEnd: subscribeEnd,
+      if (alreadyInGroup) {
+        return res
+          .status(400)
+          .send({ error: "Клиент уже находится в данной группе." });
+      }
+
+      const alreadyInWaitList = course.waitList.some(
+        (waitListItem) => String(waitListItem.user) === String(userId),
+      );
+      if (alreadyInWaitList) {
+        return res
+          .status(400)
+          .send({ error: "Клиент уже находится в списке ожидания." });
+      }
+
+      if (!userId) {
+        return res.status(400).send({ error: "ID пользователя отсутствует." });
+      }
+
+      course.waitList.push({
+        user: userId,
+        createdAt: new Date(),
+        favoriteGroup: groupId,
+        status: "new",
       });
 
-      await oldGroup.save();
-    } else {
+      await course.save();
+
       return res
+        .status(200)
+        .send({ message: "Клиент успешно добавлен в список ожидания." });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+coursesRouter.patch(
+  "/migrate/:id",
+  auth,
+  permit("client"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const courseId = req.params.id;
+      const { groupId } = req.body;
+      const userId = req.user?._id;
+
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).send({ error: "Курс не найден." });
+      }
+
+      const group = await Group.findById(groupId);
+      if (!group) {
+        return res.status(404).send({ error: "Группа не найдена." });
+      }
+
+      if (!group.course.equals(course._id)) {
+        return res
+          .status(400)
+          .send({ error: "Группа не привязана к данному курсу." });
+      }
+
+      const alreadyInGroup = group.clients.some(
+        (client) => String(client.client) === String(userId),
+      );
+
+      if (alreadyInGroup) {
+        return res
+          .status(400)
+          .send({ error: "Клиент уже находится в данной группе." });
+      }
+
+      const alreadyInWaitList = course.waitList.some(
+        (waitListItem) => String(waitListItem.user) === String(userId),
+      );
+      if (alreadyInWaitList) {
+        return res
+          .status(400)
+          .send({ error: "Клиент уже находится в списке ожидания." });
+      }
+
+      if (!userId) {
+        return res.status(400).send({ error: "ID пользователя отсутствует." });
+      }
+
+      course.waitList.push({
+        user: userId,
+        createdAt: new Date(),
+        favoriteGroup: groupId,
+        status: "migrate",
+      });
+
+      await course.save();
+
+      return res
+        .status(200)
+        .send({ message: "Клиент успешно добавлен в список мигрирования." });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+coursesRouter.patch(
+  "/approve/:id",
+  auth,
+  permit("trainer"),
+  async (req, res, next) => {
+    const courseId = req.params.id;
+    const { waitListId, subscribeEndDate } = req.body;
+
+    try {
+      const subscribeEnd = new Date(subscribeEndDate);
+      if (isNaN(subscribeEnd.getTime())) {
+        return res
+          .status(400)
+          .send({ error: "Некорректная дата для окончания подписки." });
+      }
+
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).send({ error: "Курс не найден." });
+      }
+
+      const waitListItem = course.waitList.find(
+        (item) => String(item._id) === String(waitListId),
+      );
+      if (!waitListItem) {
+        return res
+          .status(404)
+          .send({ error: "Запись в списке ожидания не найдена." });
+      }
+
+      const group = await Group.findById(waitListItem.favoriteGroup);
+      if (!group) {
+        return res
+          .status(404)
+          .send({ error: "Группа из записи списка ожидания не найдена." });
+      }
+
+      if (waitListItem.status === "new") {
+        group.clients.push({
+          client: waitListItem.user,
+          addedAt: new Date(Date.now()),
+          subscribeEnd: subscribeEnd,
+        });
+        await group.save();
+      } else if (waitListItem.status === "migrate") {
+        const oldGroup = await Group.findOne({
+          course: courseId,
+          clients: {
+            $elemMatch: {
+              client: waitListItem.user,
+            },
+          },
+        });
+        if (!oldGroup) {
+          return res.status(404).send({
+            error: "Действующая подписка пользователя не найдена.",
+          });
+        }
+
+        await Group.updateOne(
+          { _id: oldGroup._id },
+          { $pull: { clients: { client: waitListItem.user } } },
+        );
+
+        group.clients.push({
+          client: waitListItem.user,
+          addedAt: new Date(Date.now()),
+          subscribeEnd: subscribeEnd,
+        });
+
+        await oldGroup.save();
+      } else {
+        return res
           .status(400)
           .send({ error: "Неверный статус записи списка ожидания." });
-    }
+      }
 
-    course.waitList = course.waitList.filter(
-        (item) => String(item._id) !== String(waitListId)
-    );
+      course.waitList = course.waitList.filter(
+        (item) => String(item._id) !== String(waitListId),
+      );
 
-    await group.save();
-    await course.save();
+      await group.save();
+      await course.save();
 
-    return res
+      return res
         .status(200)
         .send({ message: "Клиент успешно перенаправлен в группу." });
-
-  }catch(error){
-    next(error);
-  }
-})
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 coursesRouter.delete(
   "/:id",
@@ -419,36 +458,45 @@ coursesRouter.delete(
   },
 );
 
+coursesRouter.delete(
+  "/delete/:id",
+  auth,
+  permit("trainer"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const courseId = req.params.id;
+      const { waitListId } = req.body;
+      const userId = req.user?._id;
 
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).send({ error: "Курс не найден." });
+      }
 
-coursesRouter.delete("/delete/:id", auth, permit('trainer'), async (req: RequestWithUser, res, next) => {
-  try {
-    const courseId = req.params.id;
-    const { waitListId } = req.body;
-    const userId = req.user?._id;
+      if (!(course.user as mongoose.Types.ObjectId).equals(userId)) {
+        return res
+          .status(400)
+          .send({ error: "Вы не являетесь тренером этого курса" });
+      }
 
-    const course = await Course.findById(courseId);
-    if (!course) {
-      return res.status(404).send({ error: "Курс не найден." });
-    }
-
-    if(!(course.user as mongoose.Types.ObjectId).equals(userId)) {
-      return res.status(400).send({error: "Вы не являетесь тренером этого курса"})
-    }
-
-    const result = await Course.updateOne(
+      const result = await Course.updateOne(
         { _id: courseId },
-        { $pull: { "waitList": { _id: waitListId } } }
-    );
+        { $pull: { waitList: { _id: waitListId } } },
+      );
 
-    if (result.modifiedCount === 0) {
-      return res.status(404).send({ error: "Запись не найдена или уже удалена." });
+      if (result.modifiedCount === 0) {
+        return res
+          .status(404)
+          .send({ error: "Запись не найдена или уже удалена." });
+      }
+
+      return res
+        .status(200)
+        .send({ message: "Запись успешно удалена из списка ожидания." });
+    } catch (e) {
+      return next(e);
     }
-
-    return res.status(200).send({ message: "Запись успешно удалена из списка ожидания." });
-  }catch (e) {
-      return next(e)
-  }
-})
+  },
+);
 
 export default coursesRouter;

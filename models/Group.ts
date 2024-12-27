@@ -1,6 +1,6 @@
-import mongoose, {Types} from "mongoose";
+import mongoose, { Types } from "mongoose";
 import User from "./User";
-import {GroupsTypes, SubscribeTypes} from "../types/groupTypes";
+import { GroupsTypes, SubscribeTypes } from "../types/groupTypes";
 
 const Schema = mongoose.Schema;
 
@@ -17,16 +17,16 @@ const SubscribeSchema = new Schema<SubscribeTypes>({
       message: "There can only be one role",
     },
   },
-  addedAt:{
+  addedAt: {
     type: Date,
   },
-  subscribeEnd:{
-    required:true,
+  subscribeEnd: {
+    required: true,
     type: Date,
   },
-})
+});
 
-const GroupSchema = new Schema<GroupsTypes , SubscribeTypes>({
+const GroupSchema = new Schema<GroupsTypes, SubscribeTypes>({
   title: {
     type: String,
     required: true,

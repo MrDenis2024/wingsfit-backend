@@ -7,7 +7,7 @@ import Client from "../models/Client";
 import permit from "../middleware/permit";
 import { imagesUpload } from "../multer";
 import { TrainerModel } from "../types/trainerTypes";
-import {sortScheduleDays} from "../utils/helperFunctions";
+import { sortScheduleDays } from "../utils/helperFunctions";
 
 const trainersRouter = express.Router();
 
@@ -61,10 +61,10 @@ trainersRouter.get("/search", auth, async (req: RequestWithUser, res, next) => {
 
     const filter: FilterQuery<TrainerModel> = {};
 
-    if (courseTypes && courseTypes.every(id => mongoose.isValidObjectId(id)))
+    if (courseTypes && courseTypes.every((id) => mongoose.isValidObjectId(id)))
       filter.courseTypes = { $in: courseTypes };
 
-    if (availableDays && availableDays.every(item => item.trim() !== ""))
+    if (availableDays && availableDays.every((item) => item.trim() !== ""))
       filter.availableDays = { $in: availableDays };
 
     const trainers = await Trainer.find(filter)

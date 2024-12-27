@@ -8,7 +8,6 @@ import PrivateChat from "../models/PrivateChat";
 import { GroupChatMessages } from "../types/groupChatMessagesTypes";
 import { PrivateMessagesTypes } from "../types/privateMessagesTypes";
 
-
 const createChatRouter = () => {
   const chatRouter = express.Router();
 
@@ -32,7 +31,12 @@ const createChatRouter = () => {
     });
   };
 
-  const fetchMessages = async (chatId: string, chatType: string, page = 1, limit = 20) => {
+  const fetchMessages = async (
+    chatId: string,
+    chatType: string,
+    page = 1,
+    limit = 20,
+  ) => {
     const skip = (page - 1) * limit;
     let messages;
 
@@ -51,7 +55,6 @@ const createChatRouter = () => {
     }
     return messages;
   };
-
 
   chatRouter.ws("/:chatId/:chatType", async (ws, req) => {
     const { chatId, chatType } = req.params;
@@ -130,7 +133,12 @@ const createChatRouter = () => {
                 },
               );
 
-              const latestMessages = await fetchMessages(chatId, chatType, 1, 20);
+              const latestMessages = await fetchMessages(
+                chatId,
+                chatType,
+                1,
+                20,
+              );
 
               ws.send(
                 JSON.stringify({
@@ -170,7 +178,12 @@ const createChatRouter = () => {
                 },
               );
 
-              const latestMessages = await fetchMessages(chatId, chatType, 1, 20);
+              const latestMessages = await fetchMessages(
+                chatId,
+                chatType,
+                1,
+                20,
+              );
 
               ws.send(
                 JSON.stringify({

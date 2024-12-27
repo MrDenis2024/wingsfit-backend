@@ -52,15 +52,7 @@ const TrainerSchema = new Schema<TrainerTypes, TrainerModel, TrainerMethods>({
   description: String,
   availableDays: {
     type: [String],
-    enum: [
-      "пн",
-      "вт",
-      "ср",
-      "чт",
-      "пт",
-      "сб",
-      "вс",
-    ],
+    enum: ["пн", "вт", "ср", "чт", "пт", "сб", "вс"],
   },
 });
 
