@@ -31,7 +31,7 @@ clientsRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
 
     const client = await Client.findOne({
       user: req.params.id,
-    });
+    }).populate("subscribes", "title");
 
     if (!client) {
       return res.status(404).send({ error: "Client not found" });

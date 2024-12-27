@@ -1,8 +1,32 @@
-import mongoose from "mongoose";
+import mongoose, {Types} from "mongoose";
+import User from "./User";
+import {GroupsTypes, SubscribeTypes} from "../types/groupTypes";
 
 const Schema = mongoose.Schema;
 
-const GroupSchema = new Schema({
+const SubscribeSchema = new Schema<SubscribeTypes>({
+  client: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    validate: {
+      validator: async (value: Types.ObjectId) => {
+        const user = await User.findById(value);
+        return Boolean(user && user.role === "client");
+      },
+      message: "There can only be one role",
+    },
+  },
+  addedAt:{
+    type: Date,
+  },
+  subscribeEnd:{
+    required:true,
+    type: Date,
+  },
+})
+
+const GroupSchema = new Schema<GroupsTypes , SubscribeTypes>({
   title: {
     type: String,
     required: true,
@@ -12,25 +36,46 @@ const GroupSchema = new Schema({
     ref: "Course",
     required: true,
   },
-  clients: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-  ],
-  clientsLimit: {
-    type: Number,
-    required: true,
-  },
+  clients: [SubscribeSchema],
   startTime: {
     type: String,
     required: true,
+    validate: {
+      validator: async (value: string) => {
+        if (value.includes(":")) {
+          const strArr = value.split(":");
+          return (
+            strArr.length === 2 &&
+            strArr[1].length === 2 &&
+            !isNaN(Number(strArr[0])) &&
+            !isNaN(Number(strArr[1])) &&
+            parseInt(strArr[0]) >= 0 &&
+            parseInt(strArr[0]) < 24 &&
+            parseInt(strArr[1]) >= 0 &&
+            parseInt(strArr[1]) < 60
+          );
+        } else return false;
+      },
+      message: "Time must be in hh:mm format",
+    },
   },
   trainingLevel: {
     type: String,
     enum: ["junior", "middle", "advanced"],
     required: true,
   },
+  scheduleLength: {
+    type: Number,
+    min: 1,
+    max: 5,
+    required: true,
+  },
+  maxClients: {
+    type: Number,
+    min: 1,
+    required: true,
+  },
+  //subscribeUsers:[SubscribeSchema]
 });
 
 const Group = mongoose.model("Group", GroupSchema);

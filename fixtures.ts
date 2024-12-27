@@ -64,7 +64,7 @@ const run = async () => {
     avatar: "fixtures/trainer.jpg",
     timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
     gender: "male",
-    phoneNumber: "996552022212",
+    phoneNumber: "+996552022212",
     dateOfBirth: new Date("1990-08-10"),
     notification: true,
     lastActivity: new Date("2024-11-10"),
@@ -83,7 +83,7 @@ const run = async () => {
     timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
     gender: "female",
     dateOfBirth: new Date("2000-08-10"),
-    phoneNumber: "996222120542",
+    phoneNumber: "+996222120542",
     notification: true,
     lastActivity: new Date("2024-12-05"),
     createdAt: new Date("2024-12-02"),
@@ -101,7 +101,7 @@ const run = async () => {
     avatar: "fixtures/trainer2.jpg",
     timeZone: { value: "Europe/Moscow", label: "(GMT+3:00) Moscow" },
     gender: "male",
-    phoneNumber: "996552033312",
+    phoneNumber: "+996552033312",
     dateOfBirth: new Date("1985-05-15"),
     notification: true,
     lastActivity: new Date("2024-11-11"),
@@ -120,7 +120,7 @@ const run = async () => {
     timeZone: { value: "Europe/Moscow", label: "(GMT+3:00) Moscow" },
     gender: "female",
     dateOfBirth: new Date("1995-02-20"),
-    phoneNumber: "996222129999",
+    phoneNumber: "+996222129999",
     notification: true,
     lastActivity: new Date("2024-12-10"),
     createdAt: new Date("2024-12-09"),
@@ -152,7 +152,7 @@ const run = async () => {
       },
     ],
     description: "Professional trainer with 5 years of experience.",
-    availableDays: "Mon, Wed, Fri",
+    availableDays: ["пн", "ср", "чт", "пт", "сб"],
   });
 
   await Trainer.create({
@@ -167,23 +167,13 @@ const run = async () => {
       },
     ],
     description: "Experienced cardio trainer.",
-    availableDays: "Tue, Thu, Sat",
-  });
-
-  await Client.create({
-    user: clientUser._id,
-    subscribes: [courseType1, courseType2],
-    preferredWorkoutType: [courseType1._id, courseType2._id],
-    trainingLevel: "junior",
-    physicalData: "Healthy",
-  });
-
-  await Client.create({
-    user: clientUser2._id,
-    subscribes: [courseType1, courseType2],
-    preferredWorkoutType: [courseType1._id, courseType2._id],
-    trainingLevel: "junior",
-    physicalData: "Moderate",
+    availableDays: [
+      "пн",
+      "ср",
+      "чт",
+      "сб",
+      "вс",
+    ],
   });
 
   const course1 = await Course.create({
@@ -192,11 +182,10 @@ const run = async () => {
     title: "Yoga for Beginners",
     description: "A beginner's guide to yoga.",
     format: "group",
-    schedule: "Mon & Wed 7 PM",
-    scheduleLength: "1 month",
+    schedule: ["ср", "чт", "пт", "сб", "вс"],
     price: 100,
-    maxClients: 10,
     image: "fixtures/yoga.jpg",
+    waitList:[],
   });
 
   const course2 = await Course.create({
@@ -205,18 +194,20 @@ const run = async () => {
     title: "Intensive Cardio",
     description: "High-intensity cardio training for all levels.",
     format: "group",
-    schedule: "Tue & Thu 6 PM",
-    scheduleLength: "2 weeks",
+    schedule: ["пн", "вт", "пт", "сб", "вс"],
     price: 150,
-    maxClients: 10,
     image: "fixtures/cardio.jpg",
+    waitList:[],
   });
 
   const group1 = await Group.create({
     title: "Evening Yoga Group",
     course: course1._id,
-    clients: [clientUser._id, clientUser2._id],
-    clientsLimit: 10,
+    clients: [
+      { client: clientUser._id, subscribeEnd: new Date("2025-01-01"), addedAt: Date.now() },
+    ],
+    maxClients: 10,
+    scheduleLength: 1,
     startTime: "19:00",
     trainingLevel: "junior",
   });
@@ -224,32 +215,41 @@ const run = async () => {
   const group2 = await Group.create({
     title: "Cardio Training",
     course: course2._id,
-    clients: [clientUser2._id, clientUser2._id],
-    clientsLimit: 10,
+    clients: [
+      { client: clientUser2._id, subscribeEnd: new Date("2025-01-01"), addedAt: Date.now() },
+    ],
+    maxClients: 10,
+    scheduleLength: 2,
     startTime: "18:00",
     trainingLevel: "junior",
   });
 
-  await Lesson.create({
-    course: course1._id,
-    title: "Intro to Yoga",
-    timeZone: "UTC+0",
-    groupLevel: 1,
-    quantityClients: 1,
-    description: "First lesson in the yoga series.",
-    participants: [clientUser._id],
-    presentUser: [],
+  await Client.create({
+    user: clientUser._id,
+    subscribes: [course1._id, course2._id],
+    preferredWorkoutType: [courseType1._id, courseType2._id],
+    trainingLevel: "junior",
+    physicalData: "Healthy",
+  });
+
+  await Client.create({
+    user: clientUser2._id,
+    subscribes: [course1._id, course2._id],
+    preferredWorkoutType: [courseType1._id, courseType2._id],
+    trainingLevel: "junior",
+    physicalData: "Moderate",
   });
 
   await Lesson.create({
-    course: course2._id,
-    title: "Cardio Basics",
-    timeZone: "UTC+3",
-    groupLevel: 1,
-    quantityClients: 1,
-    description: "First cardio training session.",
-    participants: [clientUser2._id],
-    presentUser: [],
+    group: group1._id,
+    notPresent: [clientUser._id],
+    arePresent: [clientUser2._id],
+  });
+
+  await Lesson.create({
+    group: group2._id,
+    notPresent: [clientUser2._id],
+    arePresent: [clientUser._id],
   });
 
   await TrainerReview.create({

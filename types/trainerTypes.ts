@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Model, Types } from "mongoose";
 
 export interface Certificates {
   _id: Types.ObjectId;
@@ -13,6 +13,12 @@ export interface TrainerTypes {
   experience: string;
   certificates: Certificates[];
   description: string;
-  availableDays: string;
+  availableDays: string[];
   rating: number;
 }
+
+export interface TrainerMethods {
+  getRating(): Promise<void>;
+}
+
+export type TrainerModel = Model<TrainerTypes, {}, TrainerMethods>;

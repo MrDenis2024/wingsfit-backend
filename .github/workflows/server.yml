@@ -25,10 +25,7 @@ jobs:
           touch .env
           echo GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} >> .env
           echo DATABASE_URL=${{ secrets.DATABASE_URL }}  >> .env  
-          echo CORS_WHITELIST=${{ secrets.CORS_WHITELIST }} >> .env
-
-      - name: Rewriting database data
-        run: npm run seed
+          echo CORS_WHITELIST=${{ secrets.HOST }} >> .env
 
       - name: Upload code and node_modules to server
         uses: appleboy/scp-action@v0.1.7
@@ -39,7 +36,7 @@ jobs:
           source: "."
           target: "/var/www/backend/"
 
-      - name: Restart PM2
+      - name: Restart PM2 and rewriting database data
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.HOST }}
@@ -47,4 +44,5 @@ jobs:
           key: ${{ secrets.SERVER_FILED_KEY }}
           script: |
             cd /var/www/backend/
+            npm run seed || exit 1
             pm2 reload ecosystem.config.js --env production

@@ -4,10 +4,9 @@ import auth, { RequestWithUser } from "../middleware/auth";
 import permit from "../middleware/permit";
 import Course from "../models/Course";
 import User from "../models/User";
-import mongoose from "mongoose";
+import mongoose, {Types} from "mongoose";
 import Client from "../models/Client";
-import courseType from "../models/CourseType";
-import { populate } from "dotenv";
+import Lesson from "../models/Lesson";
 
 export const groupsRouter = express.Router();
 
@@ -27,12 +26,12 @@ groupsRouter.get(
         .populate({
           path: "course",
           match: { user },
-          select: "title",
+          select: "title schedule user",
         })
+        .populate("clients", "firstName lastName")
         .exec();
 
       const filteredGroups = groups.filter((group) => group.course);
-
       return res.send(filteredGroups);
     } catch (error) {
       return next(error);
@@ -83,6 +82,27 @@ groupsRouter.get("/matching", auth, async (req: RequestWithUser, res, next) => {
   }
 });
 
+groupsRouter.get("/group/:id", async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id))
+      return res.status(400).send({ error: "Invalid group ID" });
+
+    const group = await Group.findById(req.params.id).populate(
+        "clients",
+        "firstName lastName"
+    ).populate( "course");
+
+    if (!group) {
+      return res.status(404).send({ error: "Group not found" });
+    }
+
+    return res.send(group);
+  } catch (error) {
+    console.error("Error fetching group:", error);
+    return next(error);
+  }
+});
+
 groupsRouter.get("/:id", async (req, res, next) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id))
@@ -119,8 +139,9 @@ groupsRouter.post(
 
       if (
         !req.body.title ||
-        req.body.clientsLimit < 1 ||
+        parseFloat(req.body.maxClients) < 1 ||
         !req.body.startTime ||
+        parseFloat(req.body.scheduleLength) < 1 ||
         !req.body.trainingLevel
       ) {
         return res.status(400).send({ error: "Fill required fields!" });
@@ -129,8 +150,9 @@ groupsRouter.post(
       const newGroup = await Group.create({
         title: req.body.title,
         course: existingCourse._id,
-        clientsLimit: existingCourse.maxClients,
+        maxClients: parseFloat(req.body.maxClients),
         startTime: req.body.startTime,
+        scheduleLength: parseFloat(req.body.scheduleLength),
         trainingLevel: req.body.trainingLevel,
       });
 
@@ -176,15 +198,19 @@ groupsRouter.patch(
       if (!existingCourse)
         return res.status(400).send({ error: "Course does not exist" });
 
-      if (group.clients.includes(client._id))
-        return res
-          .status(400)
-          .send({ error: "Client is already in the group" });
+      const clientExists = group.clients.some(sub => new Types.ObjectId(sub.client).equals(req.body.clientId));
 
-      if (group.clients.length >= group.clientsLimit)
+      if (clientExists)
+        return res.status(400).send({ error: "Client is already in the group" });
+
+      if (group.clients.length >= group.maxClients)
         return res.status(400).send({ error: "Client limit reached" });
 
-      group.clients.push(client._id);
+      group.clients.push({
+        client: client._id,
+        addedAt: new Date(),
+        subscribeEnd: new Date(req.body.subscribeEndDate),
+      });
       await group.save();
 
       return res.send(group);
@@ -192,6 +218,195 @@ groupsRouter.patch(
       return next(error);
     }
   },
+);
+groupsRouter.patch("/update_subscribe/:id", auth , permit("trainer"), async (req: RequestWithUser,res,next)=>{
+  const groupId = req.params.id;
+  const { clientId, newSubscribeEnd } = req.body;
+
+  try{
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).send({ error: 'Группа не найдена' });
+    }
+
+    const course = await Course.findById(group.course).select('user');
+    if (!course) {
+      return res.status(404).send({ error: 'Курс не найден' });
+    }
+
+    if (course.user.toString() !== req.user?._id.toString()) {
+      return res.status(403).send({ error: 'Тренер не связан с курсом группы' });
+    }
+
+    const subscribedUser = group.clients.find((user) =>
+        user.client.toString() === clientId
+    );
+
+    if (!subscribedUser) {
+      return res.status(400).send({ error: 'Клиент не найден в подписках группы' });
+    }
+
+    const newDate = new Date(newSubscribeEnd);
+    if (isNaN(newDate.getTime())) {
+      return res.status(400).send({ error: 'Неверный формат новой даты' });
+    }
+
+    if (newDate <= new Date()) {
+      return res.status(400).send({
+        error: 'Дата подписки должна быть больше текущей даты',
+      });
+    }
+
+    subscribedUser.subscribeEnd = newSubscribeEnd;
+    await group.save();
+
+    return res.status(200).send({ message: 'Подписка успешно продлена'});
+  }catch(error){
+    next(error)
+  }
+})
+
+groupsRouter.patch('/remove/:id', auth, permit('trainer', 'client'), async (req: RequestWithUser, res, next) => {
+  try {
+    const groupId = req.params.id;
+    const userId = req.user?._id;
+    const { clientId } = req.body;
+
+    const group = await Group.findById(groupId)
+    if (!group) {
+      return res.status(404).send({ error: 'Группа не найдена' });
+    }
+
+    const course = await Course.findById(group.course);
+    if (!course) {
+      return res.status(404).send({ error: 'Курс не найден' });
+    }
+
+    if (req.user?.role === 'trainer') {
+
+      if (!(course.user as Types.ObjectId).equals(userId)) {
+        return res.status(403).send({ error: 'Тренер не связан с этой группой' });
+      }
+
+      const subscriptionIndex = group.clients.findIndex(sub =>
+          new Types.ObjectId(sub.client).equals(clientId)
+      );
+
+      if (subscriptionIndex === -1) {
+        return res.status(404).send({ error: 'Клиент не найден в группе' });
+      }
+
+      group.clients.splice(subscriptionIndex, 1);
+      await group.save();
+
+      return res.send({ message: 'Клиент успешно удален из группы' });
+    }
+
+    if (req.user?.role === 'client') {
+      const clientId = req.user?._id;
+      const subscriptionIndex = group.clients.findIndex(sub =>
+          new Types.ObjectId(sub.client).equals(clientId)
+      );
+
+      if (subscriptionIndex === -1) {
+        return res.status(403).send({ error: 'Клиент не состоит в этой группе' });
+      }
+
+      group.clients.splice(subscriptionIndex, 1);
+
+      await group.save();
+      return res.send({ message: 'Вы успешно удалены из группы' });
+    }
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ error: 'Ошибка при удалении клиента' });
+  }
+});
+groupsRouter.delete(
+  "/:id",
+  auth,
+  permit("trainer", "admin", "superAdmin"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      if (!mongoose.isValidObjectId(req.params.id))
+        return res.status(400).send({ error: "Invalid group ID" });
+
+      const group = await Group.findById(req.params.id);
+
+      if (!group) {
+        return res.status(404).send({ error: "Группа не найдена" });
+      }
+
+      const course = await Course.findById(group.course);
+
+      if (!course) {
+        return res.status(404).send({ error: "Курс не найден" });
+      }
+
+      if (
+        req.user?.role === "admin" ||
+        req.user?.role === "superAdmin" ||
+        (req.user?.role === "trainer" && course.user.equals(req.user._id))
+      ) {
+        await Group.deleteOne({ _id: req.params.id });
+        await Lesson.deleteMany({ group: req.params.id });
+        return res.send({
+          message: "Группа и связанные данные успешно удалены",
+        });
+      }
+
+      return res
+        .status(403)
+        .send({ error: "Вы не можете удалить данную группу" });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+groupsRouter.put(
+    "/:id",
+    auth,
+    permit("trainer"),
+    async (req: RequestWithUser, res, next) => {
+      try {
+        const id = req.params.id;
+        const user = req.user;
+
+        if (!user) return res.status(401).send({ error: "User not found" });
+
+        if (!mongoose.isValidObjectId(id))
+          return res.status(400).send({ error: "Invalid group ID" });
+
+        const group = await Group.findById(id);
+
+        if (!group) {
+          return res.status(404).send({ error: "Group not found" });
+        }
+
+        const updatedGroups = {
+          title: req.body.title,
+          maxClients: parseFloat(req.body.maxClients),
+          startTime: req.body.startTime,
+          scheduleLength: parseFloat(req.body.scheduleLength),
+          trainingLevel: req.body.trainingLevel,
+        };
+
+        const updatedGroup = await Group.findOneAndUpdate(
+            { _id: id },
+            updatedGroups,
+            { new: true, runValidators: true },
+        );
+
+        return res.status(200).send(updatedGroup);
+      } catch (error) {
+        if (error instanceof mongoose.Error.ValidationError) {
+          return res.status(400).send(error);
+        }
+        return next(error);
+      }
+    },
 );
 
 export default groupsRouter;

@@ -1,24 +1,32 @@
 import { Types } from "mongoose";
 
-export interface CourseTypes {
+export interface WaitList {
+  _id?: Types.ObjectId;
   user: Types.ObjectId | string;
+  createdAt: Date;
+  favoriteGroup: Types.ObjectId | string;
+  status: string;
+}
+
+export interface CourseTypes {
+  user: Types.ObjectId;
   title: string;
   courseType: Types.ObjectId | string;
   description: string;
   format: string;
-  schedule: string;
-  scheduleLength: string;
+  schedule: string[];
   price: number;
-  maxClients: number;
   image: string | null;
+  waitList: WaitList[];
 }
 
 export interface UpdatedCourse {
   title: string;
-  schedule: string;
-  scheduleLength: string;
+  courseType: Types.ObjectId | string;
+  description: string;
+  format: string;
+  schedule: string[];
   price: number;
-  maxClients: number;
 }
 
 export interface CourseTypeFields {

@@ -27,6 +27,7 @@ const ClientSchema = new Schema<ClientTypes>({
   },
   subscribes: {
     type: [Schema.Types.ObjectId],
+    ref: "Course",
   },
   preferredWorkoutType: [
     {
