@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { PrivateMessagesTypes } from "../types/privateMessagesTypes";
+import {PrivateMessagesTypes} from "../types/privateMessagesTypes";
 
 const Schema = mongoose.Schema;
 
@@ -22,7 +22,7 @@ const PrivateMessageSchema = new Schema<PrivateMessagesTypes>({
     type: Date,
     default: Date.now,
   },
-  isRead: [
+  isRead:
     {
       user: {
         type: mongoose.Schema.Types.ObjectId,
@@ -34,7 +34,6 @@ const PrivateMessageSchema = new Schema<PrivateMessagesTypes>({
         default: false,
       },
     },
-  ],
 });
 
 const PrivateMessage = mongoose.model("PrivateMessage", PrivateMessageSchema);
