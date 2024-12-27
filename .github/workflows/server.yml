@@ -36,7 +36,7 @@ jobs:
           source: "."
           target: "/var/www/backend/"
 
-      - name: Restart PM2
+      - name: Restart PM2 and rewriting database data
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.HOST }}
@@ -44,7 +44,5 @@ jobs:
           key: ${{ secrets.SERVER_FILED_KEY }}
           script: |
             cd /var/www/backend/
+            npm run seed || exit 1
             pm2 reload ecosystem.config.js --env production
-
-      - name: Rewriting database data
-        run: npm run seed

@@ -1,11 +1,12 @@
 import express from "express";
 import Group from "../models/Group";
-import auth, {RequestWithUser} from "../middleware/auth";
+import auth, { RequestWithUser } from "../middleware/auth";
 import permit from "../middleware/permit";
 import Course from "../models/Course";
 import User from "../models/User";
 import mongoose, {Types} from "mongoose";
 import Client from "../models/Client";
+import Lesson from "../models/Lesson";
 
 export const groupsRouter = express.Router();
 
@@ -25,13 +26,12 @@ groupsRouter.get(
         .populate({
           path: "course",
           match: { user },
-          select: "title schedule",
+          select: "title schedule user",
         })
         .populate("clients", "firstName lastName")
         .exec();
 
       const filteredGroups = groups.filter((group) => group.course);
-
       return res.send(filteredGroups);
     } catch (error) {
       return next(error);
@@ -177,15 +177,19 @@ groupsRouter.patch(
       if (!existingCourse)
         return res.status(400).send({ error: "Course does not exist" });
 
-      if (group.clients.includes(client._id))
-        return res
-          .status(400)
-          .send({ error: "Client is already in the group" });
+      const clientExists = group.clients.some(sub => new Types.ObjectId(sub.client).equals(req.body.clientId));
+
+      if (clientExists)
+        return res.status(400).send({ error: "Client is already in the group" });
 
       if (group.clients.length >= group.maxClients)
         return res.status(400).send({ error: "Client limit reached" });
 
-      group.clients.push(client._id);
+      group.clients.push({
+        client: client._id,
+        addedAt: new Date(),
+        subscribeEnd: new Date(req.body.subscribeEndDate),
+      });
       await group.save();
 
       return res.send(group);
@@ -194,8 +198,6 @@ groupsRouter.patch(
     }
   },
 );
-
-
 groupsRouter.patch("/update_subscribe/:id", auth , permit("trainer"), async (req: RequestWithUser,res,next)=>{
   const groupId = req.params.id;
   const { clientId, newSubscribeEnd } = req.body;
@@ -215,8 +217,8 @@ groupsRouter.patch("/update_subscribe/:id", auth , permit("trainer"), async (req
       return res.status(403).send({ error: 'Тренер не связан с курсом группы' });
     }
 
-    const subscribedUser = group.subscribeUsers.find((user) =>
-        user.clients.toString() === clientId
+    const subscribedUser = group.clients.find((user) =>
+        user.client.toString() === clientId
     );
 
     if (!subscribedUser) {
@@ -265,13 +267,15 @@ groupsRouter.patch('/remove/:id', auth, permit('trainer', 'client'), async (req:
         return res.status(403).send({ error: 'Тренер не связан с этой группой' });
       }
 
-      const subscriptionIndex = group.subscribeUsers.findIndex(sub => sub.clients.equals(clientId));
+      const subscriptionIndex = group.clients.findIndex(sub =>
+          new Types.ObjectId(sub.client).equals(clientId)
+      );
 
       if (subscriptionIndex === -1) {
         return res.status(404).send({ error: 'Клиент не найден в группе' });
       }
 
-      group.subscribeUsers.splice(subscriptionIndex, 1);
+      group.clients.splice(subscriptionIndex, 1);
       await group.save();
 
       return res.send({ message: 'Клиент успешно удален из группы' });
@@ -279,13 +283,15 @@ groupsRouter.patch('/remove/:id', auth, permit('trainer', 'client'), async (req:
 
     if (req.user?.role === 'client') {
       const clientId = req.user?._id;
-      const subscriptionIndex = group.subscribeUsers.findIndex(sub => sub.clients.equals(clientId));
+      const subscriptionIndex = group.clients.findIndex(sub =>
+          new Types.ObjectId(sub.client).equals(clientId)
+      );
 
       if (subscriptionIndex === -1) {
         return res.status(403).send({ error: 'Клиент не состоит в этой группе' });
       }
 
-      group.subscribeUsers.splice(subscriptionIndex, 1);
+      group.clients.splice(subscriptionIndex, 1);
 
       await group.save();
       return res.send({ message: 'Вы успешно удалены из группы' });
@@ -296,6 +302,50 @@ groupsRouter.patch('/remove/:id', auth, permit('trainer', 'client'), async (req:
     return res.status(500).send({ error: 'Ошибка при удалении клиента' });
   }
 });
+groupsRouter.delete(
+  "/:id",
+  auth,
+  permit("trainer", "admin", "superAdmin"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      if (!mongoose.isValidObjectId(req.params.id))
+        return res.status(400).send({ error: "Invalid group ID" });
+
+      const group = await Group.findById(req.params.id);
+
+      if (!group) {
+        return res.status(404).send({ error: "Группа не найдена" });
+      }
+
+      const course = await Course.findById(group.course);
+
+      if (!course) {
+        return res.status(404).send({ error: "Курс не найден" });
+      }
+
+      if (
+        req.user?.role === "admin" ||
+        req.user?.role === "superAdmin" ||
+        (req.user?.role === "trainer" && course.user.equals(req.user._id))
+      ) {
+        await Group.deleteOne({ _id: req.params.id });
+        await Lesson.deleteMany({ group: req.params.id });
+        return res.send({
+          message: "Группа и связанные данные успешно удалены",
+        });
+      }
+
+      return res
+        .status(403)
+        .send({ error: "Вы не можете удалить данную группу" });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+
+
 
 
 export default groupsRouter;

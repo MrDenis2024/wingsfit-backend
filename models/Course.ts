@@ -20,8 +20,8 @@ const WaitListSchema = new Schema({
     },
   },
   createdAt: {
-    required: true,
-    type: Date.now(),
+    type: Date,
+    default: Date.now(),
   },
   favoriteGroup:{
     type: Schema.Types.ObjectId,
@@ -83,15 +83,7 @@ const CourseSchema = new Schema<CourseTypes>({
   schedule: [
     {
       type: String,
-      enum: [
-        "Понедельник",
-        "Вторник",
-        "Среда",
-        "Четверг",
-        "Пятница",
-        "Суббота",
-        "Воскресенье",
-      ],
+      enum: ["пн", "вт", "ср", "чт", "пт", "сб", "вс"],
       required: true,
     },
   ],

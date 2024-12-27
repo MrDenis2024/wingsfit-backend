@@ -9,7 +9,7 @@ export interface WaitList {
 }
 
 export interface CourseTypes {
-  user: Types.ObjectId | string;
+  user: Types.ObjectId;
   title: string;
   courseType: Types.ObjectId | string;
   description: string;

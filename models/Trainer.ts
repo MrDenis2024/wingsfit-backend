@@ -53,13 +53,13 @@ const TrainerSchema = new Schema<TrainerTypes, TrainerModel, TrainerMethods>({
   availableDays: {
     type: [String],
     enum: [
-      "Понедельник",
-      "Вторник",
-      "Среда",
-      "Четверг",
-      "Пятница",
-      "Суббота",
-      "Воскресенье",
+      "пн",
+      "вт",
+      "ср",
+      "чт",
+      "пт",
+      "сб",
+      "вс",
     ],
   },
 });

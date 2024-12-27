@@ -8,6 +8,8 @@ import Trainer from "../models/Trainer";
 import { UpdatedCourse } from "../types/courseTypes";
 import permit from "../middleware/permit";
 import Group from "../models/Group";
+import Lesson from "../models/Lesson";
+import { sortScheduleDays } from "../utils/helperFunctions";
 
 const coursesRouter = express.Router();
 
@@ -37,22 +39,25 @@ coursesRouter.get("/", async (req, res) => {
 
 coursesRouter.get("/search", auth, async (req, res, next) => {
   try {
-    const { courseTypes, format, trainers, schedule } = req.body;
-
+    const courseTypes = ( req.query.courseTypes as string ).split(",");
+    const format = ( req.query.format as string ).split(",");
+    const trainers = ( req.query.trainers as string ).split(",");
+    const schedule = ( req.query.schedule as string ).split(",");
     const filter: FilterQuery<typeof Course> = {};
 
-    if (courseTypes && (courseTypes as string[]).length > 0)
+    if (courseTypes && courseTypes.every(id => mongoose.isValidObjectId(id))) {
       filter.courseType = { $in: courseTypes };
+    }
 
-    if (format && (format as string[]).length > 0) {
+    if (format && format.every(item => item.trim() !== "")) {
       filter.format = { $in: format };
     }
 
-    if (trainers && (trainers as string[]).length > 0) {
+    if (trainers && trainers.every(id => mongoose.isValidObjectId(id))) {
       filter.user = { $in: trainers };
     }
 
-    if (schedule && (schedule as string[]).length > 0) {
+    if (schedule && schedule.every(item => item.trim() !== "")) {
       filter.schedule = { $in: schedule };
     }
 
@@ -117,11 +122,7 @@ coursesRouter.post(
         });
       }
 
-      // const courseType = req.body.courseType;
-      //
-      // if (!courseType) {
-      //   return res.status(400).send({ error: "courseType not provided" });
-      // }
+      const sortedSchedule = sortScheduleDays(req.body.schedule);
 
       const courseMutation = {
         user: user._id,
@@ -129,7 +130,7 @@ coursesRouter.post(
         courseType: req.body.courseType,
         description: req.body.description,
         format: req.body.format,
-        schedule: req.body.schedule,
+        schedule: sortedSchedule,
         price: req.body.price,
         image: req.file ? req.file.filename : null,
       };
@@ -164,12 +165,14 @@ coursesRouter.put(
         return res.status(404).send({ error: "Course not found" });
       }
 
+      const sortedSchedule = sortScheduleDays(req.body.schedule);
+
       const updatedFields: UpdatedCourse = {
         title: req.body.title,
         courseType: req.body.courseType,
         description: req.body.description,
         format: req.body.format,
-        schedule: req.body.schedule,
+        schedule: sortedSchedule,
         price: req.body.price,
       };
 
@@ -279,10 +282,11 @@ coursesRouter.patch("/migrate/:id", auth, permit('client') , async (req: Request
 })
 
 coursesRouter.patch("/approve/:id" , auth, permit('trainer') , async (req , res ,next) =>{
+  const courseId = req.params.id;
+  const {waitListId , subscribeEndDate } = req.body;
+  console.log("req.params:", req.params);
+  console.log("req.params.id:", req.params.id);
   try {
-    const courseId = req.params.id;
-    const {waitListId , subscribeEndDate } = req.body;
-
     const subscribeEnd = new Date(subscribeEndDate);
     if (isNaN(subscribeEnd.getTime())) {
       return res.status(400).send({ error: "Некорректная дата для окончания подписки." });
@@ -309,17 +313,17 @@ coursesRouter.patch("/approve/:id" , auth, permit('trainer') , async (req , res 
 
     if (waitListItem.status === "new") {
       group.clients.push({
-        clients: waitListItem.user,
-        addedAt: Date.now(),
+        client: waitListItem.user,
+        addedAt: new Date(Date.now()),
         subscribeEnd: subscribeEnd,
       });
       await group.save();
     } else if (waitListItem.status === "migrate") {
       const oldGroup = await Group.findOne({
         course: courseId,
-        subscribeUsers: {
+        clients: {
           $elemMatch: {
-            clients: waitListItem.user,
+            client: waitListItem.user,
           },
         },
       });
@@ -329,15 +333,18 @@ coursesRouter.patch("/approve/:id" , auth, permit('trainer') , async (req , res 
         });
       }
 
-      oldGroup.clients.pull({ clients: waitListItem.user });
-
-      await oldGroup.save();
+      await Group.updateOne(
+          { _id: oldGroup._id },
+          { $pull: { clients: { client: waitListItem.user } } }
+      );
 
       group.clients.push({
-        clients: waitListItem.user,
-        addedAt: Date.now(),
+        client: waitListItem.user,
+        addedAt: new Date(Date.now()),
         subscribeEnd: subscribeEnd,
       });
+
+      await oldGroup.save();
     } else {
       return res
           .status(400)
@@ -359,6 +366,45 @@ coursesRouter.patch("/approve/:id" , auth, permit('trainer') , async (req , res 
     next(error);
   }
 })
+
+coursesRouter.delete(
+  "/:id",
+  auth,
+  permit("admin", "superAdmin", "trainer"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      if (!mongoose.isValidObjectId(req.params.id))
+        return res.status(400).send({ error: "Invalid course ID" });
+
+      const course = await Course.findById(req.params.id);
+
+      if (!course) {
+        return res.status(404).send({ error: "Курс не найден" });
+      }
+
+      if (
+        req.user?.role === "admin" ||
+        req.user?.role === "superAdmin" ||
+        (req.user?.role === "trainer" && course.user.equals(req.user._id))
+      ) {
+        await Course.deleteOne({ _id: req.params.id });
+        const groups = await Group.find({ course: req.params.id });
+        const groupIds = groups.map((group) => group._id);
+        await Group.deleteMany({ course: req.params.id });
+        await Lesson.deleteMany({ group: { $in: groupIds } });
+        return res.send({ message: "Курс и связанные данные успешно удалены" });
+      }
+
+      return res
+        .status(403)
+        .send({ error: "Вы не можете удалить данную группу" });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+
 
 coursesRouter.delete("/delete/:id", auth, permit('trainer'), async (req: RequestWithUser, res, next) => {
   try {

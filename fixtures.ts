@@ -25,6 +25,7 @@ const run = async () => {
     await db.dropCollection("courses");
     await db.dropCollection("lessons");
     await db.dropCollection("trainerreviews");
+    await db.dropCollection("trainerreviews");
     await db.dropCollection("coursetypes");
     await db.dropCollection("groups");
     await db.dropCollection("groupchats");
@@ -152,7 +153,7 @@ const run = async () => {
       },
     ],
     description: "Professional trainer with 5 years of experience.",
-    availableDays: ["Понедельник", "Среда", "Четверг", "Пятница", "Суббота"],
+    availableDays: ["пн", "ср", "чт", "пт", "сб"],
   });
 
   await Trainer.create({
@@ -168,11 +169,11 @@ const run = async () => {
     ],
     description: "Experienced cardio trainer.",
     availableDays: [
-      "Понедельник",
-      "Среда",
-      "Четверг",
-      "Суббота",
-      "Воскресенье",
+      "пн",
+      "ср",
+      "чт",
+      "сб",
+      "вс",
     ],
   });
 
@@ -182,7 +183,7 @@ const run = async () => {
     title: "Yoga for Beginners",
     description: "A beginner's guide to yoga.",
     format: "group",
-    schedule: ["Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"],
+    schedule: ["ср", "чт", "пт", "сб", "вс"],
     price: 100,
     image: "fixtures/yoga.jpg",
   });
@@ -193,7 +194,7 @@ const run = async () => {
     title: "Intensive Cardio",
     description: "High-intensity cardio training for all levels.",
     format: "group",
-    schedule: ["Понедельник", "Вторник", "Пятница", "Суббота", "Воскресенье"],
+    schedule: ["пн", "вт", "пт", "сб", "вс"],
     price: 150,
     image: "fixtures/cardio.jpg",
   });
@@ -201,7 +202,9 @@ const run = async () => {
   const group1 = await Group.create({
     title: "Evening Yoga Group",
     course: course1._id,
-    clients: [clientUser._id, clientUser2._id],
+    clients: [
+      { client: clientUser._id, subscribeEnd: new Date("2025-01-01"), addedAt: Date.now() },
+    ],
     maxClients: 10,
     scheduleLength: 1,
     startTime: "19:00",
@@ -211,7 +214,9 @@ const run = async () => {
   const group2 = await Group.create({
     title: "Cardio Training",
     course: course2._id,
-    clients: [clientUser2._id, clientUser2._id],
+    clients: [
+      { client: clientUser2._id, subscribeEnd: new Date("2025-01-01"), addedAt: Date.now() },
+    ],
     maxClients: 10,
     scheduleLength: 2,
     startTime: "18:00",
@@ -235,25 +240,15 @@ const run = async () => {
   });
 
   await Lesson.create({
-    course: course1._id,
-    title: "Intro to Yoga",
-    timeZone: "UTC+0",
-    groupLevel: 1,
-    quantityClients: 1,
-    description: "First lesson in the yoga series.",
-    participants: [clientUser._id],
-    presentUser: [],
+    group: group1._id,
+    notPresent: [clientUser._id],
+    arePresent: [clientUser2._id],
   });
 
   await Lesson.create({
-    course: course2._id,
-    title: "Cardio Basics",
-    timeZone: "UTC+3",
-    groupLevel: 1,
-    quantityClients: 1,
-    description: "First cardio training session.",
-    participants: [clientUser2._id],
-    presentUser: [],
+    group: group2._id,
+    notPresent: [clientUser2._id],
+    arePresent: [clientUser._id],
   });
 
   await TrainerReview.create({
