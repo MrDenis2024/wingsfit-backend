@@ -82,6 +82,27 @@ groupsRouter.get("/matching", auth, async (req: RequestWithUser, res, next) => {
   }
 });
 
+groupsRouter.get("/group/:id", async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id))
+      return res.status(400).send({ error: "Invalid group ID" });
+
+    const group = await Group.findById(req.params.id).populate(
+        "clients",
+        "firstName lastName"
+    ).populate( "course");
+
+    if (!group) {
+      return res.status(404).send({ error: "Group not found" });
+    }
+
+    return res.send(group);
+  } catch (error) {
+    console.error("Error fetching group:", error);
+    return next(error);
+  }
+});
+
 groupsRouter.get("/:id", async (req, res, next) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id))
@@ -366,7 +387,6 @@ groupsRouter.put(
 
         const updatedGroups = {
           title: req.body.title,
-          course: req.body.course,
           maxClients: parseFloat(req.body.maxClients),
           startTime: req.body.startTime,
           scheduleLength: parseFloat(req.body.scheduleLength),
