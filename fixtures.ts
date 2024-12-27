@@ -345,12 +345,11 @@ const run = async () => {
     author: clientUser._id,
     message: "Good morning!",
     createdAt: new Date().toISOString(),
-    isRead: [
+    isRead:
       {
         user: trainerUser._id,
-        read: false,
+        read: true,
       },
-    ],
   });
 
   await PrivateMessage.create({
@@ -358,12 +357,11 @@ const run = async () => {
     author: trainerUser._id,
     message: "Hello!",
     createdAt: new Date().toISOString(),
-    isRead: [
+    isRead:
       {
         user: clientUser._id,
         read: true,
       },
-    ],
   });
 
   await db.close();
