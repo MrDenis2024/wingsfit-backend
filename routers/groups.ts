@@ -4,7 +4,7 @@ import auth, { RequestWithUser } from "../middleware/auth";
 import permit from "../middleware/permit";
 import Course from "../models/Course";
 import User from "../models/User";
-import mongoose from "mongoose";
+import mongoose, {Types} from "mongoose";
 import Client from "../models/Client";
 import Lesson from "../models/Lesson";
 
@@ -177,15 +177,19 @@ groupsRouter.patch(
       if (!existingCourse)
         return res.status(400).send({ error: "Course does not exist" });
 
-      if (group.clients.includes(client._id))
-        return res
-          .status(400)
-          .send({ error: "Client is already in the group" });
+      const clientExists = group.clients.some(sub => new Types.ObjectId(sub.client).equals(req.body.clientId));
+
+      if (clientExists)
+        return res.status(400).send({ error: "Client is already in the group" });
 
       if (group.clients.length >= group.maxClients)
         return res.status(400).send({ error: "Client limit reached" });
 
-      group.clients.push(client._id);
+      group.clients.push({
+        client: client._id,
+        addedAt: new Date(),
+        subscribeEnd: new Date(req.body.subscribeEndDate),
+      });
       await group.save();
 
       return res.send(group);
@@ -194,7 +198,110 @@ groupsRouter.patch(
     }
   },
 );
+groupsRouter.patch("/update_subscribe/:id", auth , permit("trainer"), async (req: RequestWithUser,res,next)=>{
+  const groupId = req.params.id;
+  const { clientId, newSubscribeEnd } = req.body;
 
+  try{
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).send({ error: 'Группа не найдена' });
+    }
+
+    const course = await Course.findById(group.course).select('user');
+    if (!course) {
+      return res.status(404).send({ error: 'Курс не найден' });
+    }
+
+    if (course.user.toString() !== req.user?._id.toString()) {
+      return res.status(403).send({ error: 'Тренер не связан с курсом группы' });
+    }
+
+    const subscribedUser = group.clients.find((user) =>
+        user.client.toString() === clientId
+    );
+
+    if (!subscribedUser) {
+      return res.status(400).send({ error: 'Клиент не найден в подписках группы' });
+    }
+
+    const newDate = new Date(newSubscribeEnd);
+    if (isNaN(newDate.getTime())) {
+      return res.status(400).send({ error: 'Неверный формат новой даты' });
+    }
+
+    if (newDate <= new Date()) {
+      return res.status(400).send({
+        error: 'Дата подписки должна быть больше текущей даты',
+      });
+    }
+
+    subscribedUser.subscribeEnd = newSubscribeEnd;
+    await group.save();
+
+    return res.status(200).send({ message: 'Подписка успешно продлена'});
+  }catch(error){
+    next(error)
+  }
+})
+
+groupsRouter.patch('/remove/:id', auth, permit('trainer', 'client'), async (req: RequestWithUser, res, next) => {
+  try {
+    const groupId = req.params.id;
+    const userId = req.user?._id;
+    const { clientId } = req.body;
+
+    const group = await Group.findById(groupId)
+    if (!group) {
+      return res.status(404).send({ error: 'Группа не найдена' });
+    }
+
+    const course = await Course.findById(group.course);
+    if (!course) {
+      return res.status(404).send({ error: 'Курс не найден' });
+    }
+
+    if (req.user?.role === 'trainer') {
+
+      if (!(course.user as Types.ObjectId).equals(userId)) {
+        return res.status(403).send({ error: 'Тренер не связан с этой группой' });
+      }
+
+      const subscriptionIndex = group.clients.findIndex(sub =>
+          new Types.ObjectId(sub.client).equals(clientId)
+      );
+
+      if (subscriptionIndex === -1) {
+        return res.status(404).send({ error: 'Клиент не найден в группе' });
+      }
+
+      group.clients.splice(subscriptionIndex, 1);
+      await group.save();
+
+      return res.send({ message: 'Клиент успешно удален из группы' });
+    }
+
+    if (req.user?.role === 'client') {
+      const clientId = req.user?._id;
+      const subscriptionIndex = group.clients.findIndex(sub =>
+          new Types.ObjectId(sub.client).equals(clientId)
+      );
+
+      if (subscriptionIndex === -1) {
+        return res.status(403).send({ error: 'Клиент не состоит в этой группе' });
+      }
+
+      group.clients.splice(subscriptionIndex, 1);
+
+      await group.save();
+      return res.send({ message: 'Вы успешно удалены из группы' });
+    }
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ error: 'Ошибка при удалении клиента' });
+  }
+});
 groupsRouter.delete(
   "/:id",
   auth,

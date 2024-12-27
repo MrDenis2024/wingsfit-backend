@@ -64,7 +64,7 @@ const run = async () => {
     avatar: "fixtures/trainer.jpg",
     timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
     gender: "male",
-    phoneNumber: "996552022212",
+    phoneNumber: "+996552022212",
     dateOfBirth: new Date("1990-08-10"),
     notification: true,
     lastActivity: new Date("2024-11-10"),
@@ -83,7 +83,7 @@ const run = async () => {
     timeZone: { value: "America/Juneau", label: "(GMT-8:00) Alaska" },
     gender: "female",
     dateOfBirth: new Date("2000-08-10"),
-    phoneNumber: "996222120542",
+    phoneNumber: "+996222120542",
     notification: true,
     lastActivity: new Date("2024-12-05"),
     createdAt: new Date("2024-12-02"),
@@ -101,7 +101,7 @@ const run = async () => {
     avatar: "fixtures/trainer2.jpg",
     timeZone: { value: "Europe/Moscow", label: "(GMT+3:00) Moscow" },
     gender: "male",
-    phoneNumber: "996552033312",
+    phoneNumber: "+996552033312",
     dateOfBirth: new Date("1985-05-15"),
     notification: true,
     lastActivity: new Date("2024-11-11"),
@@ -120,7 +120,7 @@ const run = async () => {
     timeZone: { value: "Europe/Moscow", label: "(GMT+3:00) Moscow" },
     gender: "female",
     dateOfBirth: new Date("1995-02-20"),
-    phoneNumber: "996222129999",
+    phoneNumber: "+996222129999",
     notification: true,
     lastActivity: new Date("2024-12-10"),
     createdAt: new Date("2024-12-09"),
@@ -185,6 +185,7 @@ const run = async () => {
     schedule: ["ср", "чт", "пт", "сб", "вс"],
     price: 100,
     image: "fixtures/yoga.jpg",
+    waitList:[],
   });
 
   const course2 = await Course.create({
@@ -196,12 +197,15 @@ const run = async () => {
     schedule: ["пн", "вт", "пт", "сб", "вс"],
     price: 150,
     image: "fixtures/cardio.jpg",
+    waitList:[],
   });
 
   const group1 = await Group.create({
     title: "Evening Yoga Group",
     course: course1._id,
-    clients: [clientUser._id, clientUser2._id],
+    clients: [
+      { client: clientUser._id, subscribeEnd: new Date("2025-01-01"), addedAt: Date.now() },
+    ],
     maxClients: 10,
     scheduleLength: 1,
     startTime: "19:00",
@@ -211,7 +215,9 @@ const run = async () => {
   const group2 = await Group.create({
     title: "Cardio Training",
     course: course2._id,
-    clients: [clientUser2._id, clientUser2._id],
+    clients: [
+      { client: clientUser2._id, subscribeEnd: new Date("2025-01-01"), addedAt: Date.now() },
+    ],
     maxClients: 10,
     scheduleLength: 2,
     startTime: "18:00",

@@ -1,9 +1,32 @@
-import mongoose from "mongoose";
-import { GroupsTypes } from "../types/groupTypes";
+import mongoose, {Types} from "mongoose";
+import User from "./User";
+import {GroupsTypes, SubscribeTypes} from "../types/groupTypes";
 
 const Schema = mongoose.Schema;
 
-const GroupSchema = new Schema<GroupsTypes>({
+const SubscribeSchema = new Schema<SubscribeTypes>({
+  client: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    validate: {
+      validator: async (value: Types.ObjectId) => {
+        const user = await User.findById(value);
+        return Boolean(user && user.role === "client");
+      },
+      message: "There can only be one role",
+    },
+  },
+  addedAt:{
+    type: Date,
+  },
+  subscribeEnd:{
+    required:true,
+    type: Date,
+  },
+})
+
+const GroupSchema = new Schema<GroupsTypes , SubscribeTypes>({
   title: {
     type: String,
     required: true,
@@ -13,12 +36,7 @@ const GroupSchema = new Schema<GroupsTypes>({
     ref: "Course",
     required: true,
   },
-  clients: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-  ],
+  clients: [SubscribeSchema],
   startTime: {
     type: String,
     required: true,
@@ -57,6 +75,7 @@ const GroupSchema = new Schema<GroupsTypes>({
     min: 1,
     required: true,
   },
+  //subscribeUsers:[SubscribeSchema]
 });
 
 const Group = mongoose.model("Group", GroupSchema);

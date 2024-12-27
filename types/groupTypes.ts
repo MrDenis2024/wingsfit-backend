@@ -1,9 +1,15 @@
 import { Types } from "mongoose";
 
+export interface SubscribeTypes {
+  client: Types.ObjectId | string;
+  addedAt?: Date;
+  subscribeEnd: Date;
+}
+
 export interface GroupsTypes {
   title: string;
-  course: Types.ObjectId | string;
-  clients: Types.ObjectId[];
+  course: Types.ObjectId;
+  clients: SubscribeTypes[];
   startTime: string;
   trainingLevel: string;
   scheduleLength: number;

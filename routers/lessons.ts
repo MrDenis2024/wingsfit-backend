@@ -146,7 +146,7 @@ lessonsRouter.post(
 
       const lesson = new Lesson({
         group: req.body.groupId,
-        notPresent: group.clients.map((client) => client._id),
+        notPresent: group.clients.map((client) => client.client),
       });
 
       await lesson.save();
