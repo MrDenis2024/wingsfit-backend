@@ -211,6 +211,14 @@ coursesRouter.patch("/new/:id", auth, permit('client') , async (req: RequestWith
       return res.status(400).send({ error: "Группа не привязана к данному курсу." });
     }
 
+    const alreadyInGroup = group.clients.some(
+        (client) => String(client.client) === String(userId)
+    );
+
+    if (alreadyInGroup) {
+      return res.status(400).send({ error: "Клиент уже находится в данной группе." });
+    }
+
     const alreadyInWaitList = course.waitList.some((waitListItem) => String(waitListItem.user) === String(userId));
     if (alreadyInWaitList) {
       return res.status(400).send({ error: "Клиент уже находится в списке ожидания." });
@@ -256,6 +264,14 @@ coursesRouter.patch("/migrate/:id", auth, permit('client') , async (req: Request
       return res.status(400).send({ error: "Группа не привязана к данному курсу." });
     }
 
+    const alreadyInGroup = group.clients.some(
+        (client) => String(client.client) === String(userId)
+    );
+
+    if (alreadyInGroup) {
+      return res.status(400).send({ error: "Клиент уже находится в данной группе." });
+    }
+
     const alreadyInWaitList = course.waitList.some((waitListItem) => String(waitListItem.user) === String(userId));
     if (alreadyInWaitList) {
       return res.status(400).send({ error: "Клиент уже находится в списке ожидания." });
@@ -284,8 +300,7 @@ coursesRouter.patch("/migrate/:id", auth, permit('client') , async (req: Request
 coursesRouter.patch("/approve/:id" , auth, permit('trainer') , async (req , res ,next) =>{
   const courseId = req.params.id;
   const {waitListId , subscribeEndDate } = req.body;
-  console.log("req.params:", req.params);
-  console.log("req.params.id:", req.params.id);
+
   try {
     const subscribeEnd = new Date(subscribeEndDate);
     if (isNaN(subscribeEnd.getTime())) {

@@ -25,7 +25,6 @@ const run = async () => {
     await db.dropCollection("courses");
     await db.dropCollection("lessons");
     await db.dropCollection("trainerreviews");
-    await db.dropCollection("trainerreviews");
     await db.dropCollection("coursetypes");
     await db.dropCollection("groups");
     await db.dropCollection("groupchats");
@@ -186,6 +185,7 @@ const run = async () => {
     schedule: ["ср", "чт", "пт", "сб", "вс"],
     price: 100,
     image: "fixtures/yoga.jpg",
+    waitList:[],
   });
 
   const course2 = await Course.create({
@@ -197,6 +197,7 @@ const run = async () => {
     schedule: ["пн", "вт", "пт", "сб", "вс"],
     price: 150,
     image: "fixtures/cardio.jpg",
+    waitList:[],
   });
 
   const group1 = await Group.create({
