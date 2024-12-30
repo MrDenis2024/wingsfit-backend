@@ -7,39 +7,93 @@ import { CourseTypeFields } from "../types/courseTypes";
 
 export const courseTypesRouter = express.Router();
 
-courseTypesRouter.get("/", async (req, res, next) => {
+courseTypesRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
   try {
-    const allCourseTypes = await CourseType.find();
+    const allCourseTypes = await CourseType.find(
+      req.user?.role === "admin" || req.user?.role === "superAdmin"
+        ? {}
+        : { isPublished: true },
+    );
     return res.send(allCourseTypes);
   } catch (error) {
     return next(error);
   }
 });
 
-courseTypesRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
-  try {
-    const user = req.user;
-    if (!user) return res.status(401).send({ error: "User not found" });
+courseTypesRouter.post(
+  "/",
+  auth,
+  permit("trainer", "admin", "superAdmin"),
+  async (req, res, next) => {
+    try {
+      const existingType = await CourseType.findOne({
+        name: req.body.name.toLowerCase().trim(),
+      });
 
-    const courseTypeMutation: CourseTypeFields = {
-      name: req.body.name,
-      description: req.body.description,
-    };
+      if (existingType) {
+        if (existingType.isPublished)
+          return res.status(400).send({ error: "Такой тип курса уже создан" });
+        if (!existingType.isPublished && !existingType.isBlocked)
+          return res.status(400).send({
+            error:
+              "Данный тип курса был создан и находится на рассмотрении администрации",
+          });
+        if (existingType.isBlocked)
+          return res
+            .status(400)
+            .send({ error: "Данный тип не допустим по политике приложения" });
+      }
 
-    const courseType = new CourseType(courseTypeMutation);
-    await courseType.save();
+      const courseTypeMutation: CourseTypeFields = {
+        name: req.body.name,
+        description: req.body.description ? req.body.description : null,
+      };
 
-    return res.status(200).send(courseType);
-  } catch (error) {
-    if (error instanceof mongoose.Error.ValidationError) {
-      return res.status(400).send(error);
+      const courseType = new CourseType(courseTypeMutation);
+      await courseType.save();
+
+      return res.send(courseType);
+    } catch (error) {
+      if (error instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send(error);
+      }
+      return next(error);
     }
-    return next(error);
-  }
-});
+  },
+);
 
-courseTypesRouter.put(
-  "/:id",
+courseTypesRouter.patch(
+  "/block/:id",
+  auth,
+  permit("admin", "superAdmin"),
+  async (req, res, next) => {
+    try {
+      if (!mongoose.isValidObjectId(req.params.id)) {
+        return res.status(400).send({ error: "ID is not valid" });
+      }
+
+      const courseType = await CourseType.findById(req.params.id);
+      if (!courseType)
+        return res.status(400).send({ error: "Тип курса не найден" });
+      if (courseType.isPublished)
+        return res
+          .status(400)
+          .send({ error: "Нельзя заблокировать опубликованный тип" });
+      if (courseType.isBlocked)
+        return res.status(400).send({ error: "Тип курса уже заблакирован" });
+
+      courseType.isBlocked = true;
+      await courseType.save();
+
+      return res.send(courseType);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+courseTypesRouter.patch(
+  "/publish/:id",
   auth,
   permit("admin", "superAdmin"),
   async (req: RequestWithUser, res, next) => {
@@ -51,12 +105,18 @@ courseTypesRouter.put(
       const courseType = await CourseType.findById(req.params.id);
 
       if (!courseType) {
-        return res.status(404).send({ error: "CourseType not found" });
+        return res.status(404).send({ error: "Тип курса не найден" });
       }
+      if (courseType.isBlocked)
+        return res
+          .status(400)
+          .send({ error: "Нельзя опубликовать заблакированный тип курса" });
+      if (courseType.isPublished)
+        return res.status(400).send({ error: "Тип курса уже опубликован" });
 
-      courseType.isPublished = !courseType.isPublished;
-
+      courseType.isPublished = true;
       await courseType.save();
+
       return res.status(200).send(courseType);
     } catch (error) {
       return next(error);

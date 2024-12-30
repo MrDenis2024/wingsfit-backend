@@ -6,9 +6,16 @@ const CourseTypeSchema = new Schema({
   name: {
     type: String,
     required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
   },
   description: String,
   isPublished: {
+    type: Boolean,
+    default: false,
+  },
+  isBlocked: {
     type: Boolean,
     default: false,
   },
