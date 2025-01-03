@@ -130,13 +130,11 @@ const run = async () => {
 
   const courseType1 = await CourseType.create({
     name: "Yoga",
-    description: "Relaxation and flexibility training",
     isPublished: true,
   });
 
   const courseType2 = await CourseType.create({
     name: "Cardio",
-    description: "Endurance and heart health",
     isPublished: true,
   });
 

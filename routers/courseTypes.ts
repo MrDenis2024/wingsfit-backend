@@ -32,7 +32,9 @@ courseTypesRouter.post(
 
       if (existingType) {
         if (existingType.isPublished)
-          return res.status(400).send({ error: "Такой тип курса уже создан" });
+          return res
+            .status(400)
+            .send({ error: "Тип курса с таким названием уже существует" });
         if (!existingType.isPublished && !existingType.isBlocked)
           return res.status(400).send({
             error:
@@ -41,12 +43,13 @@ courseTypesRouter.post(
         if (existingType.isBlocked)
           return res
             .status(400)
-            .send({ error: "Данный тип не допустим по политике приложения" });
+            .send({
+              error: "Данный тип курса недопустим по политике приложения",
+            });
       }
 
       const courseTypeMutation: CourseTypeFields = {
         name: req.body.name,
-        description: req.body.description ? req.body.description : null,
       };
 
       const courseType = new CourseType(courseTypeMutation);
@@ -80,7 +83,7 @@ courseTypesRouter.patch(
           .status(400)
           .send({ error: "Нельзя заблокировать опубликованный тип" });
       if (courseType.isBlocked)
-        return res.status(400).send({ error: "Тип курса уже заблакирован" });
+        return res.status(400).send({ error: "Тип курса уже заблокирован" });
 
       courseType.isBlocked = true;
       await courseType.save();
@@ -110,7 +113,7 @@ courseTypesRouter.patch(
       if (courseType.isBlocked)
         return res
           .status(400)
-          .send({ error: "Нельзя опубликовать заблакированный тип курса" });
+          .send({ error: "Нельзя опубликовать заблокированный тип курса" });
       if (courseType.isPublished)
         return res.status(400).send({ error: "Тип курса уже опубликован" });
 

@@ -10,7 +10,6 @@ const CourseTypeSchema = new Schema({
     trim: true,
     lowercase: true,
   },
-  description: String,
   isPublished: {
     type: Boolean,
     default: false,
