@@ -31,7 +31,6 @@ export interface UpdatedCourse {
 
 export interface CourseTypeFields {
   name: string;
-  description: string;
 }
 
 export interface ICourseRequest {
