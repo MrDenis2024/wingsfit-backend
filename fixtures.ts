@@ -66,7 +66,6 @@ const run = async () => {
     gender: "male",
     phoneNumber: "+996552022212",
     dateOfBirth: new Date("1990-08-10"),
-    notification: true,
     lastActivity: new Date("2024-11-10"),
   });
   trainerUser.getToken();
@@ -84,7 +83,6 @@ const run = async () => {
     gender: "female",
     dateOfBirth: new Date("2000-08-10"),
     phoneNumber: "+996222120542",
-    notification: true,
     lastActivity: new Date("2024-12-05"),
     createdAt: new Date("2024-12-02"),
   });
@@ -103,8 +101,8 @@ const run = async () => {
     gender: "male",
     phoneNumber: "+996552033312",
     dateOfBirth: new Date("1985-05-15"),
-    notification: true,
     lastActivity: new Date("2024-11-11"),
+    createdAt: new Date("2024-12-09"),
   });
   trainerUser2.getToken();
   await trainerUser2.save();
@@ -121,7 +119,6 @@ const run = async () => {
     gender: "female",
     dateOfBirth: new Date("1995-02-20"),
     phoneNumber: "+996222129999",
-    notification: true,
     lastActivity: new Date("2024-12-10"),
     createdAt: new Date("2024-12-09"),
   });
@@ -140,7 +137,7 @@ const run = async () => {
     isPublished: true,
   });
 
-  await Trainer.create({
+  const trainer1 = await Trainer.create({
     user: trainerUser._id,
     courseTypes: [courseType1._id],
     specialization: "Fitness",
@@ -155,7 +152,7 @@ const run = async () => {
     availableDays: ["пн", "ср", "чт", "пт", "сб"],
   });
 
-  await Trainer.create({
+  const trainer2 = await Trainer.create({
     user: trainerUser2._id,
     courseTypes: [courseType2._id],
     specialization: "Cardio Training",
@@ -228,7 +225,6 @@ const run = async () => {
 
   await Client.create({
     user: clientUser._id,
-    subscribes: [course1._id, course2._id],
     preferredWorkoutType: [courseType1._id, courseType2._id],
     trainingLevel: "junior",
     physicalData: "Healthy",
@@ -236,7 +232,6 @@ const run = async () => {
 
   await Client.create({
     user: clientUser2._id,
-    subscribes: [course1._id, course2._id],
     preferredWorkoutType: [courseType1._id, courseType2._id],
     trainingLevel: "junior",
     physicalData: "Moderate",
@@ -285,6 +280,12 @@ const run = async () => {
     comment: "Great workout!",
     createdAt: new Date().toISOString(),
   });
+
+  await trainer1.getRating();
+  await trainer1.save();
+
+  await trainer2.getRating();
+  await trainer2.save();
 
   const groupChat1 = await GroupChat.create({
     group: group1._id,

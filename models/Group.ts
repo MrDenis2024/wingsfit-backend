@@ -75,7 +75,6 @@ const GroupSchema = new Schema<GroupsTypes, SubscribeTypes>({
     min: 1,
     required: true,
   },
-  //subscribeUsers:[SubscribeSchema]
 });
 
 const Group = mongoose.model("Group", GroupSchema);
