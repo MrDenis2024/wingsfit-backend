@@ -87,10 +87,6 @@ const UserSchema = new Schema<
       type: String,
       default: null,
     },
-    notification: {
-      type: Boolean,
-      default: true,
-    },
     createdAt: {
       type: Date,
     },

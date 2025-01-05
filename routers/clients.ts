@@ -31,7 +31,7 @@ clientsRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
 
     const client = await Client.findOne({
       user: req.params.id,
-    }).populate("subscribes", "title");
+    });
 
     if (!client) {
       return res.status(404).send({ error: "Client not found" });
@@ -40,7 +40,7 @@ clientsRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
     if (user._id.equals(client.user)) {
       await client.populate(
         "user",
-        "email firstName lastName role phoneNumber gender timeZone dateOfBirth notification avatar",
+        "email firstName lastName role phoneNumber gender timeZone dateOfBirth avatar",
       );
     } else {
       await client.populate(
@@ -55,143 +55,131 @@ clientsRouter.get("/:id", auth, async (req: RequestWithUser, res, next) => {
   }
 });
 
-clientsRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
-  try {
-    const user = req.user;
+clientsRouter.post(
+  "/",
+  auth,
+  permit("client"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const user = req.user;
 
-    if (!user) return res.status(401).send({ error: "User not found" });
+      if (
+        !req.body.firstName ||
+        !req.body.lastName ||
+        !req.body.timeZone ||
+        !req.body.gender
+      ) {
+        return res
+          .status(400)
+          .send({ error: "The required fields must be filled in!" });
+      }
 
-    if (user.role !== "client") {
-      return res.status(400).send({
-        error: "Bad Request! Client create only for users with role client!",
-      });
-    }
+      await User.findOneAndUpdate(
+        { _id: user },
+        {
+          firstName: req.body.firstName,
+          lastName: req.body.lastName,
+          phoneNumber: req.body.phoneNumber,
+          gender: req.body.gender,
+          timeZone: req.body.timeZone,
+          dateOfBirth: req.body.dateOfBirth
+            ? new Date(req.body.dateOfBirth)
+            : null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          lastActivity: new Date(),
+        },
+        { new: true, runValidators: true },
+      );
 
-    if (
-      !req.body.firstName ||
-      !req.body.lastName ||
-      !req.body.timeZone ||
-      !req.body.gender
-    ) {
-      return res
-        .status(400)
-        .send({ error: "The required fields must be filled in!" });
-    }
-
-    await User.findOneAndUpdate(
-      { _id: user },
-      {
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        phoneNumber: req.body.phoneNumber,
-        gender: req.body.gender,
-        timeZone: req.body.timeZone,
-        dateOfBirth: req.body.dateOfBirth
-          ? new Date(req.body.dateOfBirth)
-          : null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        lastActivity: new Date(),
-      },
-      { new: true, runValidators: true },
-    );
-
-    if (req.body.notification === "true") {
-      await User.findOneAndUpdate({ _id: user }, { notification: true });
-    } else if (req.body.notification === "false") {
-      await User.findOneAndUpdate({ _id: user }, { notification: false });
-    }
-
-    const clientMutation = {
-      user,
-      physicalData: req.body.physicalData,
-      preferredWorkoutType: req.body.preferredWorkoutType,
-      trainingLevel: req.body.trainingLevel,
-    };
-
-    const client = await Client.create(clientMutation);
-    await client.populate(
-      "user",
-      "email firstName lastName role phoneNumber gender timeZone dateOfBirth notification avatar",
-    );
-
-    return res.status(200).send(client);
-  } catch (error) {
-    if (error instanceof mongoose.Error.ValidationError) {
-      return res.status(400).send(error);
-    }
-
-    return next(error);
-  }
-});
-
-clientsRouter.put("/", auth, async (req: RequestWithUser, res, next) => {
-  try {
-    const user = req.user;
-
-    if (!user) return res.status(401).send({ error: "User not found" });
-
-    if (
-      !req.body.firstName ||
-      !req.body.lastName ||
-      !req.body.timeZone ||
-      !req.body.gender
-    ) {
-      return res
-        .status(400)
-        .send({ error: "The required fields must be filled in!" });
-    }
-
-    const client = await Client.findOneAndUpdate(
-      { user },
-      {
+      const clientMutation = {
+        user,
+        physicalData: req.body.physicalData,
         preferredWorkoutType: req.body.preferredWorkoutType,
         trainingLevel: req.body.trainingLevel,
-        physicalData: req.body.physicalData,
-      },
-      { new: true },
-    );
+      };
 
-    if (!client) {
-      return res.status(404).send({ error: "Client not found" });
+      const client = await Client.create(clientMutation);
+      await client.populate(
+        "user",
+        "email firstName lastName role phoneNumber gender timeZone dateOfBirth avatar",
+      );
+
+      return res.status(200).send(client);
+    } catch (error) {
+      if (error instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send(error);
+      }
+
+      return next(error);
     }
+  },
+);
 
-    await User.findOneAndUpdate(
-      { _id: user },
-      {
-        gender: req.body.gender,
-        timeZone: req.body.timeZone,
-        dateOfBirth: req.body.dateOfBirth
-          ? new Date(req.body.dateOfBirth)
-          : null,
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        phoneNumber: req.body.phoneNumber,
-        updatedAt: new Date(),
-        lastActivity: new Date(),
-      },
-      { new: true, runValidators: true },
-    );
+clientsRouter.put(
+  "/",
+  auth,
+  permit("client"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const user = req.user;
 
-    if (req.body.notification === "true") {
-      await User.findOneAndUpdate({ _id: user }, { notification: true });
-    } else if (req.body.notification === "false") {
-      await User.findOneAndUpdate({ _id: user }, { notification: false });
+      if (
+        !req.body.firstName ||
+        !req.body.lastName ||
+        !req.body.timeZone ||
+        !req.body.gender
+      ) {
+        return res
+          .status(400)
+          .send({ error: "The required fields must be filled in!" });
+      }
+
+      const client = await Client.findOneAndUpdate(
+        { user },
+        {
+          preferredWorkoutType: req.body.preferredWorkoutType,
+          trainingLevel: req.body.trainingLevel,
+          physicalData: req.body.physicalData,
+        },
+        { new: true },
+      );
+
+      if (!client) {
+        return res.status(404).send({ error: "Client not found" });
+      }
+
+      await User.findOneAndUpdate(
+        { _id: user },
+        {
+          gender: req.body.gender,
+          timeZone: req.body.timeZone,
+          dateOfBirth: req.body.dateOfBirth
+            ? new Date(req.body.dateOfBirth)
+            : null,
+          firstName: req.body.firstName,
+          lastName: req.body.lastName,
+          phoneNumber: req.body.phoneNumber,
+          updatedAt: new Date(),
+          lastActivity: new Date(),
+        },
+        { new: true, runValidators: true },
+      );
+
+      await client.populate(
+        "user",
+        "email firstName lastName role gender timeZone dateOfBirth phoneNumber avatar",
+      );
+
+      return res.status(200).send(client);
+    } catch (error) {
+      if (error instanceof mongoose.Error.ValidationError) {
+        return res.status(400).send(error);
+      }
+
+      return next(error);
     }
-
-    await client.populate(
-      "user",
-      "email firstName lastName role gender timeZone dateOfBirth phoneNumber notification avatar",
-    );
-
-    return res.status(200).send(client);
-  } catch (error) {
-    if (error instanceof mongoose.Error.ValidationError) {
-      return res.status(400).send(error);
-    }
-
-    return next(error);
-  }
-});
+  },
+);
 
 export default clientsRouter;
