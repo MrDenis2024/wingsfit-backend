@@ -10,19 +10,18 @@ import Lesson from "../models/Lesson";
 
 export const groupsRouter = express.Router();
 
-groupsRouter.get(
-  "/",
-  auth,
-  permit("trainer"),
-  async (req: RequestWithUser, res, next) => {
-    try {
-      const user = req.user;
+groupsRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
+  try {
+    const user = req.user;
 
-      if (!user) {
-        return res.status(401).send({ error: "Trainer not found" });
-      }
+    if (!user) {
+      return res.status(401).send({ error: "User not found" });
+    }
 
-      const groups = await Group.find()
+    let groups;
+
+    if (user.role === "admin" || user.role === "superAdmin") {
+      groups = await Group.find()
         .populate({
           path: "course",
           match: { user },
@@ -33,14 +32,40 @@ groupsRouter.get(
           select: "firstName lastName",
         })
         .exec();
+    } else if (user.role === "trainer") {
+      groups = await Group.find()
+        .populate({
+          path: "course",
+          match: { user: user._id }, // Проверка на тренера
+          select: "title schedule user",
+        })
+        .populate({
+          path: "clients.client",
+          select: "firstName lastName",
+        })
+        .exec();
 
-      const filteredGroups = groups.filter((group) => group.course);
-      return res.send(filteredGroups);
-    } catch (error) {
-      return next(error);
+      groups = groups.filter((group) => group.course);
+    } else if (user.role === "client") {
+      groups = await Group.find({
+        "clients.client": user._id,
+      })
+        .populate({
+          path: "course",
+          select: "title schedule user",
+        })
+        .populate({
+          path: "clients.client",
+          select: "firstName lastName",
+        })
+        .exec();
     }
-  },
-);
+
+    return res.send(groups);
+  } catch (error) {
+    return next(error);
+  }
+});
 
 groupsRouter.get("/matching", auth, async (req: RequestWithUser, res, next) => {
   try {
@@ -85,7 +110,7 @@ groupsRouter.get("/matching", auth, async (req: RequestWithUser, res, next) => {
   }
 });
 
-groupsRouter.get("/group/:id", async (req, res, next) => {
+groupsRouter.get("/group/:id", auth, async (req, res, next) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id))
       return res.status(400).send({ error: "Invalid group ID" });
@@ -105,7 +130,7 @@ groupsRouter.get("/group/:id", async (req, res, next) => {
   }
 });
 
-groupsRouter.get("/:id", async (req, res, next) => {
+groupsRouter.get("/:id", auth, async (req, res, next) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id))
       return res.status(400).send({ error: "Invalid course ID" });
@@ -168,63 +193,6 @@ groupsRouter.post(
   },
 );
 
-groupsRouter.patch(
-  "/:id",
-  auth,
-  permit("trainer"),
-  async (req: RequestWithUser, res, next) => {
-    try {
-      const user = req.user;
-      if (!user) return res.status(400).send({ error: "User not found" });
-
-      if (!mongoose.isValidObjectId(req.params.id))
-        return res.status(400).send({ error: "Invalid group ID" });
-      if (!mongoose.isValidObjectId(req.body.clientId))
-        return res.status(400).send({ error: "Client ID is required" });
-
-      const client = await User.findById(req.body.clientId);
-      if (!client)
-        return res.status(400).send({ error: "Client does not exist" });
-
-      if (client.role !== "client")
-        return res.status(400).send({ error: "You can only add a client" });
-
-      const group = await Group.findById(req.params.id);
-      if (!group)
-        return res.status(400).send({ error: "Group does not exist" });
-
-      const existingCourse = await Course.findOne({
-        _id: group.course,
-        user,
-      });
-      if (!existingCourse)
-        return res.status(400).send({ error: "Course does not exist" });
-
-      const clientExists = group.clients.some((sub) =>
-        new Types.ObjectId(sub.client).equals(req.body.clientId),
-      );
-
-      if (clientExists)
-        return res
-          .status(400)
-          .send({ error: "Client is already in the group" });
-
-      if (group.clients.length >= group.maxClients)
-        return res.status(400).send({ error: "Client limit reached" });
-
-      group.clients.push({
-        client: client._id,
-        addedAt: new Date(),
-        subscribeEnd: new Date(req.body.subscribeEndDate),
-      });
-      await group.save();
-
-      return res.send(group);
-    } catch (error) {
-      return next(error);
-    }
-  },
-);
 groupsRouter.patch(
   "/update_subscribe/:id",
   auth,
@@ -364,6 +332,13 @@ groupsRouter.put(
 
       if (!group) {
         return res.status(404).send({ error: "Group not found" });
+      }
+
+      if (parseFloat(req.body.maxClients) < group.clients.length) {
+        return res.status(400).send({
+          error:
+            "Максимальное количество клиентов не может быть меньше текущего количества клиентов в группе.",
+        });
       }
 
       const updatedGroups = {
