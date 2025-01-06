@@ -13,7 +13,7 @@ import { sortScheduleDays } from "../utils/helperFunctions";
 
 const coursesRouter = express.Router();
 
-coursesRouter.get("/", async (req, res) => {
+coursesRouter.get("/", auth, async (req, res) => {
   const { trainerId } = req.query;
 
   if (!trainerId) {
@@ -332,9 +332,21 @@ coursesRouter.patch(
   "/approve/:id",
   auth,
   permit("trainer"),
-  async (req, res, next) => {
+  async (req: RequestWithUser, res, next) => {
     const courseId = req.params.id;
     const { waitListId, subscribeEndDate } = req.body;
+    const userId = req.user?._id;
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).send({ error: "Курс не найден." });
+    }
+
+    if (!(course.user as mongoose.Types.ObjectId).equals(userId)) {
+      return res
+        .status(400)
+        .send({ error: "Вы не являетесь тренером этого курса" });
+    }
 
     try {
       const subscribeEnd = new Date(subscribeEndDate);
@@ -370,6 +382,7 @@ coursesRouter.patch(
           client: waitListItem.user,
           addedAt: new Date(Date.now()),
           subscribeEnd: subscribeEnd,
+          status: "active",
         });
         await group.save();
       } else if (waitListItem.status === "migrate") {
@@ -396,6 +409,7 @@ coursesRouter.patch(
           client: waitListItem.user,
           addedAt: new Date(Date.now()),
           subscribeEnd: subscribeEnd,
+          status: "active",
         });
 
         await oldGroup.save();
@@ -417,6 +431,47 @@ coursesRouter.patch(
         .send({ message: "Клиент успешно перенаправлен в группу." });
     } catch (error) {
       next(error);
+    }
+  },
+);
+
+coursesRouter.patch(
+  "/decline/:id",
+  auth,
+  permit("trainer"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const courseId = req.params.id;
+      const { waitListId } = req.body;
+      const userId = req.user?._id;
+
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).send({ error: "Курс не найден." });
+      }
+
+      if (!(course.user as mongoose.Types.ObjectId).equals(userId)) {
+        return res
+          .status(400)
+          .send({ error: "Вы не являетесь тренером этого курса" });
+      }
+
+      const result = await Course.updateOne(
+        { _id: courseId },
+        { $pull: { waitList: { _id: waitListId } } },
+      );
+
+      if (result.modifiedCount === 0) {
+        return res
+          .status(404)
+          .send({ error: "Запись не найдена или уже удалена." });
+      }
+
+      return res
+        .status(200)
+        .send({ message: "Запись успешно удалена из списка ожидания." });
+    } catch (e) {
+      return next(e);
     }
   },
 );
@@ -454,47 +509,6 @@ coursesRouter.delete(
         .send({ error: "Вы не можете удалить данную группу" });
     } catch (error) {
       return next(error);
-    }
-  },
-);
-
-coursesRouter.delete(
-  "/delete/:id",
-  auth,
-  permit("trainer"),
-  async (req: RequestWithUser, res, next) => {
-    try {
-      const courseId = req.params.id;
-      const { waitListId } = req.body;
-      const userId = req.user?._id;
-
-      const course = await Course.findById(courseId);
-      if (!course) {
-        return res.status(404).send({ error: "Курс не найден." });
-      }
-
-      if (!(course.user as mongoose.Types.ObjectId).equals(userId)) {
-        return res
-          .status(400)
-          .send({ error: "Вы не являетесь тренером этого курса" });
-      }
-
-      const result = await Course.updateOne(
-        { _id: courseId },
-        { $pull: { waitList: { _id: waitListId } } },
-      );
-
-      if (result.modifiedCount === 0) {
-        return res
-          .status(404)
-          .send({ error: "Запись не найдена или уже удалена." });
-      }
-
-      return res
-        .status(200)
-        .send({ message: "Запись успешно удалена из списка ожидания." });
-    } catch (e) {
-      return next(e);
     }
   },
 );
