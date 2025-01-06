@@ -36,7 +36,7 @@ groupsRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
       groups = await Group.find()
         .populate({
           path: "course",
-          match: { user: user._id }, // Проверка на тренера
+          match: { user: user._id },
           select: "title schedule user",
         })
         .populate({
