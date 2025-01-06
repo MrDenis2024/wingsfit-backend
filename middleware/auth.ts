@@ -24,6 +24,10 @@ const auth = async (
   if (!user) {
     return res.status(401).send({ error: "Wrong Token!" });
   }
+
+  user.lastActivity = new Date();
+  await user.save();
+
   req.user = user;
   return next();
 };

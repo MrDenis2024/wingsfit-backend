@@ -25,10 +25,6 @@ const ClientSchema = new Schema<ClientTypes>({
       message: "User does not exist!",
     },
   },
-  subscribes: {
-    type: [Schema.Types.ObjectId],
-    ref: "Course",
-  },
   preferredWorkoutType: [
     {
       type: Schema.Types.ObjectId,

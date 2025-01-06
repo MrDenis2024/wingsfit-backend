@@ -18,7 +18,6 @@ export interface UserFields {
   phoneNumber?: string;
   avatar: string | null;
   dateOfBirth: Date;
-  notification?: boolean;
   createdAt: Date;
   updatedAt: Date;
   lastActivity: Date;

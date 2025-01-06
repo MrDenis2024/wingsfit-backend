@@ -5,6 +5,7 @@ import Course from "../models/Course";
 import Lesson from "../models/Lesson";
 import mongoose, { Types } from "mongoose";
 import Trainer from "../models/Trainer";
+import Group from "../models/Group";
 
 export const trainerReviewRouter = express.Router();
 
@@ -54,7 +55,12 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
       return res.status(404).send({ error: "Trainer not found in courses." });
     }
 
-    const lessons = await Lesson.find({ course: course._id });
+    const group = await Group.findOne({ course: course._id });
+    if (!group) {
+      return res.status(404).send({ error: "Trainer not found in group." });
+    }
+
+    const lessons = await Lesson.find({ group: group._id });
     if (!lessons || lessons.length === 0) {
       return res
         .status(404)
@@ -88,7 +94,8 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
     });
 
     await newReview.save();
-    await trainer.getRating();
+    trainer.getRating();
+    await trainer.save();
 
     return res.status(200).send(newReview);
   } catch (e) {
@@ -125,7 +132,16 @@ trainerReviewRouter.delete(
           .send({ error: "You do not have permission to delete this review." });
       }
 
+      const trainer = await Trainer.findOne({ user: review.trainerId });
+
+      if (!trainer) {
+        return res.status(404).send({ error: "Trainer not found!" });
+      }
+
       await TrainerReview.findByIdAndDelete(reviewId);
+      trainer.getRating();
+      await trainer.save();
+
       return res.status(200).send({ message: "Review deleted successfully." });
     } catch (e) {
       return next(e);
