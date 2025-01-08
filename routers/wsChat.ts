@@ -18,7 +18,6 @@ const createChatRouter = () => {
     chatType: "group" | "private",
     message: unknown,
   ) => {
-    console.log("Sending message to clients:", { chatId, chatType, message });
     const chatClients = Object.values(connectedClients)
       .filter((client) =>
         chatType === "group"
@@ -26,8 +25,6 @@ const createChatRouter = () => {
           : client.privateChats.includes(chatId),
       )
       .flatMap((client) => client.clients);
-
-    console.log("Chat clients to send to:", chatClients.length);
 
     chatClients.forEach((client) => {
       client.send(JSON.stringify(message));
@@ -61,19 +58,15 @@ const createChatRouter = () => {
 
   chatRouter.ws("/:chatId/:chatType/:userId", async (ws, req) => {
     const { chatId, chatType, userId } = req.params;
-    console.log(`New WebSocket connection: chatId=${chatId}, chatType=${chatType}, userId=${userId}`);
 
     if (!["group", "private"].includes(chatType)) {
       ws.send(JSON.stringify({ type: "ERROR", payload: "Invalid chat type" }));
       return ws.close();
     }
 
-    // let userId: string;
     let userName: string;
 
     ws.on("message", async (message) => {
-      console.log("Received message:", message.toString());
-
       try {
         const decodedMessage = JSON.parse(
           message.toString(),
@@ -89,10 +82,7 @@ const createChatRouter = () => {
               );
               return ws.close();
             }
-            // userId = user._id.toString();
             userName = user.firstName;
-
-            console.log("User logged in:", { userId, userName });
 
             if (!connectedClients[userId]) {
               connectedClients[userId] = {
@@ -101,13 +91,9 @@ const createChatRouter = () => {
                 groups: [],
                 privateChats: [],
               };
-              console.log("user was added:", userId);
             } else {
               connectedClients[userId].clients.push(ws);
             }
-
-            console.log("Current connectedClients:", connectedClients);
-
 
             ws.send(
               JSON.stringify({
@@ -118,8 +104,6 @@ const createChatRouter = () => {
             break;
 
           case "JOIN_CHAT":
-            console.log("Join chat___ user", userId);
-
             if (chatType === "group") {
               const groupChat = await GroupChat.findById(chatId);
               if (!groupChat) {
@@ -175,8 +159,6 @@ const createChatRouter = () => {
                 );
                 return;
               }
-              console.log(userId);
-              console.log(typeof userId);
 
               connectedClients[userId].privateChats.push(chatId);
 
@@ -216,9 +198,9 @@ const createChatRouter = () => {
           case "SEND_MESSAGE":
             if (
               (chatType === "group" &&
-                connectedClients[userId].groups.includes(chatId)) ||
+                connectedClients[userId]?.groups.includes(chatId)) ||
               (chatType === "private" &&
-                connectedClients[userId].privateChats.includes(chatId))
+                connectedClients[userId]?.privateChats.includes(chatId))
             ) {
               let newMessage: GroupChatMessages | PrivateMessagesTypes;
 
@@ -283,18 +265,20 @@ const createChatRouter = () => {
             );
         }
       } catch (error) {
-        console.error(error);
-        ws.send(JSON.stringify({ type: "ERROR", payload: `Invalid message: ${error}` }));
+        ws.send(
+          JSON.stringify({
+            type: "ERROR",
+            payload: `Invalid message: ${error}`,
+          }),
+        );
       }
     });
     ws.on("close", () => {
-      console.log("WebSocket connection closed:", userId);
       const user = connectedClients[userId];
       const currentConnectionIndex = user.clients.indexOf(ws);
       user.clients.splice(currentConnectionIndex, 1);
       if (user.clients.length === 0) {
         delete connectedClients[userId];
-        console.log("User removed from connectedClients:", userId);
       }
     });
   });
