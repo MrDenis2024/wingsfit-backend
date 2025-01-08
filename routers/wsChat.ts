@@ -56,15 +56,14 @@ const createChatRouter = () => {
     return messages;
   };
 
-  chatRouter.ws("/:chatId/:chatType", async (ws, req) => {
-    const { chatId, chatType } = req.params;
+  chatRouter.ws("/:chatId/:chatType/:userId", async (ws, req) => {
+    const { chatId, chatType, userId } = req.params;
 
     if (!["group", "private"].includes(chatType)) {
       ws.send(JSON.stringify({ type: "ERROR", payload: "Invalid chat type" }));
       return ws.close();
     }
 
-    let userId: string;
     let userName: string;
 
     ws.on("message", async (message) => {
@@ -83,7 +82,6 @@ const createChatRouter = () => {
               );
               return ws.close();
             }
-            userId = user._id.toString();
             userName = user.firstName;
 
             if (!connectedClients[userId]) {
@@ -117,7 +115,6 @@ const createChatRouter = () => {
                 );
                 return;
               }
-
               connectedClients[userId].groups.push(chatId);
 
               await GroupChatMessage.updateMany(
@@ -201,9 +198,9 @@ const createChatRouter = () => {
           case "SEND_MESSAGE":
             if (
               (chatType === "group" &&
-                connectedClients[userId].groups.includes(chatId)) ||
+                connectedClients[userId]?.groups.includes(chatId)) ||
               (chatType === "private" &&
-                connectedClients[userId].privateChats.includes(chatId))
+                connectedClients[userId]?.privateChats.includes(chatId))
             ) {
               let newMessage: GroupChatMessages | PrivateMessagesTypes;
 
@@ -268,7 +265,12 @@ const createChatRouter = () => {
             );
         }
       } catch (error) {
-        ws.send(JSON.stringify({ type: "ERROR", payload: "Invalid message" }));
+        ws.send(
+          JSON.stringify({
+            type: "ERROR",
+            payload: `Invalid message: ${error}`,
+          }),
+        );
       }
     });
     ws.on("close", () => {
