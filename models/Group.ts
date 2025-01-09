@@ -24,6 +24,13 @@ const SubscribeSchema = new Schema<SubscribeTypes>({
     required: true,
     type: Date,
   },
+  status: {
+    type: String,
+    enum: ["active", "frozen"],
+  },
+  frozenAt: {
+    type: Date,
+  },
 });
 
 const GroupSchema = new Schema<GroupsTypes, SubscribeTypes>({

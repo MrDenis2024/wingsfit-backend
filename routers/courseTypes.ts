@@ -41,11 +41,9 @@ courseTypesRouter.post(
               "Данный тип курса был создан и находится на рассмотрении администрации",
           });
         if (existingType.isBlocked)
-          return res
-            .status(400)
-            .send({
-              error: "Данный тип курса недопустим по политике приложения",
-            });
+          return res.status(400).send({
+            error: "Данный тип курса недопустим по политике приложения",
+          });
       }
 
       const courseTypeMutation: CourseTypeFields = {
