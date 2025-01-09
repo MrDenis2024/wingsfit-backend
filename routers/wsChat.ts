@@ -275,10 +275,14 @@ const createChatRouter = () => {
     });
     ws.on("close", () => {
       const user = connectedClients[userId];
-      const currentConnectionIndex = user.clients.indexOf(ws);
-      user.clients.splice(currentConnectionIndex, 1);
-      if (user.clients.length === 0) {
-        delete connectedClients[userId];
+      if (user) {
+        const currentConnectionIndex = user.clients.indexOf(ws);
+        if (currentConnectionIndex !== -1) {
+          user.clients.splice(currentConnectionIndex, 1);
+        }
+        if (user.clients.length === 0) {
+          delete connectedClients[userId];
+        }
       }
     });
   });
