@@ -393,7 +393,7 @@ groupsRouter.delete(
         await Group.deleteOne({ _id: req.params.id });
         await Lesson.deleteMany({ group: req.params.id });
         return res.send({
-          message: "Группа и связанные данные успешно удалены",
+          message: "Группа и связанные данные успешно удалены!",
         });
       }
 
