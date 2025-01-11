@@ -3,7 +3,6 @@ import Group from "../models/Group";
 import auth, { RequestWithUser } from "../middleware/auth";
 import permit from "../middleware/permit";
 import Course from "../models/Course";
-import User from "../models/User";
 import mongoose, { Types } from "mongoose";
 import Client from "../models/Client";
 import Lesson from "../models/Lesson";
@@ -37,7 +36,7 @@ groupsRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
         .populate({
           path: "course",
           match: { user: user._id },
-          select: "title schedule user",
+          select: "title schedule user image price",
         })
         .populate({
           path: "clients.client",
@@ -52,7 +51,7 @@ groupsRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
       })
         .populate({
           path: "course",
-          select: "title schedule user",
+          select: "title schedule user image price",
         })
         .populate({
           path: "clients.client",
@@ -253,7 +252,7 @@ groupsRouter.patch(
   "/remove/:id",
   auth,
   permit("trainer", "client"),
-  async (req: RequestWithUser, res, next) => {
+  async (req: RequestWithUser, res) => {
     try {
       const groupId = req.params.id;
       const userId = req.user?._id;
@@ -503,7 +502,7 @@ groupsRouter.delete(
         await Group.deleteOne({ _id: req.params.id });
         await Lesson.deleteMany({ group: req.params.id });
         return res.send({
-          message: "Группа и связанные данные успешно удалены",
+          message: "Группа и связанные данные успешно удалены!",
         });
       }
 
