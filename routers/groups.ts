@@ -26,6 +26,7 @@ groupsRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
           match: { user },
           select: "title schedule user",
         })
+        .populate("course", "title")
         .populate({
           path: "clients.client",
           select: "firstName lastName",
