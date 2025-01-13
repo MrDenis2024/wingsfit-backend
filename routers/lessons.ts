@@ -1,7 +1,6 @@
 import express from "express";
 import Lesson from "../models/Lesson";
 import auth, { RequestWithUser } from "../middleware/auth";
-import mongoose from "mongoose";
 import permit from "../middleware/permit";
 import Course from "../models/Course";
 import Group from "../models/Group";
@@ -11,25 +10,24 @@ const lessonsRouter = express.Router();
 lessonsRouter.get(
   "/",
   auth,
-  permit("trainer"),
   async (req: RequestWithUser, res, next) => {
     try {
-      const courses = await Course.find({ user: req.user?._id });
+      const courses = await Course.find({ user: req.query?.trainer });
 
-      if (!courses) {
+      if (courses.length < 1) {
         return res
           .status(404)
-          .send({ error: "No courses found for this trainer" });
+          .send({ error: "Курсы данного тренера не найдены" });
       }
 
       const groups = await Group.find({
         course: { $in: courses.map((course) => course._id) },
       });
 
-      if (!groups) {
+      if (groups.length < 1) {
         return res
           .status(404)
-          .send({ error: "No groups found for this trainer" });
+          .send({ error: "Группы данного тренера не найдены" });
       }
 
       const lessons = await Lesson.find({
@@ -53,37 +51,37 @@ lessonsRouter.get(
   },
 );
 
-lessonsRouter.get("/:id", auth, permit("trainer"), async (req, res, next) => {
-  try {
-    const id = req.params.id;
-
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).send({ error: "Invalid ID" });
-    }
-
-    const group = await Group.findById(id);
-
-    if (!group) {
-      return res.status(404).send("Group not found");
-    }
-
-    const lessons = await Lesson.find({ group: group._id })
-      .populate({
-        path: "group",
-        select: "title course",
-        populate: {
-          path: "course",
-          select: "title",
-        },
-      })
-      .populate("notPresent", "firstName lastName")
-      .populate("arePresent", "firstName lastName");
-
-    return res.status(200).send(lessons);
-  } catch (e) {
-    next(e);
-  }
-});
+// lessonsRouter.get("/:id", auth, permit("trainer"), async (req, res, next) => {
+//   try {
+//     const id = req.params.id;
+//
+//     if (!mongoose.isValidObjectId(id)) {
+//       return res.status(400).send({ error: "Invalid ID" });
+//     }
+//
+//     const group = await Group.findById(id);
+//
+//     if (!group) {
+//       return res.status(404).send("Group not found");
+//     }
+//
+//     const lessons = await Lesson.find({ group: group._id })
+//       .populate({
+//         path: "group",
+//         select: "title course",
+//         populate: {
+//           path: "course",
+//           select: "title",
+//         },
+//       })
+//       .populate("notPresent", "firstName lastName")
+//       .populate("arePresent", "firstName lastName");
+//
+//     return res.status(200).send(lessons);
+//   } catch (e) {
+//     next(e);
+//   }
+// });
 
 lessonsRouter.post(
   "/",
@@ -146,7 +144,7 @@ lessonsRouter.post(
 
       const lesson = new Lesson({
         group: req.body.groupId,
-        notPresent: group.clients.map((client) => client.client),
+        notPresent: group.clients.map((client) => client.client.toString()),
       });
 
       await lesson.save();
