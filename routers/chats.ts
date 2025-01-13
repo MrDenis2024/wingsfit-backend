@@ -5,6 +5,7 @@ import GroupChat from "../models/GroupChat";
 import Course from "../models/Course";
 import PrivateChat from "../models/PrivateChat";
 import User from "../models/User";
+import permit from "../middleware/permit";
 
 const chatsRouter = express.Router();
 
@@ -73,10 +74,14 @@ chatsRouter.get(
   },
 );
 
-chatsRouter.post("/start-chat", async (req, res) => {
+chatsRouter.post("/start-chat", auth, async (req: RequestWithUser, res, next) => {
   const { firstPersonId, secondPersonId } = req.body;
 
   try {
+    const user = req.user;
+
+    if (!user) return res.status(400).send({ error: "User not found" });
+
     const firstPerson = await User.findById(firstPersonId);
     const secondPerson = await User.findById(secondPersonId);
 
@@ -116,10 +121,55 @@ chatsRouter.post("/start-chat", async (req, res) => {
 
     await newPrivateChat.save();
 
-    return res.status(201).send(newPrivateChat);
+    return res.send(newPrivateChat);
   } catch (error) {
-    return res.status(500).send(error);
+    return next(error);
   }
 });
+
+chatsRouter.post(
+  "/start-groupChat",
+  auth,
+  permit("trainer"),
+  async (req: RequestWithUser, res, next) => {
+    const { group } = req.body;
+    try {
+      const user = req.user;
+
+      if (!user) return res.status(400).send({ error: "User not found" });
+
+      if (!group) {
+        return res.status(400).send({ error: "Group ID is required." });
+      }
+
+      const existingGroup = await Group.findById(group);
+
+      if (!existingGroup) {
+        return res.status(404).send({ error: "Group not found." });
+      }
+
+      const existingChat = await GroupChat.findOne({ group });
+
+      if (existingChat) {
+        return res.status(200).send({
+          message: "Group chat already exists.",
+          chat: existingChat,
+        });
+      }
+
+      const newGroupChat = new GroupChat({
+        group: existingGroup._id,
+        title: existingGroup.title,
+        isUrl: false,
+      });
+
+      await newGroupChat.save();
+
+      return res.send(newGroupChat);
+    } catch (error) {
+      return next(error);
+    }
+  }
+);
 
 export default chatsRouter;
