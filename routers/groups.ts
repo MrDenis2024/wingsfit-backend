@@ -3,7 +3,6 @@ import Group from "../models/Group";
 import auth, { RequestWithUser } from "../middleware/auth";
 import permit from "../middleware/permit";
 import Course from "../models/Course";
-import User from "../models/User";
 import mongoose, { Types } from "mongoose";
 import Client from "../models/Client";
 import Lesson from "../models/Lesson";
@@ -27,6 +26,7 @@ groupsRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
           match: { user },
           select: "title schedule user",
         })
+        .populate("course", "title")
         .populate({
           path: "clients.client",
           select: "firstName lastName",
@@ -37,7 +37,7 @@ groupsRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
         .populate({
           path: "course",
           match: { user: user._id },
-          select: "title schedule user",
+          select: "title schedule user image price",
         })
         .populate({
           path: "clients.client",
@@ -52,7 +52,7 @@ groupsRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
       })
         .populate({
           path: "course",
-          select: "title schedule user",
+          select: "title schedule user image price",
         })
         .populate({
           path: "clients.client",
@@ -253,7 +253,7 @@ groupsRouter.patch(
   "/remove/:id",
   auth,
   permit("trainer", "client"),
-  async (req: RequestWithUser, res, next) => {
+  async (req: RequestWithUser, res) => {
     try {
       const groupId = req.params.id;
       const userId = req.user?._id;
@@ -310,6 +310,115 @@ groupsRouter.patch(
     } catch (error) {
       console.error(error);
       return res.status(500).send({ error: "Ошибка при удалении клиента" });
+    }
+  },
+);
+
+groupsRouter.patch(
+  "/frozen/:id",
+  auth,
+  permit("trainer"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      if (!req.body.clientId) {
+        return res.status(400).send({ error: "Не указан clientId" });
+      }
+
+      const group = await Group.findById(req.params.id);
+      if (!group) {
+        return res.status(404).send({ error: "Группа не найдена" });
+      }
+
+      const course = await Course.findById(group.course);
+      if (!course || course.user.toString() !== req.user?._id.toString()) {
+        return res
+          .status(404)
+          .send({ error: "Данный тренер не является создателям группы" });
+      }
+
+      const client = group.clients.find(
+        (client) => client.client.toString() === req.body.clientId,
+      );
+
+      if (!client) {
+        return res.status(404).send({ error: "Данного клиента нет в группе" });
+      }
+
+      client.status = "frozen";
+      client.frozenAt = new Date();
+
+      await group.save();
+
+      return res.send({ message: "Клиент успешно заморожен" });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+groupsRouter.patch(
+  "/active/:id",
+  auth,
+  permit("client", "trainer"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      if (!req.body.clientId) {
+        return res.status(404).send({ error: "Не указан clientId" });
+      }
+
+      const group = await Group.findById(req.params.id);
+      if (!group) {
+        return res.status(404).send({ error: "Группа не найдена" });
+      }
+
+      const client = group.clients.find(
+        (client) => client.client.toString() === req.body.clientId,
+      );
+
+      if (!client) {
+        return res.status(404).send({ error: "Данного клиента нет в группе" });
+      }
+
+      const course = await Course.findById(group.course);
+
+      if (
+        (req.user?.role === "client" &&
+          req.user._id.toString() !== req.body.clientId) ||
+        (req.user?.role === "trainer" &&
+          course?.user.toString() !== req.user._id.toString())
+      ) {
+        return res
+          .status(403)
+          .send({ error: "Вы не можете активировать статус другого клиента" });
+      }
+
+      client.status = "active";
+
+      const now = new Date();
+      const frozenAt = client.frozenAt
+        ? new Date(client.frozenAt).getTime()
+        : null;
+      const subscribeEnd = client.subscribeEnd
+        ? new Date(client.subscribeEnd).getTime()
+        : null;
+
+      if (frozenAt && subscribeEnd) {
+        const remainingTime = subscribeEnd - frozenAt;
+
+        if (remainingTime > 0) {
+          client.subscribeEnd = new Date(now.getTime() + remainingTime);
+        } else {
+          client.subscribeEnd = now;
+        }
+      } else {
+        client.subscribeEnd = now;
+      }
+
+      await group.save();
+
+      return res.send({ message: "Статус клиента успешно изменен на активен" });
+    } catch (error) {
+      return next(error);
     }
   },
 );
@@ -394,7 +503,7 @@ groupsRouter.delete(
         await Group.deleteOne({ _id: req.params.id });
         await Lesson.deleteMany({ group: req.params.id });
         return res.send({
-          message: "Группа и связанные данные успешно удалены",
+          message: "Группа и связанные данные успешно удалены!",
         });
       }
 
