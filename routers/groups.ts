@@ -314,6 +314,115 @@ groupsRouter.patch(
   },
 );
 
+groupsRouter.patch(
+  "/frozen/:id",
+  auth,
+  permit("trainer"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      if (!req.body.clientId) {
+        return res.status(400).send({ error: "Не указан clientId" });
+      }
+
+      const group = await Group.findById(req.params.id);
+      if (!group) {
+        return res.status(404).send({ error: "Группа не найдена" });
+      }
+
+      const course = await Course.findById(group.course);
+      if (!course || course.user.toString() !== req.user?._id.toString()) {
+        return res
+          .status(404)
+          .send({ error: "Данный тренер не является создателям группы" });
+      }
+
+      const client = group.clients.find(
+        (client) => client.client.toString() === req.body.clientId,
+      );
+
+      if (!client) {
+        return res.status(404).send({ error: "Данного клиента нет в группе" });
+      }
+
+      client.status = "frozen";
+      client.frozenAt = new Date();
+
+      await group.save();
+
+      return res.send({ message: "Клиент успешно заморожен" });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+groupsRouter.patch(
+  "/active/:id",
+  auth,
+  permit("client", "trainer"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      if (!req.body.clientId) {
+        return res.status(404).send({ error: "Не указан clientId" });
+      }
+
+      const group = await Group.findById(req.params.id);
+      if (!group) {
+        return res.status(404).send({ error: "Группа не найдена" });
+      }
+
+      const client = group.clients.find(
+        (client) => client.client.toString() === req.body.clientId,
+      );
+
+      if (!client) {
+        return res.status(404).send({ error: "Данного клиента нет в группе" });
+      }
+
+      const course = await Course.findById(group.course);
+
+      if (
+        (req.user?.role === "client" &&
+          req.user._id.toString() !== req.body.clientId) ||
+        (req.user?.role === "trainer" &&
+          course?.user.toString() !== req.user._id.toString())
+      ) {
+        return res
+          .status(403)
+          .send({ error: "Вы не можете активировать статус другого клиента" });
+      }
+
+      client.status = "active";
+
+      const now = new Date();
+      const frozenAt = client.frozenAt
+        ? new Date(client.frozenAt).getTime()
+        : null;
+      const subscribeEnd = client.subscribeEnd
+        ? new Date(client.subscribeEnd).getTime()
+        : null;
+
+      if (frozenAt && subscribeEnd) {
+        const remainingTime = subscribeEnd - frozenAt;
+
+        if (remainingTime > 0) {
+          client.subscribeEnd = new Date(now.getTime() + remainingTime);
+        } else {
+          client.subscribeEnd = now;
+        }
+      } else {
+        client.subscribeEnd = now;
+      }
+
+      await group.save();
+
+      return res.send({ message: "Статус клиента успешно изменен на активен" });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
 groupsRouter.put(
   "/:id",
   auth,
