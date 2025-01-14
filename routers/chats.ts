@@ -4,6 +4,8 @@ import Group from "../models/Group";
 import GroupChat from "../models/GroupChat";
 import Course from "../models/Course";
 import PrivateChat from "../models/PrivateChat";
+import User from "../models/User";
+import permit from "../middleware/permit";
 
 const chatsRouter = express.Router();
 
@@ -70,6 +72,104 @@ chatsRouter.get(
       return next(error);
     }
   },
+);
+
+chatsRouter.post("/start-chat", auth, async (req: RequestWithUser, res, next) => {
+  const { firstPersonId, secondPersonId } = req.body;
+
+  try {
+    const user = req.user;
+
+    if (!user) return res.status(400).send({ error: "User not found" });
+
+    const firstPerson = await User.findById(firstPersonId);
+    const secondPerson = await User.findById(secondPersonId);
+
+    if (!firstPerson || !secondPerson) {
+      return res.status(400).send({ error: "One or both users not found" });
+    }
+
+    if (firstPerson._id.toString() === secondPerson._id.toString()) {
+      return res
+        .status(400)
+        .send({ error: "First and second persons cannot be the same" });
+    }
+
+    if (!["trainer", "admin", "superAdmin"].includes(firstPerson.role)) {
+      return res.status(400).send({
+        error:
+          "First person must have a valid role (trainer, admin, or superAdmin)",
+      });
+    }
+
+    const existingChat = await PrivateChat.findOne({
+      $or: [
+        { firstPerson: firstPerson._id, secondPerson: secondPerson._id },
+        { firstPerson: secondPerson._id, secondPerson: firstPerson._id },
+      ],
+    });
+
+    if (existingChat) {
+      return res.status(200).send(existingChat);
+    }
+
+    const newPrivateChat = new PrivateChat({
+      firstPerson: firstPerson._id,
+      secondPerson: secondPerson._id,
+      availableTo: [firstPerson._id, secondPerson._id],
+    });
+
+    await newPrivateChat.save();
+
+    return res.send(newPrivateChat);
+  } catch (error) {
+    return next(error);
+  }
+});
+
+chatsRouter.post(
+  "/start-groupChat",
+  auth,
+  permit("trainer"),
+  async (req: RequestWithUser, res, next) => {
+    const { group } = req.body;
+    try {
+      const user = req.user;
+
+      if (!user) return res.status(400).send({ error: "User not found" });
+
+      if (!group) {
+        return res.status(400).send({ error: "Group ID is required." });
+      }
+
+      const existingGroup = await Group.findById(group);
+
+      if (!existingGroup) {
+        return res.status(404).send({ error: "Group not found." });
+      }
+
+      const existingChat = await GroupChat.findOne({ group });
+
+      if (existingChat) {
+        return res.status(200).send({
+          message: "Group chat already exists.",
+          chat: existingChat,
+        });
+      }
+
+      const newGroupChat = new GroupChat({
+        group: existingGroup._id,
+        title: existingGroup.title,
+        isUrl: false,
+      });
+
+      await newGroupChat.save();
+
+      return res.send(newGroupChat);
+    } catch (error) {
+      return next(error);
+    }
+  }
 );
 
 export default chatsRouter;
