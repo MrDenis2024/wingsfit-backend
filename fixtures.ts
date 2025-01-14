@@ -289,7 +289,7 @@ const run = async () => {
 
   const groupChat1 = await GroupChat.create({
     group: group1._id,
-    title: "Morning Yoga group",
+    title: "Evening Yoga group",
   });
 
   await GroupChat.create({

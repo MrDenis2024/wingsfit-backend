@@ -33,7 +33,8 @@ coursesRouter.get("/", auth, async (req, res) => {
 
   const courses = await Course.find({ user: trainerId })
     .populate("user", "firstName lastName")
-    .populate("courseType", "name");
+    .populate("courseType", "name")
+    .populate({ path: "waitList.user", select: "firstName lastName" });
   return res.status(200).send(courses);
 });
 
@@ -85,6 +86,7 @@ coursesRouter.get("/:id", async (req, res, next) => {
     const course = await Course.findById(id)
       .populate("user", "firstName lastName avatar")
       .populate("courseType", "name")
+      .populate({ path: "waitList.user", select: "firstName lastName" })
       .lean();
 
     if (!course) {
