@@ -13,9 +13,11 @@ clientsRouter.get(
   permit("admin", "superAdmin"),
   async (_req, res, next) => {
     try {
-      const clients = await Client.find()
-          .populate("user", "firstName lastName")
-        return res.send(clients);
+      const clients = await Client.find().populate(
+        "user",
+        "firstName lastName",
+      );
+      return res.send(clients);
     } catch (error) {
       return next(error);
     }
