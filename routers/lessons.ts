@@ -8,49 +8,45 @@ import mongoose from "mongoose";
 
 const lessonsRouter = express.Router();
 
-lessonsRouter.get(
-  "/",
-  auth,
-  async (req: RequestWithUser, res, next) => {
-    try {
-      const courses = await Course.find({ user: req.query?.trainer });
+lessonsRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
+  try {
+    const courses = await Course.find({ user: req.query?.trainer });
 
-      if (courses.length < 1) {
-        return res
-          .status(404)
-          .send({ error: "Курсы данного тренера не найдены" });
-      }
-
-      const groups = await Group.find({
-        course: { $in: courses.map((course) => course._id) },
-      });
-
-      if (groups.length < 1) {
-        return res
-          .status(404)
-          .send({ error: "Группы данного тренера не найдены" });
-      }
-
-      const lessons = await Lesson.find({
-        group: { $in: groups.map((group) => group._id) },
-      })
-        .populate({
-          path: "group",
-          select: "title course",
-          populate: {
-            path: "course",
-            select: "title",
-          },
-        })
-        .populate("notPresent", "firstName lastName")
-        .populate("arePresent", "firstName lastName");
-
-      return res.status(200).send(lessons);
-    } catch (error) {
-      return next(error);
+    if (courses.length < 1) {
+      return res
+        .status(404)
+        .send({ error: "Курсы данного тренера не найдены" });
     }
-  },
-);
+
+    const groups = await Group.find({
+      course: { $in: courses.map((course) => course._id) },
+    });
+
+    if (groups.length < 1) {
+      return res
+        .status(404)
+        .send({ error: "Группы данного тренера не найдены" });
+    }
+
+    const lessons = await Lesson.find({
+      group: { $in: groups.map((group) => group._id) },
+    })
+      .populate({
+        path: "group",
+        select: "title course",
+        populate: {
+          path: "course",
+          select: "title",
+        },
+      })
+      .populate("notPresent", "firstName lastName")
+      .populate("arePresent", "firstName lastName");
+
+    return res.status(200).send(lessons);
+  } catch (error) {
+    return next(error);
+  }
+});
 
 lessonsRouter.get("/:id", auth, permit("trainer"), async (req, res, next) => {
   try {
