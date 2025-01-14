@@ -290,13 +290,11 @@ const run = async () => {
   const groupChat1 = await GroupChat.create({
     group: group1._id,
     title: "Evening Yoga group",
-    isTrainingUrl: false,
   });
 
   await GroupChat.create({
     group: group2._id,
     title: "Evening Pilates group",
-    isTrainingUrl: false,
   });
 
   await GroupChatMessage.create({
