@@ -24,7 +24,7 @@ groupsRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
         .populate({
           path: "course",
           match: { user },
-          select: "title schedule user",
+          select: "title schedule user image price",
         })
         .populate("course", "title")
         .populate({
@@ -117,7 +117,7 @@ groupsRouter.get("/group/:id", auth, async (req, res, next) => {
 
     const group = await Group.findById(req.params.id)
       .populate("clients", "firstName lastName")
-      .populate("course");
+      .populate("course", "user title schedule");
 
     if (!group) {
       return res.status(404).send({ error: "Group not found" });
@@ -135,10 +135,16 @@ groupsRouter.get("/:id", auth, async (req, res, next) => {
     if (!mongoose.isValidObjectId(req.params.id))
       return res.status(400).send({ error: "Invalid course ID" });
 
-    const groups = await Group.find({ course: req.params.id }).populate(
-      "clients",
-      "firstName lastName",
-    );
+    const groups = await Group.find({ course: req.params.id })
+      .populate({
+        path: "course",
+        select: "title schedule user image price",
+      })
+      .populate({
+        path: "clients.client",
+        select: "firstName lastName",
+      })
+      .exec();
     return res.send(groups);
   } catch (error) {
     return next(error);
