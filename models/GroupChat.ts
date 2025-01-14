@@ -13,10 +13,6 @@ const GroupChatSchema = new Schema<ChatType>({
     type: String,
     required: true,
   },
-  isTrainingUrl: {
-    type: Boolean,
-    default: false,
-  }
 });
 
 const GroupChat = mongoose.model("GroupChat", GroupChatSchema);

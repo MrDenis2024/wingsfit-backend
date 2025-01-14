@@ -6,4 +6,5 @@ export interface GroupChatMessages extends Document {
   message: string;
   createdAt: Date;
   isRead: Array<{ user: string; read: boolean }>;
+  isTrainingUrl?: boolean;
 }
