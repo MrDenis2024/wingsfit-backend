@@ -35,9 +35,28 @@ chatsRouter.get(
 
       const groupIds = userGroups.map((group) => group._id);
 
+      let frozenGroupIds: string[] = [];
+
+      if (user.role === "client") {
+        frozenGroupIds = userGroups
+          .filter((group) =>
+            group.clients.some(
+              (client) =>
+                client.client.toString() === user._id.toString() &&
+                client.status === "frozen",
+            ),
+          )
+          .map((group) => group._id.toString());
+      }
+
       const groupChats = await GroupChat.find({ group: { $in: groupIds } });
 
-      return res.status(200).send(groupChats);
+      const result = groupChats.map((chat) => ({
+        ...chat.toObject(),
+        disabled: frozenGroupIds.includes(chat.group.toString()),
+      }));
+
+      return res.status(200).send(result);
     } catch (error) {
       return next(error);
     }
@@ -74,58 +93,62 @@ chatsRouter.get(
   },
 );
 
-chatsRouter.post("/start-chat", auth, async (req: RequestWithUser, res, next) => {
-  const { firstPersonId, secondPersonId } = req.body;
+chatsRouter.post(
+  "/start-chat",
+  auth,
+  async (req: RequestWithUser, res, next) => {
+    const { firstPersonId, secondPersonId } = req.body;
 
-  try {
-    const user = req.user;
+    try {
+      const user = req.user;
 
-    if (!user) return res.status(400).send({ error: "User not found" });
+      if (!user) return res.status(400).send({ error: "User not found" });
 
-    const firstPerson = await User.findById(firstPersonId);
-    const secondPerson = await User.findById(secondPersonId);
+      const firstPerson = await User.findById(firstPersonId);
+      const secondPerson = await User.findById(secondPersonId);
 
-    if (!firstPerson || !secondPerson) {
-      return res.status(400).send({ error: "One or both users not found" });
-    }
+      if (!firstPerson || !secondPerson) {
+        return res.status(400).send({ error: "One or both users not found" });
+      }
 
-    if (firstPerson._id.toString() === secondPerson._id.toString()) {
-      return res
-        .status(400)
-        .send({ error: "First and second persons cannot be the same" });
-    }
+      if (firstPerson._id.toString() === secondPerson._id.toString()) {
+        return res
+          .status(400)
+          .send({ error: "First and second persons cannot be the same" });
+      }
 
-    if (!["trainer", "admin", "superAdmin"].includes(firstPerson.role)) {
-      return res.status(400).send({
-        error:
-          "First person must have a valid role (trainer, admin, or superAdmin)",
+      if (!["trainer", "admin", "superAdmin"].includes(firstPerson.role)) {
+        return res.status(400).send({
+          error:
+            "First person must have a valid role (trainer, admin, or superAdmin)",
+        });
+      }
+
+      const existingChat = await PrivateChat.findOne({
+        $or: [
+          { firstPerson: firstPerson._id, secondPerson: secondPerson._id },
+          { firstPerson: secondPerson._id, secondPerson: firstPerson._id },
+        ],
       });
+
+      if (existingChat) {
+        return res.status(200).send(existingChat);
+      }
+
+      const newPrivateChat = new PrivateChat({
+        firstPerson: firstPerson._id,
+        secondPerson: secondPerson._id,
+        availableTo: [firstPerson._id, secondPerson._id],
+      });
+
+      await newPrivateChat.save();
+
+      return res.send(newPrivateChat);
+    } catch (error) {
+      return next(error);
     }
-
-    const existingChat = await PrivateChat.findOne({
-      $or: [
-        { firstPerson: firstPerson._id, secondPerson: secondPerson._id },
-        { firstPerson: secondPerson._id, secondPerson: firstPerson._id },
-      ],
-    });
-
-    if (existingChat) {
-      return res.status(200).send(existingChat);
-    }
-
-    const newPrivateChat = new PrivateChat({
-      firstPerson: firstPerson._id,
-      secondPerson: secondPerson._id,
-      availableTo: [firstPerson._id, secondPerson._id],
-    });
-
-    await newPrivateChat.save();
-
-    return res.send(newPrivateChat);
-  } catch (error) {
-    return next(error);
-  }
-});
+  },
+);
 
 chatsRouter.post(
   "/start-groupChat",
@@ -169,7 +192,7 @@ chatsRouter.post(
     } catch (error) {
       return next(error);
     }
-  }
+  },
 );
 
 export default chatsRouter;
