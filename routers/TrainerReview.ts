@@ -52,11 +52,20 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
 
     const existingReview = await TrainerReview.findOneAndUpdate(
       { clientId, trainerId },
-      { rating, comment },
+      {
+        rating,
+        comment,
+        createdAt: new Date().toISOString()
+      },
       { new: true, upsert: false }
     );
 
     if (existingReview) {
+      const trainer = await Trainer.findOne({ user: trainerId });
+
+      if (!trainer) return res.status(404).send({ error: "Trainer not found!" });
+
+      trainer.getRating();
       return res.status(200).send(existingReview);
     }
 
