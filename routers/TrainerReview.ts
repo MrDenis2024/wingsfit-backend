@@ -50,6 +50,16 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
       return res.status(400).send({ error: "Invalid Client ID." });
     }
 
+    const existingReview = await TrainerReview.findOneAndUpdate(
+      { clientId, trainerId },
+      { rating, comment },
+      { new: true, upsert: false }
+    );
+
+    if (existingReview) {
+      return res.status(200).send(existingReview);
+    }
+
     const course = await Course.findOne({ user: trainerId });
     if (!course) {
       return res.status(404).send({ error: "Trainer not found in courses." });
