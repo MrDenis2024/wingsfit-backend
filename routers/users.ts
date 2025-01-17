@@ -141,7 +141,7 @@ usersRouter.patch(
       if (!req.body.oldPassword || !req.body.newPassword) {
         return res
           .status(400)
-          .send({ error: "Old password and new password is required" });
+          .send({ error: "Старый и новый пароль обязательны" });
       }
 
       const user = await User.findById(req.user);
@@ -150,7 +150,7 @@ usersRouter.patch(
       }
       const isMatch = await user.checkPassword(req.body.oldPassword);
       if (!isMatch) {
-        return res.status(400).send({ error: "Old password is incorrect!" });
+        return res.status(400).send({ error: "Старый пароль неверен!" });
       }
       user.password = req.body.newPassword;
       user.confirmPassword = req.body.newPassword;
