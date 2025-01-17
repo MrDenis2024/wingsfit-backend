@@ -614,6 +614,43 @@ const run = async () => {
     trainingLevel: "junior",
   });
 
+  const clientsForWaitList = [
+    {
+      user: clientUser8._id,
+      createdAt: new Date(),
+      favoriteGroup: group1._id,
+      status: "new",
+    },
+    {
+      user: clientUser9._id,
+      createdAt: new Date(),
+      favoriteGroup: group1._id,
+      status: "new",
+    },
+    {
+      user: clientUser10._id,
+      createdAt: new Date(),
+      favoriteGroup: group1._id,
+      status: "new",
+    },
+    {
+      user: clientUser7._id,
+      createdAt: new Date(),
+      favoriteGroup: group1._id,
+      status: "new",
+    },
+    {
+      user: clientUser2._id,
+      createdAt: new Date(),
+      favoriteGroup: group1._id,
+      status: "new",
+    },
+  ];
+
+  course1.waitList.push(...clientsForWaitList);
+
+  await course1.save();
+
   const group2 = await Group.create({
     title: "Cardio Training",
     course: course2._id,
