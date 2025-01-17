@@ -6,6 +6,7 @@ import permit from "../middleware/permit";
 import CourseRequest from "../models/CourseRequest";
 import CoursesRequest from "./coursesRequest";
 import { ICourseRequest } from "../types/courseTypes";
+import {randomUUID} from "node:crypto";
 
 export const trainerStatisticsRouter = express.Router();
 
@@ -33,54 +34,95 @@ trainerStatisticsRouter.get(
 );
 
 trainerStatisticsRouter.get(
-  "/clients",
-  auth,
-  async (req: RequestWithUser, res, next) => {
-    try {
-      const userId = req.user?._id;
+    "/clients",
+    auth,
+    async (req: RequestWithUser, res, next) => {
+      try {
+        const userId = req.user?._id;
 
-      const clientStats = await Group.aggregate([
-        {
-          $lookup: {
-            from: "courses",
-            localField: "course",
-            foreignField: "_id",
-            as: "courseData",
+        const clientStats = await Group.aggregate([
+          {
+            $lookup: {
+              from: "courses",
+              localField: "course",
+              foreignField: "_id",
+              as: "courseData",
+            },
           },
-        },
-        {
-          $match: {
-            "courseData.user": userId,
+          {
+            $match: {
+              "courseData.user": userId,
+            },
           },
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "clients",
-            foreignField: "_id",
-            as: "clientData",
+          {
+            $unwind: "$courseData",
           },
-        },
-        { $unwind: "$clientData" },
-        { $unwind: "$courseData" },
-        {
-          $group: {
-            _id: "$clientData._id",
-            name: { $first: "$clientData.firstName" },
-            lastName: { $first: "$clientData.lastName" },
-            phoneNumber: { $first: "$clientData.phoneNumber" },
-            email: { $first: "$clientData.email" },
-            groups: { $addToSet: "$title" },
-            courses: { $addToSet: "$courseData.title" },
+          {
+            $lookup: {
+              from: "users",
+              localField: "clients.client",
+              foreignField: "_id",
+              as: "clientData",
+            },
           },
-        },
-      ]);
+          {
+            $unwind: "$clientData",
+          },
+          {
+            $unwind: "$clients",
+          },
+          {
+            $project: {
+              _id: "$clientData._id",
+              name: "$clientData.firstName",
+              lastName: "$clientData.lastName",
+              groupTitle: "$courseData.title",
+              status: "$clients.status",
+              subscribeEnd: "$clients.subscribeEnd",
+              addedAt: "$clients.addedAt",
+            },
+          },
+          {
+            $group: {
+              _id: { clientId: "$_id", groupTitle: "$groupTitle" },
+              name: { $first: "$name" },
+              lastName: { $first: "$lastName" },
+              status: { $push: "$status" },
+              subscribeEnd: { $push: "$subscribeEnd" },
+              addedAt: { $push: "$addedAt" },
+            },
+          },
+          {
+            $project: {
+              clientId: "$_id.clientId",
+              groupTitle: "$_id.groupTitle",
+              name: 1,
+              lastName: 1,
+              status: { $arrayElemAt: ["$status", 0] },
+              subscribeEnd: { $arrayElemAt: ["$subscribeEnd", 0] },
+              addedAt: { $arrayElemAt: ["$addedAt", 0] },
+            },
+          },
+          {
+            $addFields: {
+              _id: { $literal: randomUUID() },
+            },
+          },
+          {
+            $sort: { name: 1, lastName: 1 },
+          },
+        ]);
 
-      return res.status(200).send(clientStats);
-    } catch (error) {
-      return next(error);
+        const statsWithUniqueId = clientStats.map(client => ({
+          ...client,
+          _id: randomUUID(),
+        }));
+
+        return res.status(200).send(statsWithUniqueId);
+      } catch (error) {
+        return next(error);
+      }
     }
-  },
 );
 
 trainerStatisticsRouter.get(
