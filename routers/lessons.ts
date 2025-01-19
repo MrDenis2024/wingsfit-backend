@@ -48,6 +48,35 @@ lessonsRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
   }
 });
 
+lessonsRouter.get(
+  "/last/:id",
+  auth,
+  permit("trainer"),
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const id = req.params.id;
+
+      if (!mongoose.isValidObjectId(id)) {
+        return res.status(400).send({ error: "Invalid ID" });
+      }
+
+      const lastLesson = await Lesson.findOne({ group: id }).sort({
+        createdAt: -1,
+      });
+
+      if (!lastLesson) {
+        return res
+          .status(404)
+          .json({ message: "No lessons found for this group." });
+      }
+
+      return res.status(200).send(lastLesson);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
 lessonsRouter.get("/:id", auth, permit("trainer"), async (req, res, next) => {
   try {
     const id = req.params.id;
