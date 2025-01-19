@@ -209,6 +209,7 @@ const createChatRouter = () => {
                   groupChat: chatId,
                   author: userId,
                   message: decodedMessage.payload.message,
+                  isTrainingUrl: !!decodedMessage.payload.isTrainingUrl,
                 });
                 newMessage = await newMessage.populate(
                   "author",
