@@ -110,11 +110,11 @@ trainerReviewRouter.post("/", auth, async (req: RequestWithUser, res, next) => {
       clientId,
       trainerId,
       comment: comment ?? null,
-      rating,
+      rating: isNaN(rating) ? 0 : rating,
     });
 
     await newReview.save();
-    trainer.getRating();
+    await trainer.getRating();
     await trainer.save();
 
     return res.status(200).send(newReview);
@@ -159,7 +159,7 @@ trainerReviewRouter.delete(
       }
 
       await TrainerReview.findByIdAndDelete(reviewId);
-      trainer.getRating();
+      await trainer.getRating();
       await trainer.save();
 
       return res.status(200).send({ message: "Review deleted successfully." });

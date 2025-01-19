@@ -59,14 +59,26 @@ const TrainerSchema = new Schema<TrainerTypes, TrainerModel, TrainerMethods>({
 TrainerSchema.methods.getRating = async function () {
   const reviews = await TrainerReview.find({ trainerId: this.user });
 
-  if (reviews.length < 1) {
+  if (reviews.length === 0) {
     this.rating = 0;
+    await this.save();
+    return;
   }
 
-  const averageRating =
-    reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+  const validRatings = reviews
+    .map((review) => Number(review.rating))
+    .filter((rating) => !isNaN(rating) && rating >= 1 && rating <= 5);
 
-  this.rating = Math.min(Math.round(averageRating / 0.5) * 0.5, 5);
+  if (validRatings.length === 0) {
+    this.rating = 0;
+  } else {
+    const averageRating =
+      validRatings.reduce((sum, rating) => sum + rating, 0) /
+      validRatings.length;
+    this.rating = Math.min(Math.round(averageRating / 0.5) * 0.5, 5);
+  }
+
+  await this.save();
 };
 
 const Trainer = mongoose.model<TrainerTypes, TrainerModel>(
