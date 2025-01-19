@@ -121,7 +121,7 @@ lessonsRouter.post(
         timeDifference > oneHour
       ) {
         return res
-          .status(403)
+          .status(400)
           .send({ error: "Временные ограничения нарушены" });
       }
 
@@ -135,7 +135,7 @@ lessonsRouter.post(
 
       if (existingLesson) {
         return res
-          .status(403)
+          .status(400)
           .send({ error: "Занятие уже создано для этого дня" });
       }
 
@@ -147,7 +147,7 @@ lessonsRouter.post(
       await lesson.save();
       res.status(200).send(lesson);
     } catch (error) {
-      next(error);
+      return next(error);
     }
   },
 );
