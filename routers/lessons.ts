@@ -51,7 +51,6 @@ lessonsRouter.get("/", auth, async (req: RequestWithUser, res, next) => {
 lessonsRouter.get(
   "/last/:id",
   auth,
-  permit("trainer"),
   async (req: RequestWithUser, res, next) => {
     try {
       const id = req.params.id;
