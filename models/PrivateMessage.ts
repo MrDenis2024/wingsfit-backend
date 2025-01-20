@@ -22,17 +22,19 @@ const PrivateMessageSchema = new Schema<PrivateMessagesTypes>({
     type: Date,
     default: Date.now,
   },
-  isRead: {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+  isRead: [
+    {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      read: {
+        type: Boolean,
+        default: false,
+      },
     },
-    read: {
-      type: Boolean,
-      default: false,
-    },
-  },
+  ],
 });
 
 const PrivateMessage = mongoose.model("PrivateMessage", PrivateMessageSchema);

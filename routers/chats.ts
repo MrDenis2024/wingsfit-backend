@@ -6,6 +6,11 @@ import Course from "../models/Course";
 import PrivateChat from "../models/PrivateChat";
 import User from "../models/User";
 import permit from "../middleware/permit";
+import { GroupChatMessages } from "../types/groupChatMessagesTypes";
+import groupChatMessages from "../models/GroupChatMessages";
+import GroupChatMessage from "../models/GroupChatMessages";
+import PrivateMessage from "../models/PrivateMessage";
+import { PrivateMessagesTypes } from "../types/privateMessagesTypes";
 
 const chatsRouter = express.Router();
 
@@ -64,6 +69,76 @@ chatsRouter.get(
 );
 
 chatsRouter.get(
+  "/groupChatsUnreadMessages",
+  auth,
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const user = req.user;
+
+      if (!user) return res.status(401).send({ error: "User not found" });
+
+      const userGroups = await Group.find({
+        $or: [
+          { clients: { $elemMatch: { client: user._id } } },
+          {
+            course: {
+              $in: await Course.find({ user: user._id }).distinct("_id"),
+            },
+          },
+        ],
+      });
+
+      if (!userGroups || userGroups.length === 0) {
+        return res.status(200).send([]);
+      }
+
+      const groupIds = userGroups.map((group) => group._id);
+
+      let frozenGroupIds: string[] = [];
+      const groupChats = await GroupChat.find({ group: { $in: groupIds } });
+
+      if (user.role === "client") {
+        frozenGroupIds = userGroups
+          .filter((group) =>
+            group.clients.some(
+              (client) =>
+                client.client.toString() === user._id.toString() &&
+                client.status === "frozen",
+            ),
+          )
+          .map((group) => group._id.toString());
+      }
+
+      const activeChats = groupChats.map((chat) => ({
+        ...chat.toObject(),
+        disabled: frozenGroupIds.includes(chat.group.toString()),
+      }));
+
+      const groupChatsIds = activeChats.map((group) => group._id);
+
+      const unreadMessages: GroupChatMessages[] = [];
+      const groupMessages = await GroupChatMessage.find({
+        groupChat: { $in: groupChatsIds },
+      }).populate("groupChat author", "title firstName lastName");
+      groupMessages.map((message) => {
+        message.isRead.map((chatUser) => {
+          if (
+            chatUser.user.toString() === user._id.toString() &&
+            !chatUser.read
+          ) {
+            unreadMessages.push(message);
+          }
+        });
+      });
+
+      return res.status(200).send(unreadMessages);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+chatsRouter.get(
   "/privateChats",
   auth,
   async (req: RequestWithUser, res, next) => {
@@ -87,6 +162,45 @@ chatsRouter.get(
           : [];
 
       return res.status(200).send(privateChat);
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
+
+chatsRouter.get(
+  "/privateChatsUnreadMessages",
+  auth,
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const user = req.user;
+
+      if (!user) return res.status(401).send({ error: "User not found" });
+
+      const privateChats = await PrivateChat.find({
+        availableTo: user._id,
+        $or: [{ firstPerson: user._id }, { secondPerson: user._id }],
+      }).populate("firstPerson secondPerson", "firstName lastName avatar");
+
+      const privateChatsIds = privateChats.map(
+        (privateChat) => privateChat._id,
+      );
+      const messages = await PrivateMessage.find({
+        privateChat: { $in: privateChatsIds },
+      }).populate("author", "firstName lastName");
+      const unreadMessages: PrivateMessagesTypes[] = [];
+      messages.map((message) => {
+        message.isRead.map((chatUser) => {
+          if (
+            chatUser.user.toString() === user._id.toString() &&
+            !chatUser.read
+          ) {
+            unreadMessages.push(message);
+          }
+        });
+      });
+
+      return res.status(200).send(unreadMessages);
     } catch (error) {
       return next(error);
     }

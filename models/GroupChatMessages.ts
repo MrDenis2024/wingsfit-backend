@@ -36,9 +36,9 @@ const GroupChatMessageSchema = new Schema<GroupChatMessages>({
     },
   ],
   isTrainingUrl: {
-  type: Boolean,
-  default: false,
-}
+    type: Boolean,
+    default: false,
+  },
 });
 
 const GroupChatMessage = mongoose.model(
