@@ -43,7 +43,8 @@ chatsRouter.get(
             group.clients.some(
               (client) =>
                 client.client.toString() === user._id.toString() &&
-                client.status === "frozen",
+                (client.status === "frozen" ||
+                  (client.subscribeEnd && client.subscribeEnd.getTime() < Date.now()))
             ),
           )
           .map((group) => group._id.toString());
