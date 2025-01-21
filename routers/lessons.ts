@@ -59,18 +59,20 @@ lessonsRouter.get(
         return res.status(400).send({ error: "Invalid ID" });
       }
 
-      const lastLesson = await Lesson.findOne({ group: id }).populate({
-        path: "group",
-        select: "title course",
-        populate: {
-          path: "course",
-          select: "title",
-        },
-      })
-          .populate("notPresent", "firstName lastName")
-          .populate("arePresent", "firstName lastName").sort({
-        createdAt: -1,
-      });
+      const lastLesson = await Lesson.findOne({ group: id })
+        .populate({
+          path: "group",
+          select: "title course",
+          populate: {
+            path: "course",
+            select: "title",
+          },
+        })
+        .populate("notPresent", "firstName lastName")
+        .populate("arePresent", "firstName lastName")
+        .sort({
+          createdAt: -1,
+        });
 
       if (!lastLesson) {
         return res

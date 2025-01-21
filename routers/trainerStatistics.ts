@@ -6,7 +6,7 @@ import permit from "../middleware/permit";
 import CourseRequest from "../models/CourseRequest";
 import CoursesRequest from "./coursesRequest";
 import { ICourseRequest } from "../types/courseTypes";
-import {randomUUID} from "node:crypto";
+import { randomUUID } from "node:crypto";
 
 export const trainerStatisticsRouter = express.Router();
 
@@ -34,95 +34,95 @@ trainerStatisticsRouter.get(
 );
 
 trainerStatisticsRouter.get(
-    "/clients",
-    auth,
-    async (req: RequestWithUser, res, next) => {
-      try {
-        const userId = req.user?._id;
+  "/clients",
+  auth,
+  async (req: RequestWithUser, res, next) => {
+    try {
+      const userId = req.user?._id;
 
-        const clientStats = await Group.aggregate([
-          {
-            $lookup: {
-              from: "courses",
-              localField: "course",
-              foreignField: "_id",
-              as: "courseData",
-            },
+      const clientStats = await Group.aggregate([
+        {
+          $lookup: {
+            from: "courses",
+            localField: "course",
+            foreignField: "_id",
+            as: "courseData",
           },
-          {
-            $match: {
-              "courseData.user": userId,
-            },
+        },
+        {
+          $match: {
+            "courseData.user": userId,
           },
-          {
-            $unwind: "$courseData",
+        },
+        {
+          $unwind: "$courseData",
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "clients.client",
+            foreignField: "_id",
+            as: "clientData",
           },
-          {
-            $lookup: {
-              from: "users",
-              localField: "clients.client",
-              foreignField: "_id",
-              as: "clientData",
-            },
+        },
+        {
+          $unwind: "$clientData",
+        },
+        {
+          $unwind: "$clients",
+        },
+        {
+          $project: {
+            _id: "$clientData._id",
+            name: "$clientData.firstName",
+            lastName: "$clientData.lastName",
+            groupTitle: "$courseData.title",
+            status: "$clients.status",
+            subscribeEnd: "$clients.subscribeEnd",
+            addedAt: "$clients.addedAt",
           },
-          {
-            $unwind: "$clientData",
+        },
+        {
+          $group: {
+            _id: { clientId: "$_id", groupTitle: "$groupTitle" },
+            name: { $first: "$name" },
+            lastName: { $first: "$lastName" },
+            status: { $push: "$status" },
+            subscribeEnd: { $push: "$subscribeEnd" },
+            addedAt: { $push: "$addedAt" },
           },
-          {
-            $unwind: "$clients",
+        },
+        {
+          $project: {
+            clientId: "$_id.clientId",
+            groupTitle: "$_id.groupTitle",
+            name: 1,
+            lastName: 1,
+            status: { $arrayElemAt: ["$status", 0] },
+            subscribeEnd: { $arrayElemAt: ["$subscribeEnd", 0] },
+            addedAt: { $arrayElemAt: ["$addedAt", 0] },
           },
-          {
-            $project: {
-              _id: "$clientData._id",
-              name: "$clientData.firstName",
-              lastName: "$clientData.lastName",
-              groupTitle: "$courseData.title",
-              status: "$clients.status",
-              subscribeEnd: "$clients.subscribeEnd",
-              addedAt: "$clients.addedAt",
-            },
+        },
+        {
+          $addFields: {
+            _id: { $literal: randomUUID() },
           },
-          {
-            $group: {
-              _id: { clientId: "$_id", groupTitle: "$groupTitle" },
-              name: { $first: "$name" },
-              lastName: { $first: "$lastName" },
-              status: { $push: "$status" },
-              subscribeEnd: { $push: "$subscribeEnd" },
-              addedAt: { $push: "$addedAt" },
-            },
-          },
-          {
-            $project: {
-              clientId: "$_id.clientId",
-              groupTitle: "$_id.groupTitle",
-              name: 1,
-              lastName: 1,
-              status: { $arrayElemAt: ["$status", 0] },
-              subscribeEnd: { $arrayElemAt: ["$subscribeEnd", 0] },
-              addedAt: { $arrayElemAt: ["$addedAt", 0] },
-            },
-          },
-          {
-            $addFields: {
-              _id: { $literal: randomUUID() },
-            },
-          },
-          {
-            $sort: { name: 1, lastName: 1 },
-          },
-        ]);
+        },
+        {
+          $sort: { name: 1, lastName: 1 },
+        },
+      ]);
 
-        const statsWithUniqueId = clientStats.map(client => ({
-          ...client,
-          _id: randomUUID(),
-        }));
+      const statsWithUniqueId = clientStats.map((client) => ({
+        ...client,
+        _id: randomUUID(),
+      }));
 
-        return res.status(200).send(statsWithUniqueId);
-      } catch (error) {
-        return next(error);
-      }
+      return res.status(200).send(statsWithUniqueId);
+    } catch (error) {
+      return next(error);
     }
+  },
 );
 
 trainerStatisticsRouter.get(

@@ -1114,7 +1114,7 @@ const run = async () => {
   });
   await Lesson.create({
     group: group1._id,
-    createdAt: new Date(Date.now()-100000),
+    createdAt: new Date(Date.now() - 100000),
     notPresent: [clientUser9._id],
     arePresent: [
       clientUser8._id,
