@@ -37,6 +37,7 @@ export type IncomingMessage =
         chatId: string;
         chatType: "group" | "private";
         message: string;
+        isTrainingUrl?: string;
       };
     }
   | {
