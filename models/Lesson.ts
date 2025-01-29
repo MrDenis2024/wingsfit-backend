@@ -4,6 +4,7 @@ import { LessonsTypes } from "../types/lessonsTypes";
 const Schema = mongoose.Schema;
 
 const LessonSchema = new Schema<LessonsTypes>({
+  lessonURL:String,
   group: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Group",

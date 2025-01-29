@@ -59,7 +59,16 @@ lessonsRouter.get(
         return res.status(400).send({ error: "Invalid ID" });
       }
 
-      const lastLesson = await Lesson.findOne({ group: id }).sort({
+      const lastLesson = await Lesson.findOne({ group: id }).populate({
+        path: "group",
+        select: "title course",
+        populate: {
+          path: "course",
+          select: "title",
+        },
+      })
+          .populate("notPresent", "firstName lastName")
+          .populate("arePresent", "firstName lastName").sort({
         createdAt: -1,
       });
 
@@ -115,7 +124,6 @@ lessonsRouter.post(
   async (req: RequestWithUser, res, next) => {
     try {
       const group = await Group.findById(req.body.groupId);
-
       if (!group) {
         return res.status(400).send({ error: "Группа не найдена" });
       }
@@ -135,23 +143,6 @@ lessonsRouter.post(
       }
 
       const currentDate = new Date();
-      const groupStartTime = new Date(
-        currentDate.toDateString() + " " + group.startTime,
-      );
-
-      const timeDifference = Math.abs(
-        currentDate.getTime() - groupStartTime.getTime(),
-      );
-      const oneHour = 60 * 60 * 1000;
-
-      if (
-        currentDate.toDateString() !== groupStartTime.toDateString() ||
-        timeDifference > oneHour
-      ) {
-        return res
-          .status(400)
-          .send({ error: "Временные ограничения нарушены" });
-      }
 
       const existingLesson = await Lesson.findOne({
         group: req.body.groupId,
@@ -169,6 +160,7 @@ lessonsRouter.post(
 
       const lesson = new Lesson({
         group: req.body.groupId,
+        lessonURL: req.body.lessonUrl,
         notPresent: group.clients.map((client) => client.client.toString()),
       });
 
